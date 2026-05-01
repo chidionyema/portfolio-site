@@ -15,9 +15,9 @@ interface EventData {
 }
 
 const products: Product[] = [
-  { id: '1', name: 'Clean Architecture Book', price: 49.99, icon: '📚' },
-  { id: '2', name: 'DDD Workshop', price: 199.99, icon: '🎓' },
-  { id: '3', name: 'Event Sourcing Course', price: 299.99, icon: '⚡' },
+  { id: '1', name: 'API Access (Monthly)', price: 49.99, icon: '🔑' },
+  { id: '2', name: 'Premium Support', price: 199.99, icon: '🛡️' },
+  { id: '3', name: 'Enterprise License', price: 299.99, icon: '⚡' },
 ];
 
 export function CheckoutDemo() {
