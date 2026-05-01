@@ -5,8 +5,8 @@ interface Props {
 }
 
 const {
-  title = "Chidi Onyema | Senior .NET Architect - Live System Demo",
-  description = "See a distributed system running live. .NET 9, Clean Architecture, Event-Driven, DDD. Try the interactive demo."
+  title = "Chidi Onyema | Senior .NET Architect",
+  description = "See a distributed system running live. .NET 9, Clean Architecture, Event-Driven, DDD."
 } = Astro.props;
 ---
 
@@ -17,35 +17,66 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+
+    <!-- Favicon - inline SVG for zero requests -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+
+    <!-- Critical font - system fonts first, then load Inter -->
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400 700;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2') format('woff2');
+        unicode-range: U+0000-00FF;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/s/jetbrainsmono/v18/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxjPVmUsaaDhw.woff2') format('woff2');
+        unicode-range: U+0000-00FF;
+      }
+    </style>
+
+    <!-- Critical CSS inlined -->
+    <style is:inline>
+      :root{--color-base:10 10 15;--color-surface:18 18 26;--color-accent:99 102 241}
+      *,*::before,*::after{box-sizing:border-box}
+      html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+      body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#0a0a0f;color:#f8fafc;-webkit-font-smoothing:antialiased}
+      .container{width:100%;max-width:1280px;margin:0 auto}
+      .glass{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:1rem}
+      .gradient-text{background:linear-gradient(to right,#6366f1,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent}
+      @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+      .animate-fade-in{animation:fade-in 0.5s ease-out forwards}
+      @keyframes pulse-slow{0%,100%{opacity:1}50%{opacity:0.5}}
+      .animate-pulse-slow{animation:pulse-slow 4s ease-in-out infinite}
+    </style>
 
     <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/og-image.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
 
     <title>{title}</title>
+
+    <!-- Preload the demo section (user likely to interact) -->
+    <link rel="prefetch" href="/demo" />
   </head>
-  <body class="bg-base text-primary antialiased">
+  <body>
     <slot />
+
+    <!-- Load non-critical CSS asynchronously -->
+    <link rel="stylesheet" href="/src/styles/global.css" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="/src/styles/global.css" /></noscript>
   </body>
 </html>
-
-<style is:global>
-  @import "../styles/global.css";
-</style>

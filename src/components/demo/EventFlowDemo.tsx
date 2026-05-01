@@ -1,10 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Pause, RotateCcw, Database, MessageSquare, Check, Clock, ArrowRight } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { Badge } from '../ui/Badge';
-import { cn } from '../../lib/utils';
 
 interface SagaStep {
   id: string;
@@ -17,314 +11,161 @@ interface OutboxMessage {
   id: string;
   type: string;
   status: 'pending' | 'published';
-  createdAt: Date;
-}
-
-interface QueueMessage {
-  id: string;
-  queue: string;
-  count: number;
 }
 
 export function EventFlowDemo() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [sagaSteps, setSagaSteps] = useState<SagaStep[]>([
-    { id: '1', name: 'Checkout Started', status: 'pending' },
+    { id: '1', name: 'Checkout', status: 'pending' },
     { id: '2', name: 'Stock Reserved', status: 'pending' },
-    { id: '3', name: 'Payment Created', status: 'pending' },
-    { id: '4', name: 'Order Complete', status: 'pending' },
+    { id: '3', name: 'Payment', status: 'pending' },
+    { id: '4', name: 'Complete', status: 'pending' },
   ]);
-  const [outboxMessages, setOutboxMessages] = useState<OutboxMessage[]>([]);
-  const [queueDepths, setQueueDepths] = useState<QueueMessage[]>([
-    { id: '1', queue: 'orders.created', count: 0 },
-    { id: '2', queue: 'stock.reserved', count: 0 },
-    { id: '3', queue: 'payments.completed', count: 0 },
+  const [outbox, setOutbox] = useState<OutboxMessage[]>([]);
+  const [queues, setQueues] = useState([
+    { name: 'orders.created', depth: 0 },
+    { name: 'stock.reserved', depth: 0 },
+    { name: 'payments.completed', depth: 0 },
   ]);
 
-  // Animation loop
   useEffect(() => {
     if (!isPlaying) return;
-
     const interval = setInterval(() => {
-      setCurrentStep((prev) => {
-        const next = prev + 1;
-        if (next > sagaSteps.length) {
+      setCurrentStep(prev => {
+        if (prev >= sagaSteps.length) {
           setIsPlaying(false);
           return prev;
         }
-        return next;
+        return prev + 1;
       });
-    }, 1000);
-
+    }, 800);
     return () => clearInterval(interval);
   }, [isPlaying, sagaSteps.length]);
 
-  // Update saga steps based on current step
   useEffect(() => {
-    setSagaSteps((steps) =>
-      steps.map((step, index) => ({
-        ...step,
-        status:
-          index < currentStep
-            ? 'completed'
-            : index === currentStep
-            ? 'active'
-            : 'pending',
-        duration: index < currentStep ? 50 + Math.random() * 100 : undefined,
-      }))
-    );
+    setSagaSteps(steps => steps.map((s, i) => ({
+      ...s,
+      status: i < currentStep ? 'completed' : i === currentStep ? 'active' : 'pending',
+      duration: i < currentStep ? 30 + Math.random() * 70 : undefined,
+    })));
 
-    // Add outbox messages
-    if (currentStep > 0 && currentStep <= sagaSteps.length) {
-      const eventTypes = ['OrderCreated', 'StockReserved', 'PaymentCreated', 'OrderCompleted'];
-      setOutboxMessages((prev) => {
-        const existing = prev.find((m) => m.type === eventTypes[currentStep - 1]);
-        if (existing) return prev;
-        return [
-          {
-            id: crypto.randomUUID(),
-            type: eventTypes[currentStep - 1],
-            status: 'pending',
-            createdAt: new Date(),
-          },
-          ...prev,
-        ];
+    const types = ['OrderCreated', 'StockReserved', 'PaymentCreated', 'OrderCompleted'];
+    if (currentStep > 0 && currentStep <= types.length) {
+      setOutbox(prev => {
+        if (prev.find(m => m.type === types[currentStep - 1])) return prev;
+        return [{ id: crypto.randomUUID(), type: types[currentStep - 1], status: 'pending' }, ...prev];
       });
     }
-  }, [currentStep, sagaSteps.length]);
 
-  // Publish outbox messages
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setOutboxMessages((messages) =>
-        messages.map((m, i) => ({
-          ...m,
-          status: i < messages.length - 1 ? 'published' : m.status,
-        }))
-      );
-
-      // Update queue depths
-      setQueueDepths((queues) =>
-        queues.map((q, i) => ({
-          ...q,
-          count: Math.max(0, currentStep - i - 1),
-        }))
-      );
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [outboxMessages, currentStep]);
+    setTimeout(() => {
+      setOutbox(msgs => msgs.map((m, i) => ({ ...m, status: i > 0 ? 'published' : m.status })));
+      setQueues(qs => qs.map((q, i) => ({ ...q, depth: Math.max(0, currentStep - i - 1) })));
+    }, 400);
+  }, [currentStep]);
 
   const reset = () => {
     setIsPlaying(false);
     setCurrentStep(0);
-    setSagaSteps((steps) =>
-      steps.map((s) => ({ ...s, status: 'pending', duration: undefined }))
-    );
-    setOutboxMessages([]);
-    setQueueDepths((queues) => queues.map((q) => ({ ...q, count: 0 })));
+    setSagaSteps(s => s.map(x => ({ ...x, status: 'pending', duration: undefined })));
+    setOutbox([]);
+    setQueues(q => q.map(x => ({ ...x, depth: 0 })));
   };
 
   const togglePlay = () => {
-    if (currentStep >= sagaSteps.length) {
-      reset();
-      setTimeout(() => setIsPlaying(true), 100);
-    } else {
-      setIsPlaying(!isPlaying);
-    }
+    if (currentStep >= sagaSteps.length) reset();
+    setTimeout(() => setIsPlaying(true), 50);
   };
 
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="flex items-center justify-center gap-4">
-        <Button variant="secondary" onClick={togglePlay}>
-          {isPlaying ? (
-            <>
-              <Pause className="w-4 h-4" />
-              Pause
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4" />
-              {currentStep >= sagaSteps.length ? 'Replay' : 'Start'}
-            </>
-          )}
-        </Button>
-        <Button variant="ghost" onClick={reset}>
-          <RotateCcw className="w-4 h-4" />
-          Reset
-        </Button>
+      <div className="flex justify-center gap-4">
+        <button onClick={togglePlay} className="px-6 py-3 rounded-xl border border-accent/50 text-accent hover:bg-accent/10 transition-colors flex items-center gap-2">
+          {isPlaying ? '⏸ Pause' : currentStep >= sagaSteps.length ? '🔄 Replay' : '▶ Start'}
+        </button>
+        <button onClick={reset} className="px-6 py-3 rounded-xl border border-border text-secondary hover:text-primary transition-colors">
+          ↺ Reset
+        </button>
       </div>
 
-      {/* Saga Visualization */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Saga Flow</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            {sagaSteps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <motion.div
-                  className={cn(
-                    'flex flex-col items-center',
-                    step.status === 'pending' && 'opacity-50'
-                  )}
-                  animate={{
-                    scale: step.status === 'active' ? 1.1 : 1,
-                  }}
-                >
-                  <div
-                    className={cn(
-                      'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-colors',
-                      {
-                        'bg-success text-white': step.status === 'completed',
-                        'bg-accent text-white animate-pulse': step.status === 'active',
-                        'bg-surface text-muted': step.status === 'pending',
-                      }
-                    )}
-                  >
-                    {step.status === 'completed' ? (
-                      <Check className="w-6 h-6" />
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                  <span className="mt-2 text-xs text-center max-w-[80px]">
-                    {step.name}
-                  </span>
-                  {step.duration && (
-                    <span className="text-xs text-muted mt-1">
-                      {step.duration.toFixed(0)}ms
-                    </span>
-                  )}
-                </motion.div>
+      {/* Saga Flow */}
+      <div className="glass rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-primary mb-6 text-center">Saga Flow</h3>
+        <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
+          {sagaSteps.map((step, i) => (
+            <div key={step.id} className="flex items-center">
+              <div className={`flex flex-col items-center transition-transform ${step.status === 'active' ? 'scale-110' : ''}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-colors ${
+                  step.status === 'completed' ? 'bg-success text-white' :
+                  step.status === 'active' ? 'bg-accent text-white animate-pulse' : 'bg-surface text-muted'
+                }`}>
+                  {step.status === 'completed' ? '✓' : i + 1}
+                </div>
+                <span className="mt-2 text-xs text-center max-w-[70px]">{step.name}</span>
+                {step.duration && <span className="text-xs text-muted">{step.duration.toFixed(0)}ms</span>}
+              </div>
+              {i < sagaSteps.length - 1 && (
+                <span className={`mx-2 text-xl ${sagaSteps[i + 1].status !== 'pending' ? 'text-accent' : 'text-muted'}`}>→</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 
-                {index < sagaSteps.length - 1 && (
-                  <ArrowRight
-                    className={cn(
-                      'w-6 h-6 mx-2',
-                      sagaSteps[index + 1].status !== 'pending'
-                        ? 'text-accent'
-                        : 'text-muted'
-                    )}
-                  />
-                )}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Outbox */}
+        <div className="glass rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+            📤 Outbox Table
+          </h3>
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 text-xs text-muted font-medium pb-2 border-b border-border">
+              <span>Event Type</span>
+              <span>Status</span>
+            </div>
+            {outbox.length === 0 ? (
+              <div className="py-4 text-center text-muted text-sm">Waiting for events...</div>
+            ) : (
+              outbox.map((m, i) => (
+                <div key={m.id} className="grid grid-cols-2 text-sm py-2 border-b border-border/50 animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
+                  <span className="font-mono text-xs">{m.type}</span>
+                  <span className={`px-2 py-0.5 rounded text-xs w-fit ${m.status === 'published' ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'}`}>
+                    {m.status === 'published' ? 'Published' : 'Pending'}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+          <p className="text-xs text-secondary mt-4 p-3 bg-surface rounded-lg">
+            <strong className="text-primary">Transactional Outbox:</strong> Events saved in same DB transaction as data. Nothing gets lost.
+          </p>
+        </div>
+
+        {/* Queues */}
+        <div className="glass rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+            📨 Message Queues
+          </h3>
+          <div className="space-y-4">
+            {queues.map(q => (
+              <div key={q.name} className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="font-mono text-xs text-secondary">{q.name}</span>
+                  <span className="text-xs bg-surface px-2 py-0.5 rounded">{q.depth}</span>
+                </div>
+                <div className="h-2 bg-surface rounded-full overflow-hidden">
+                  <div className="h-full bg-accent rounded-full transition-all duration-300" style={{ width: `${Math.min(q.depth * 25, 100)}%` }} />
+                </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Outbox Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />
-              Outbox Table
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 text-xs text-muted font-medium pb-2 border-b border-border">
-                <span>Type</span>
-                <span>Status</span>
-                <span>Created</span>
-              </div>
-              {outboxMessages.length === 0 ? (
-                <div className="py-4 text-center text-muted text-sm">
-                  <Clock className="w-6 h-6 mx-auto mb-2 opacity-50" />
-                  Waiting for events...
-                </div>
-              ) : (
-                outboxMessages.map((msg) => (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="grid grid-cols-3 text-sm py-2 border-b border-border/50 last:border-0"
-                  >
-                    <span className="font-mono text-xs truncate">
-                      {msg.type}
-                    </span>
-                    <Badge
-                      variant={msg.status === 'published' ? 'success' : 'warning'}
-                      className="w-fit"
-                    >
-                      {msg.status === 'published' ? 'Published' : 'Pending'}
-                    </Badge>
-                    <span className="text-muted text-xs">
-                      {msg.createdAt.toLocaleTimeString()}
-                    </span>
-                  </motion.div>
-                ))
-              )}
-            </div>
-
-            <div className="mt-4 p-3 bg-surface rounded-lg text-xs text-secondary">
-              <strong className="text-primary">Transactional Outbox:</strong>{' '}
-              Events are written to the database in the same transaction as your
-              data, then published by a background worker. Nothing gets lost.
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Message Queues */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" />
-              Message Queues
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {queueDepths.map((queue) => (
-                <div key={queue.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono text-xs text-secondary">
-                      {queue.queue}
-                    </span>
-                    <Badge variant="outline">{queue.count}</Badge>
-                  </div>
-                  <div className="h-2 bg-surface rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-accent rounded-full"
-                      animate={{ width: `${Math.min(queue.count * 25, 100)}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-primary">
-                  {queueDepths.reduce((sum, q) => sum + q.count, 0)}
-                </div>
-                <div className="text-xs text-muted">Total Messages</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary">2</div>
-                <div className="text-xs text-muted">Consumers</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary">12/s</div>
-                <div className="text-xs text-muted">Throughput</div>
-              </div>
-            </div>
-
-            <div className="mt-4 p-3 bg-surface rounded-lg text-xs text-secondary">
-              <strong className="text-primary">MassTransit + RabbitMQ:</strong>{' '}
-              Events are delivered reliably with automatic retries,
-              dead-letter handling, and consumer scaling.
-            </div>
-          </CardContent>
-        </Card>
+          <div className="grid grid-cols-3 gap-4 mt-6 text-center">
+            <div><div className="text-2xl font-bold">{queues.reduce((s, q) => s + q.depth, 0)}</div><div className="text-xs text-muted">Messages</div></div>
+            <div><div className="text-2xl font-bold">2</div><div className="text-xs text-muted">Consumers</div></div>
+            <div><div className="text-2xl font-bold">12/s</div><div className="text-xs text-muted">Throughput</div></div>
+          </div>
+        </div>
       </div>
     </div>
   );
