@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 const techStack = ['.NET 9', 'Clean Architecture', 'Event-Driven', 'DDD', 'CQRS', 'MassTransit'];
 
 const metrics = [
+  { value: 15, label: 'Years Building Software' },
   { value: 5, label: 'Bounded Contexts' },
-  { value: 1400, label: 'Tests', suffix: '+' },
   { value: 99.9, label: 'Uptime', suffix: '%' },
   { value: 50, label: 'P99 Latency', prefix: '<', suffix: 'ms' },
 ];
