@@ -55,7 +55,7 @@ export function Hero() {
 
         {/* Headline */}
         <h1 className="text-5xl md:text-7xl font-bold text-primary mb-4 leading-tight">
-          I build distributed systems.
+          I build resilient, secure, and scalable distributed systems.
         </h1>
         <h2 className="text-4xl md:text-6xl font-bold mb-8">
           <span className="bg-gradient-to-r from-accent to-accent-light bg-clip-text text-transparent">
