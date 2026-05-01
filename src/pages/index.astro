@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Hero } from '../components/hero/Hero';
+import { DemoHub } from '../components/demo/DemoHub';
+---
+
+<BaseLayout>
+  <main>
+    <!-- Hero Section -->
+    <Hero client:load />
+
+    <!-- Demo Section -->
+    <DemoHub client:load />
+
+    <!-- Architecture Section (placeholder) -->
+    <section id="architecture" class="py-24 bg-surface">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-4xl font-bold text-primary mb-4">
+            System Architecture
+          </h2>
+          <p class="text-lg text-secondary max-w-2xl mx-auto">
+            Click any component to see the code and learn why it's designed that way.
+          </p>
+        </div>
+
+        <!-- Architecture diagram will go here -->
+        <div class="glass rounded-2xl p-8 text-center">
+          <p class="text-secondary">
+            Interactive architecture explorer coming soon...
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deep Dives Section (placeholder) -->
+    <section id="deep-dives" class="py-24">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-4xl font-bold text-primary mb-4">
+            Technical Deep-Dives
+          </h2>
+          <p class="text-lg text-secondary max-w-2xl mx-auto">
+            How I built it, and why.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          {['Transactional Outbox', 'CQRS with MediatR', 'Circuit Breakers', 'Vault Rotation', 'Testing EDA', 'Clean Architecture'].map((title) => (
+            <div class="glass rounded-xl p-6 hover:-translate-y-0.5 transition-transform cursor-pointer">
+              <h3 class="text-lg font-semibold text-primary mb-2">{title}</h3>
+              <p class="text-sm text-secondary mb-4">
+                Deep dive into implementation details and patterns.
+              </p>
+              <span class="text-accent text-sm hover:text-accent-light transition-colors">
+                Read more →
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 bg-surface">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-4xl font-bold text-primary mb-6">
+            Chidi Onyema
+          </h2>
+          <p class="text-xl text-secondary mb-4">
+            Senior .NET Contractor · London, UK
+          </p>
+          <p class="text-secondary mb-8 leading-relaxed">
+            20 years building software. These days I split my time between writing code
+            and leading teams. My sweet spot is roles where I can do both.
+            <br /><br />
+            Recent work includes migrating legacy systems to .NET Core, building security
+            platforms processing millions of events, and delivering UK Government services.
+            <br /><br />
+            I know when to use patterns and when they're overkill.
+          </p>
+
+          <div class="flex flex-wrap justify-center gap-4">
+            <a
+              href="/cv.pdf"
+              download
+              class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white hover:shadow-lg hover:shadow-accent/25 transition-all"
+            >
+              Download CV
+            </a>
+            <a
+              href="https://github.com/chidionyema"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-secondary hover:text-primary hover:border-accent transition-all"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://linkedin.com/in/chidionyema"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-secondary hover:text-primary hover:border-accent transition-all"
+            >
+              LinkedIn
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-border">
+      <div class="container mx-auto px-4 text-center text-sm text-muted">
+        <p>
+          Built with .NET 9, Astro, and too much coffee.
+        </p>
+        <p class="mt-2">
+          &copy; {new Date().getFullYear()} Chidi Onyema. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  </main>
+</BaseLayout>
