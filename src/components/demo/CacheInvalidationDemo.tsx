@@ -21,7 +21,7 @@ export function CacheInvalidationDemo() {
     price: 49.99,
     version: 1,
     cachedAt: new Date(),
-    ttl: 300,
+    ttl: 60,
   });
   const [cacheStatus, setCacheStatus] = useState<'hit' | 'miss' | 'stale'>('hit');
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -107,7 +107,7 @@ export function CacheInvalidationDemo() {
   };
 
   const formatTime = (d: Date) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const ttlPercent = (product.ttl / 300) * 100;
+  const ttlPercent = (product.ttl / 60) * 100;
 
   const actionColors = {
     read: 'text-info',
