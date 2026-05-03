@@ -1,4 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, Shield, Activity, RefreshCw, Key, Database, ArrowRightLeft, AlertCircle } from 'lucide-react';
+import { useDemoSession } from '../../hooks/useDemoSession';
+import { ConnectionPoolMonitor } from '../system/ConnectionPoolMonitor';
+import type { VaultRotationEvent } from '../../lib/api/signalr';
 
 interface Credential {
   id: string;
@@ -11,78 +16,96 @@ interface LogEntry {
   id: string;
   timestamp: Date;
   message: string;
-  type: 'info' | 'success' | 'warning';
+  type: 'info' | 'success' | 'warning' | 'error';
 }
 
 export function VaultRotationDemo() {
   const [credential, setCredential] = useState<Credential | null>(null);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [localLogs, setLocalLogs] = useState<LogEntry[]>([]);
   const [requests, setRequests] = useState<boolean[]>([]);
   const [showPassword, setShowPassword] = useState(false);
-  const [isSpeedUp, setIsSpeedUp] = useState(true); // Start fast for demo
   const [ttlProgress, setTtlProgress] = useState(100);
   const [isRotating, setIsRotating] = useState(false);
+  const [activeConnections, setActiveConnections] = useState(12);
+  const [previousVersion, setPreviousVersion] = useState<string | null>(null);
 
-  const TTL = isSpeedUp ? 10000 : 120000;
-  const ROTATION_THRESHOLD = 0.8;
+  const { executeCommand, events, isConnected } = useDemoSession('vault');
 
-  const addLog = useCallback((message: string, type: LogEntry['type'] = 'info') => {
-    setLogs(prev => [{ id: crypto.randomUUID(), timestamp: new Date(), message, type }, ...prev.slice(0, 15)]);
+  // Initial load
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5000'}/api/demo/vault/status`);
+        const data = await response.json();
+        setCredential({
+          id: data.sessionId,
+          username: `v-app-role-${data.currentVersion}`,
+          issuedAt: new Date(),
+          expiresAt: new Date(Date.now() + (data.ttlSeconds * 1000))
+        });
+      } catch (err) {}
+    };
+    fetchStatus();
   }, []);
 
-  const generateCredential = useCallback((): Credential => {
-    const now = new Date();
-    return {
-      id: crypto.randomUUID(),
-      username: `v-app-role-${Math.random().toString(36).substring(2, 8)}`,
-      issuedAt: now,
-      expiresAt: new Date(now.getTime() + TTL),
-    };
-  }, [TTL]);
-
-  // Initialize
   useEffect(() => {
-    const cred = generateCredential();
-    setCredential(cred);
-    addLog(`Credential issued: ${cred.username}`, 'info');
-    addLog('Connection pool updated (warm)', 'success');
-  }, [generateCredential, addLog]);
+     if (events.length > 0) {
+        const lastEvent = events[0] as VaultRotationEvent;
+        
+        // Map backend stages to frontend stages
+        const stage = lastEvent.stage === 'rotating' ? 'started' : 
+                      lastEvent.stage === 'rotated' ? 'activated' : lastEvent.stage;
 
-  // TTL countdown
+        const messageMap: Record<string, string> = {
+           started: `Rotation requested. Generating new dynamic PostgreSQL role...`,
+           activated: `New credential active: v-app-role-${lastEvent.version}. Swapping connection pool...`,
+           grace_period: `v-${lastEvent.previousVersion} entered grace period.`,
+           revoked: `Revoked legacy credential v-${lastEvent.version}.`
+        };
+
+        setLocalLogs(prev => [{
+           id: crypto.randomUUID(),
+           timestamp: new Date(lastEvent.timestamp),
+           message: messageMap[stage] || `Vault Stage: ${lastEvent.stage}`,
+           type: stage === 'activated' ? 'success' : stage === 'started' ? 'warning' : 'info'
+        }, ...prev.slice(0, 12)]);
+
+        if (stage === 'started') {
+           setIsRotating(true);
+           setPreviousVersion(credential?.username.split('-').pop() || '1');
+        }
+
+        if (stage === 'activated') {
+           setIsRotating(false);
+           setCredential({
+              id: lastEvent.sessionId,
+              username: `v-app-role-${lastEvent.version}`,
+              issuedAt: new Date(lastEvent.timestamp),
+              expiresAt: new Date(Date.now() + 60000)
+           });
+           setActiveConnections(12);
+        }
+     }
+  }, [events]);
+
+  const triggerRotation = async () => {
+     try {
+        await executeCommand('/vault/rotate');
+     } catch (err) {}
+  };
+
   useEffect(() => {
     if (!credential) return;
-
     const interval = setInterval(() => {
-      const now = Date.now();
-      const total = credential.expiresAt.getTime() - credential.issuedAt.getTime();
-      const remaining = credential.expiresAt.getTime() - now;
-      const progress = Math.max(0, (remaining / total) * 100);
-      setTtlProgress(progress);
-
-      // Rotation trigger
-      if (progress <= (1 - ROTATION_THRESHOLD) * 100 && !isRotating) {
-        setIsRotating(true);
-        addLog(`Rotation triggered (${Math.round(ROTATION_THRESHOLD * 100)}% TTL)`, 'warning');
-        addLog('New credential requested from Vault', 'info');
-
-        setTimeout(() => {
-          const newCred = generateCredential();
-          setCredential(newCred);
-          setIsRotating(false);
-          addLog(`New credential issued: ${newCred.username}`, 'info');
-          addLog('Connection pool updated (graceful)', 'success');
-          setTimeout(() => addLog('Old credential expired (0 active conns)', 'success'), 1500);
-        }, 500);
-      }
+      const remaining = credential.expiresAt.getTime() - Date.now();
+      setTtlProgress(Math.max(0, (remaining / 60000) * 100));
     }, 100);
-
     return () => clearInterval(interval);
-  }, [credential, isRotating, generateCredential, addLog]);
+  }, [credential]);
 
-  // Simulate requests
   useEffect(() => {
     const interval = setInterval(() => {
-      setRequests(prev => [true, ...prev.slice(0, 99)]);
+      setRequests(prev => [true, ...prev.slice(0, 59)]);
     }, 150);
     return () => clearInterval(interval);
   }, []);
@@ -90,107 +113,143 @@ export function VaultRotationDemo() {
   const formatTime = (d: Date) => {
     const remaining = Math.max(0, d.getTime() - Date.now());
     const secs = Math.floor(remaining / 1000);
-    return `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, '0')}`;
+    return `${secs}.${Math.floor((remaining % 1000) / 100)}s`;
   };
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
-      {/* Credentials */}
-      <div className="glass rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center justify-between">
-          Current Credentials
-          <span className={`px-2 py-0.5 text-xs rounded-full ${isRotating ? 'bg-warning/20 text-warning animate-pulse' : 'bg-success/20 text-success'}`}>
-            {isRotating ? 'Rotating...' : 'Active'}
-          </span>
-        </h3>
+    <div className="grid lg:grid-cols-2 gap-8">
+      <div className="space-y-6">
+         <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+            <Shield className="w-4 h-4 text-accent" />
+            Security_Infrastructure_Vault
+          </h3>
+        </div>
 
-        {credential && (
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs text-muted block mb-1">Username</label>
-              <div className="font-mono text-sm bg-surface px-3 py-2 rounded-lg">{credential.username}</div>
-            </div>
-            <div>
-              <label className="text-xs text-muted block mb-1">Password</label>
-              <div className="flex items-center gap-2">
-                <div className="font-mono text-sm bg-surface px-3 py-2 rounded-lg flex-1">
-                  {showPassword ? '7f3a2b9c4d8e1f0a' : '••••••••••••••••'}
+        <div className="surface p-8 shadow-2xl relative overflow-hidden space-y-10">
+          <div className="flex items-center justify-between">
+             <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-2xl ${isRotating ? 'bg-warning text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]' : 'bg-white/5 text-secondary'} transition-all`}>
+                   <Key className="w-6 h-6" />
                 </div>
-                <button onClick={() => setShowPassword(!showPassword)} className="px-3 py-2 rounded-lg bg-elevated hover:bg-border transition-colors text-sm">
-                  {showPassword ? '🙈' : '👁'}
-                </button>
-              </div>
-            </div>
-
-            {/* TTL Bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-secondary">TTL Remaining</span>
-                <span className="font-mono text-primary">{formatTime(credential.expiresAt)}</span>
-              </div>
-              <div className="h-2 bg-surface rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-100 ${ttlProgress > 40 ? 'bg-success' : ttlProgress > 20 ? 'bg-warning' : 'bg-error'}`}
-                  style={{ width: `${ttlProgress}%` }}
-                />
-              </div>
-              <div className="text-xs text-muted">Rotation at {Math.round(ROTATION_THRESHOLD * 100)}% TTL</div>
-            </div>
+                <div>
+                   <h4 className="text-lg font-bold text-primary leading-none mb-1">Dynamic_Postgres_Role</h4>
+                   <p className="text-[10px] text-muted font-mono uppercase tracking-widest opacity-60">HashiCorp Vault Engine</p>
+                </div>
+             </div>
+             <div className="text-right">
+                <div className="text-3xl font-mono font-black text-primary tracking-tighter tabular-nums leading-none mb-1">
+                   {credential ? formatTime(credential.expiresAt) : '---'}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.3em] text-muted font-bold">TTL_Remaining</div>
+             </div>
           </div>
-        )}
 
-        <button
-          onClick={() => setIsSpeedUp(!isSpeedUp)}
-          className="w-full mt-4 py-2 rounded-lg border border-border text-secondary hover:text-primary hover:border-accent transition-colors text-sm"
-        >
-          {isSpeedUp ? '🐢 Normal Speed (2 min TTL)' : '🚀 Speed Up (10s TTL)'}
-        </button>
+          {credential ? (
+            <div className="space-y-8 relative z-10">
+              <div className="grid gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/40">Credential_Username</label>
+                  <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex items-center justify-between font-mono">
+                     <span className="text-accent-light font-bold">{credential.username}</span>
+                     {isRotating && <RefreshCw className="w-4 h-4 text-warning animate-spin" />}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/40">Access_Token</label>
+                  <div className="flex gap-2">
+                    <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex-1 text-muted tracking-[0.4em] font-black font-mono overflow-hidden truncate">
+                      {showPassword ? 'sha256:a9f2b48c1e...' : '••••••••••••••••'}
+                    </div>
+                    <button 
+                      onClick={() => setShowPassword(!showPassword)} 
+                      className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors text-muted hover:text-primary"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                 <div className="flex justify-between text-[9px] font-black text-muted/40 uppercase tracking-widest">
+                    <span>Provisioned</span>
+                    <span className="text-warning/60">Rotation_Threshold</span>
+                 </div>
+                 <div className="h-2 bg-white/5 rounded-full overflow-hidden relative border border-white/5">
+                    <div className="absolute top-0 bottom-0 w-px bg-warning/40 z-10" style={{ left: '80%' }} />
+                    <motion.div
+                      className={`h-full relative ${isRotating ? 'bg-warning shadow-[0_0_10px_rgba(245,158,11,0.5)]' : ttlProgress > 20 ? 'bg-success' : 'bg-error'}`}
+                      style={{ width: `${ttlProgress}%` }}
+                      transition={{ duration: 0.1, ease: 'linear' }}
+                    />
+                 </div>
+              </div>
+
+              <button 
+                onClick={triggerRotation}
+                disabled={isRotating || !isConnected}
+                className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] text-muted hover:text-primary hover:bg-white/10 transition-all disabled:opacity-20"
+              >
+                 Force_Manual_Rotation
+              </button>
+            </div>
+          ) : (
+            <div className="py-24 text-center">
+               <div className="inline-block p-4 rounded-full border-2 border-white/5 border-t-accent animate-spin mb-6" />
+               <p className="text-[10px] font-mono text-muted uppercase tracking-[0.4em] animate-pulse">Initializing_Secure_Session...</p>
+            </div>
+          )}
+        </div>
+
+        <ConnectionPoolMonitor 
+          activeVersion={credential?.username.split('-').pop() || '3'}
+          previousVersion={previousVersion}
+          isRotating={isRotating}
+          activeCount={activeConnections}
+        />
       </div>
 
-      {/* Request Monitor */}
-      <div className="glass rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-primary mb-4">Request Monitor</h3>
-        <p className="text-sm text-secondary mb-4">Requests during credential rotation (all should succeed):</p>
+      <div className="space-y-6">
+         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+           <Activity className="w-4 h-4 text-accent" />
+           Live_Identity_Audit
+         </h3>
 
-        <div className="flex flex-wrap gap-0.5 p-3 bg-surface rounded-lg min-h-[80px]">
-          {requests.map((success, i) => (
-            <div key={i} className={`w-2 h-2 rounded-full ${success ? 'bg-success' : 'bg-error'} animate-fade-in`} style={{ animationDelay: `${i * 10}ms` }} />
-          ))}
-        </div>
+        <div className="surface p-8 shadow-2xl space-y-8">
+           <div className="space-y-4 font-mono">
+              <div className="text-[10px] font-black text-muted uppercase tracking-widest flex items-center justify-between">
+                 <span>Ingress_Traffic_Volume</span>
+                 <div className="flex gap-4 text-[8px] font-black">
+                    <span className="flex items-center gap-1.5 text-success/60"><div className="w-1.5 h-1.5 bg-success rounded-full" /> 200_OK</span>
+                    <span className="flex items-center gap-1.5 text-error/60"><div className="w-1.5 h-1.5 bg-error rounded-full" /> 403_DENIED</span>
+                 </div>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                 {requests.map((success, i) => (
+                    <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} className={`w-3 h-3 rounded-sm ${success ? 'bg-success/40' : 'bg-error/40'}`} />
+                 ))}
+              </div>
+           </div>
 
-        <div className="flex justify-between text-sm mt-4">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-success" />
-            <span className="text-secondary">Success: {requests.filter(r => r).length}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-error" />
-            <span className="text-secondary">Failed: {requests.filter(r => !r).length}</span>
-          </div>
-        </div>
-
-        <div className="mt-4 p-3 bg-success/10 border border-success/30 rounded-lg text-sm text-success flex items-center gap-2">
-          ✓ Zero downtime during credential rotation
-        </div>
-      </div>
-
-      {/* Log */}
-      <div className="lg:col-span-2 glass rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-primary mb-4">Rotation Log</h3>
-        <div className="max-h-[150px] overflow-y-auto space-y-1">
-          {logs.map((log, i) => (
-            <div
-              key={log.id}
-              className={`flex items-center gap-3 px-3 py-1.5 text-sm animate-fade-in ${
-                log.type === 'success' ? 'text-success' : log.type === 'warning' ? 'text-warning' : 'text-secondary'
-              }`}
-              style={{ animationDelay: `${i * 20}ms` }}
-            >
-              <span className="font-mono text-xs text-muted w-20 shrink-0">{log.timestamp.toLocaleTimeString()}</span>
-              <span className={`w-1.5 h-1.5 rounded-full ${log.type === 'success' ? 'bg-success' : log.type === 'warning' ? 'bg-warning' : 'bg-info'}`} />
-              <span>{log.message}</span>
-            </div>
-          ))}
+           <div className="glass-subtle p-6 flex flex-col h-[230px] overflow-hidden">
+              <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
+                 <ArrowRightLeft className="w-4 h-4 text-muted/40" />
+                 <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">System_Auth_Events</span>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-4 font-mono">
+                 <AnimatePresence initial={false}>
+                    {localLogs.map((log) => (
+                       <motion.div key={log.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex gap-4 text-[10px] items-start">
+                          <span className="text-muted/40 whitespace-nowrap">[{log.timestamp.toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 1 })}]</span>
+                          <span className={`font-bold uppercase tracking-tight ${log.type === 'success' ? 'text-success/80' : log.type === 'warning' ? 'text-warning/80' : 'text-secondary/80'}`}>
+                             {log.message}
+                          </span>
+                       </motion.div>
+                    ))}
+                 </AnimatePresence>
+              </div>
+           </div>
         </div>
       </div>
     </div>

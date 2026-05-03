@@ -1,0 +1,212 @@
+---
+title: 'The Transactional Outbox'
+description: 'Why dual-write is the most expensive bug in event-driven systems, and the small amount of plumbing that fixes it forever.'
+publishedAt: 2026-05-02
+readingTime: 9
+iconKey: outbox
+related: ['saga-vs-2pc']
+---
+
+There is a bug pattern in distributed systems that almost every team writes at least once. The code looks reasonable. The tests pass. It survives staging. Then, six weeks into production, support tickets start arriving for orders that were charged but never shipped, or shipped but never billed.
+
+The bug has a name: **dual-write**. The fix is a pattern with an unglamorous name: **the transactional outbox**.
+
+This is short, mechanical, and once you have it, you stop seeing this bug.
+
+## The shape of the bug
+
+Imagine an order service. A request comes in; you save the order, then publish an `OrderCreated` event so downstream services (payments, inventory, notifications) can react. The handler looks like this:
+
+```csharp
+public async Task<OrderId> Handle(CreateOrder cmd, CancellationToken ct)
+{
+    var order = Order.Create(cmd);
+
+    await _db.Orders.AddAsync(order, ct);
+    await _db.SaveChangesAsync(ct);              // (1) commit to Postgres
+
+    await _bus.Publish(new OrderCreated(order.Id), ct);  // (2) publish to RabbitMQ
+
+    return order.Id;
+}
+```
+
+It looks atomic, but it is not. Steps **(1)** and **(2)** are independent. Three failure modes hide between them:
+
+1. **DB commits, broker fails.** The row is saved; no event is ever published. Downstream services never learn about the order.
+2. **DB commits, process crashes before publish.** Same outcome, different cause.
+3. **Broker publishes, DB rolls back later.** Rare with most ORMs, but possible if you publish *before* `SaveChangesAsync` and a constraint fires on commit.
+
+Whichever you pick, you are choosing between **lost events** and **phantom events**. Neither is acceptable.
+
+The reflexive fix is wrong: "I'll add a try/catch and retry the publish." Retries help with transient broker errors but cannot help with case (2) — the process is dead. They also cannot help with the inverse case, where the publish succeeded but the handler then throws and the DB rolls back. Retries make the window smaller, not zero.
+
+A second reflex is "I'll use a distributed transaction across the DB and the broker." That is two-phase commit. It works. It also locks up your database row until the broker coordinator is satisfied, and it requires both sides to support XA, which RabbitMQ does not. In practice, almost nobody runs 2PC against a message broker for production traffic.
+
+What you want is a pattern that:
+
+- Uses **only the database's** local transaction guarantees.
+- Survives crashes anywhere — handler, broker, network, host.
+- Eventually delivers every event, exactly to the broker, with no duplicates as far as the producer is concerned.
+
+That is the transactional outbox.
+
+## The pattern in one paragraph
+
+Don't publish in the handler. **Write the event into a table** — call it `outbox` — in the same transaction as the order. The event sits there as data, not as a network call. A separate process, the **outbox dispatcher**, polls the table, publishes pending rows to the broker, and marks them sent. If the dispatcher crashes mid-publish, the row is still there; on restart, it tries again. If the broker is down, retries handle it. If the publish succeeded but the dispatcher crashed before marking the row sent, the row gets re-published — which is fine if downstream consumers are idempotent (and they should be).
+
+That's the whole idea. Everything else is plumbing.
+
+## The schema
+
+```sql
+create table outbox (
+    id              uuid        primary key,
+    occurred_at     timestamptz not null default now(),
+    aggregate_type  text        not null,
+    aggregate_id    uuid        not null,
+    event_type      text        not null,
+    payload         jsonb       not null,
+    headers         jsonb       not null default '{}'::jsonb,
+    -- dispatch state
+    status          text        not null default 'pending'
+                                check (status in ('pending', 'dispatched', 'failed')),
+    dispatched_at   timestamptz,
+    attempt_count   smallint    not null default 0,
+    last_error      text
+);
+
+create index outbox_pending_idx
+    on outbox (occurred_at)
+    where status = 'pending';
+```
+
+A few choices worth defending:
+
+- **`payload` is `jsonb`.** Events are versioned independently of your domain schema. A typed column locks you in.
+- **Partial index on `status = 'pending'`.** The dispatcher's hot query is *"give me the next N pending events, oldest first."* A partial index keeps that fast even when `outbox` has millions of dispatched rows you haven't yet pruned.
+- **`attempt_count` and `last_error`.** When something *does* fail repeatedly, you want to see the error in the row, not page through Loki. The dispatcher should also stop retrying after some threshold and move the row to `status = 'failed'` so a human can look at it.
+- **No `correlation_id` column.** Put it in `headers`. You'll add three more such fields over the years and you'll be glad they live in the JSON.
+
+## The save path
+
+The application code now writes the row inside the same DbContext transaction as the aggregate:
+
+```csharp
+public async Task<OrderId> Handle(CreateOrder cmd, CancellationToken ct)
+{
+    var order = Order.Create(cmd);
+    _db.Orders.Add(order);
+
+    _db.Outbox.Add(new OutboxMessage {
+        Id            = Guid.NewGuid(),
+        AggregateType = nameof(Order),
+        AggregateId   = order.Id,
+        EventType     = "OrderCreated.v1",
+        Payload       = JsonSerializer.SerializeToDocument(new OrderCreated(order)),
+        Headers       = JsonDocument.Parse($$"""{ "correlation_id": "{{cmd.CorrelationId}}" }""")
+    });
+
+    await _db.SaveChangesAsync(ct);              // both rows commit atomically
+    return order.Id;
+}
+```
+
+Notice what we **didn't** do: we didn't open a transaction explicitly, and we didn't talk to the broker. The first omission is intentional — EF Core groups changes into one implicit transaction per `SaveChangesAsync`. The second is the whole point.
+
+A useful refinement: rather than have every handler remember to write to the outbox, raise domain events on the aggregate and have a `SaveChangesInterceptor` translate them into outbox rows automatically. The handler becomes:
+
+```csharp
+order.Apply(OrderCreated.From(cmd));   // raises the domain event
+_db.Orders.Add(order);
+await _db.SaveChangesAsync(ct);        // interceptor materializes outbox rows
+```
+
+The two-row write is now invisible to the application code, which is where the danger of forgetting it goes to die.
+
+## The dispatcher
+
+The dispatcher is a hosted service. Pseudocode:
+
+```csharp
+while (!stoppingToken.IsCancellationRequested)
+{
+    await using var tx = await _db.Database.BeginTransactionAsync(stoppingToken);
+
+    var batch = await _db.Outbox
+        .FromSqlRaw("""
+            select * from outbox
+            where status = 'pending'
+            order by occurred_at
+            limit 100
+            for update skip locked
+        """)
+        .ToListAsync(stoppingToken);
+
+    if (batch.Count == 0) {
+        await tx.CommitAsync(stoppingToken);
+        await Task.Delay(_pollInterval, stoppingToken);
+        continue;
+    }
+
+    foreach (var msg in batch) {
+        try {
+            await _bus.Publish(msg, stoppingToken);
+            msg.Status = "dispatched";
+            msg.DispatchedAt = DateTime.UtcNow;
+        }
+        catch (Exception ex) {
+            msg.AttemptCount++;
+            msg.LastError = ex.Message;
+            if (msg.AttemptCount >= _maxAttempts) msg.Status = "failed";
+        }
+    }
+
+    await _db.SaveChangesAsync(stoppingToken);
+    await tx.CommitAsync(stoppingToken);
+}
+```
+
+The two non-obvious lines are `for update skip locked` and the polling-batch shape. They are what make this scale to multiple dispatcher replicas.
+
+`for update skip locked` (Postgres) lets multiple dispatchers run safely. Each dispatcher gets a different batch; rows already locked by another dispatcher are skipped, not waited on. Without it, a second dispatcher will block on the first dispatcher's batch and you've accidentally serialized the whole pipeline.
+
+The batch shape (`limit 100 ... for update skip locked`) gives you back-pressure for free. If your broker is slow, batches take longer; the next iteration grabs whatever has accumulated. There's no separate queue depth metric to babysit.
+
+## The bit nobody talks about: pruning
+
+`outbox` will grow forever unless you do something about it. Options:
+
+- **Hard delete dispatched rows after N days.** Simple, loses history.
+- **Move them to an `outbox_archive` table.** Slightly more work, keeps them queryable.
+- **Trigger-based archive on `update status = 'dispatched'`.** Cute, but I've yet to see this done well.
+
+For a system processing tens of thousands of events per day, a nightly job that deletes everything in `outbox` with `status = 'dispatched' and dispatched_at < now() - interval '7 days'` is sufficient. If your audit needs are stricter, archive instead of delete. The point is: **decide pruning at design time**. Tables that grow unboundedly turn into incidents at the worst possible moment.
+
+## Idempotent consumers — why this works
+
+The transactional outbox guarantees **at-least-once** delivery to the broker. It does not, and cannot, give you exactly-once delivery to a consumer — that's a distinct problem owned by the consumer side, usually solved with an `inbox` table that records which `(message_id)` it has already processed.
+
+This is the part new teams stumble on: they implement the outbox, see that messages occasionally arrive twice, and panic. They shouldn't. *Every* event-driven system is at-least-once. The fix is on the receiving side: each consumer dedupes by message id. If you treat that as a one-time investment when you build your first consumer, every consumer after it gets it for free.
+
+## When not to use it
+
+This pattern adds a table, a hosted service, and a dispatch loop. It's right when:
+
+- You have a real bounded context that owns its data and emits events to others.
+- Lost or duplicated events have business consequences.
+- Your team is comfortable with eventual consistency between contexts.
+
+It's overkill when:
+
+- You're calling an internal service that is logically *part of the same context*. Use a normal RPC.
+- Events are best-effort metrics or analytics. Fire-and-forget is fine.
+- You haven't yet split the system into bounded contexts. Adding outboxes inside a monolith with a single database is mostly performance art.
+
+## What you actually get
+
+The outbox is one of those patterns where the value is *what stops happening*. You stop having tickets that say "this order was charged but never appears in the warehouse system." You stop debugging by reading broker logs. New consumers can be added by a different team without coordinating with the producer — the producer's contract is the events in the outbox, and that contract is durable in your own database.
+
+It is also one of the cheapest patterns to teach to a team. You can demo the failure modes (kill the broker, kill the dispatcher) and show that no events are lost. Most engineers, after they see that demo, stop dual-writing without anyone telling them not to.
+
+Which is, in the end, what makes it worth the small amount of plumbing.

@@ -1,71 +1,93 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useSignalR } from './useSignalR';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface StreamEvent {
   id: string;
   type: string;
   timestamp: Date;
-  correlationId: string;
-  data: Record<string, unknown>;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  correlationId?: string;
+  data?: any;
+  status?: string;
 }
 
 interface UseEventStreamOptions {
-  hubUrl: string;
+  url: string;
+  mode?: 'sse' | 'signalr';
   maxEvents?: number;
   filterTypes?: string[];
 }
 
 interface UseEventStreamReturn {
-  events: StreamEvent[];
+  events: any[];
   isConnected: boolean;
   isConnecting: boolean;
   error: Error | null;
   clearEvents: () => void;
 }
 
+/**
+ * Universal event stream hook.
+ * Supports SSE (Server-Sent Events) and SignalR (via future extension).
+ * Currently optimized for SSE for health and metrics.
+ */
 export function useEventStream({
-  hubUrl,
+  url,
+  mode = 'sse',
   maxEvents = 50,
   filterTypes,
 }: UseEventStreamOptions): UseEventStreamReturn {
-  const [events, setEvents] = useState<StreamEvent[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  const { connectionState, error, subscribe } = useSignalR({
-    url: hubUrl,
-    autoConnect: true,
-  });
+  const connect = useCallback(() => {
+    if (mode === 'sse') {
+      setIsConnecting(true);
+      const es = new EventSource(url);
+      eventSourceRef.current = es;
 
-  const isConnected = connectionState === 'Connected';
-  const isConnecting = connectionState === 'Connecting' || connectionState === 'Reconnecting';
+      es.onopen = () => {
+        setIsConnected(true);
+        setIsConnecting(false);
+        setError(null);
+      };
 
-  // Subscribe to events
+      es.onerror = (e) => {
+        setIsConnected(false);
+        setIsConnecting(false);
+        setError(new Error('SSE connection failed'));
+        es.close();
+      };
+
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (filterTypes && !filterTypes.includes(data.type)) {
+            return;
+          }
+
+          setEvents((prev) => {
+            const next = [data, ...prev];
+            return next.slice(0, maxEvents);
+          });
+        } catch (err) {
+          console.error('Failed to parse SSE event data', err);
+        }
+      };
+    }
+    // SignalR mode would go here if needed, but demos use useDemoSession
+  }, [url, mode, maxEvents, filterTypes]);
+
   useEffect(() => {
-    const unsubscribe = subscribe<StreamEvent>('EventReceived', (event) => {
-      // Filter by type if specified
-      if (filterTypes && !filterTypes.includes(event.type)) {
-        return;
-      }
+    connect();
+    return () => {
+      eventSourceRef.current?.close();
+    };
+  }, [connect]);
 
-      setEvents((prev) => {
-        const newEvents = [
-          {
-            ...event,
-            timestamp: new Date(event.timestamp),
-          },
-          ...prev,
-        ];
-        // Limit to maxEvents
-        return newEvents.slice(0, maxEvents);
-      });
-    });
-
-    return unsubscribe;
-  }, [subscribe, maxEvents, filterTypes]);
-
-  const clearEvents = useCallback(() => {
-    setEvents([]);
-  }, []);
+  const clearEvents = useCallback(() => setEvents([]), []);
 
   return {
     events,

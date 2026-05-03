@@ -1,0 +1,48 @@
+---
+import { getCollection } from 'astro:content';
+import { DeepDiveIcon } from '../../lib/icons';
+import { Clock } from 'lucide-react';
+
+const entries = await getCollection('deep-dives', ({ data }) => !data.draft);
+entries.sort(
+  (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
+);
+---
+
+{entries.length === 0 ? (
+  <p class="text-center text-muted text-sm">No deep-dives published yet.</p>
+) : (
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/5 border border-white/5">
+    {entries.map((entry) => {
+      const Icon = (DeepDiveIcon as any)[entry.data.iconKey] ?? DeepDiveIcon.architecture;
+      return (
+        <a
+          href={`/deep-dives/${entry.slug}`}
+          class="group block p-10 bg-black hover:bg-[#050505] transition-colors relative"
+        >
+          <div class="flex items-center justify-between mb-10 font-mono">
+             <div class="p-2 border border-white/10 bg-[#0a0a0a]">
+                <Icon className="w-6 h-6 text-accent" strokeWidth={1.5} />
+             </div>
+             <div class="flex items-center gap-1.5 text-[10px] text-muted/40 font-black uppercase tracking-[0.2em]">
+                <Clock className="w-3 h-3" />
+                {entry.data.readingTime}M_READ
+             </div>
+          </div>
+          
+          <h3 class="font-mono text-2xl font-black text-primary mb-4 uppercase tracking-tighter group-hover:text-accent transition-colors leading-tight">
+            {entry.data.title}
+          </h3>
+          <p class="text-sm font-mono text-muted uppercase tracking-tight leading-relaxed opacity-60 line-clamp-3">
+            {entry.data.description}
+          </p>
+          
+          <div class="mt-10 pt-6 border-t border-white/5 flex items-center justify-between font-mono text-[9px] text-muted/40 font-black uppercase tracking-[0.3em]">
+             <span>SPEC_ID: {entry.slug.toUpperCase().slice(0, 8)}</span>
+             <span class="group-hover:text-primary transition-colors">[ OPEN_SPEC ]</span>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+)}

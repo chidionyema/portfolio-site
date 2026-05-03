@@ -1,0 +1,58 @@
+---
+title: "Zero-Downtime Secret Rotation"
+description: "How we rotate database credentials and API keys in a live distributed system without dropping a single request."
+publishedAt: 2026-05-01
+readingTime: 8
+iconKey: "vault"
+category: "Security"
+tags: ["Vault", "Coordination", "Infrastructure"]
+---
+
+import { VaultRotationDemo } from '../../components/demo/VaultRotationDemo';
+
+# The Challenge: Moving Targets
+
+In a modern high-security environment, credentials like database passwords or API keys shouldn't live for months. They should be rotated frequently—ideally daily or even hourly. But how do you rotate a database password while 50 API nodes are actively using it?
+
+## The Pattern: The Overlap Window
+
+The solution is a two-step rotation pattern managed by HashiCorp Vault. Instead of updating a single password, we manage a lifecycle of credentials.
+
+### 1. Generation
+Vault generates a new set of credentials for the target database. At this point, both the **old** and the **new** credentials are valid.
+
+### 2. Propagation
+The API nodes receive a SignalR notification or poll a configuration endpoint. They begin a "graceful transition," where new connections use the new credentials while existing ones finish their work with the old set.
+
+### 3. Revocation
+After a safe TTL (Time-to-Live) window, Vault revokes the old credentials.
+
+## Real-time Visualization
+
+Below is the actual rotation logic running in our production environment. When you click **Trigger Rotation**, you are instructing the backend to request a new credential lease from Vault.
+
+<VaultRotationDemo client:load />
+
+## The Implementation
+
+In .NET 9, we use a custom `DbConnectionInterceptor` to intercept every connection attempt. Before a connection is opened, we check the lease expiry:
+
+```csharp
+public override InterceptionResult ConnectionOpening(
+    DbConnection connection, 
+    ConnectionEventData eventData, 
+    InterceptionResult result)
+{
+    var creds = _vault.GetCachedCredentials();
+    if (creds.IsExpiringSoon()) 
+    {
+        // Trigger background refresh but continue with current
+        _ = _vault.RefreshAsync();
+    }
+    
+    connection.ConnectionString = BuildConnectionString(creds);
+    return result;
+}
+```
+
+This ensures that the application code remains completely unaware of the underlying security plumbing.

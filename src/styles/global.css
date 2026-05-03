@@ -2,20 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Premium Design System — High-Fidelity Infrastructure.
+ * Inspired by the foundational vision, elevated for production-active credibility.
+ */
 @layer base {
   :root {
-    --color-base: 10 10 15;
-    --color-surface: 18 18 26;
-    --color-elevated: 26 26 36;
-    --color-border: 36 36 46;
+    /* Deep space palette — high contrast, zero vibration. */
+    --color-base: 8 8 12;
+    --color-surface: 14 14 20;
+    --color-elevated: 20 20 28;
+    --color-border: 255 255 255 / 0.08;
 
+    /* Signature Indigo & Violet. */
     --color-accent: 99 102 241;
     --color-accent-light: 139 92 246;
 
+    /* Semantic state colors. */
     --color-success: 34 197 94;
     --color-info: 59 130 246;
     --color-warning: 245 158 11;
     --color-error: 239 68 68;
+
+    /* Text hierarchy. */
+    --color-text-primary: 248 250 252;
+    --color-text-secondary: 148 163 184;
+    --color-text-muted: 100 116 139;
+
+    /* Ultra-crisp hairlines. */
+    --hairline: 1px solid rgb(255 255 255 / 0.1);
   }
 
   html {
@@ -23,152 +38,73 @@
   }
 
   body {
-    @apply bg-base text-primary antialiased;
+    background: rgb(var(--color-base));
+    color: rgb(var(--color-text-primary));
+    -webkit-font-smoothing: antialiased;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    @apply w-2;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-surface;
-  }
-
+  /* Refined scrollbar. */
+  ::-webkit-scrollbar { @apply w-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted;
-  }
-
-  /* Selection */
-  ::selection {
-    @apply bg-accent/30 text-primary;
+    background: rgb(var(--color-text-muted) / 0.3);
+    border-radius: 9999px;
   }
 }
 
 @layer components {
-  /* Glass effect */
+  /*
+   * Glassmorphism — Premium Layering.
+   * Restored and refined for maximum visual depth.
+   */
   .glass {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl;
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)];
   }
 
   .glass-subtle {
-    @apply bg-white/[0.02] backdrop-blur-sm border border-white/[0.05] rounded-xl;
+    @apply bg-white/[0.02] backdrop-blur-md border border-white/[0.05] rounded-xl;
   }
 
-  /* Gradient text */
+  .surface {
+    @apply bg-surface border border-white/[0.08] rounded-2xl;
+  }
+
+  .surface-elevated {
+    @apply bg-elevated border border-white/[0.12] rounded-2xl shadow-2xl;
+  }
+
+  /* Restored gradient text. */
   .gradient-text {
     @apply bg-gradient-to-r from-accent to-accent-light bg-clip-text text-transparent;
   }
 
-  /* Gradient border */
-  .gradient-border {
-    position: relative;
+  /* Status Indicators — High Visibility. */
+  .status-dot { @apply w-2 h-2 rounded-full; }
+  .status-dot-success { @apply bg-success shadow-[0_0_12px_rgba(34,197,94,0.6)]; }
+  .status-dot-info { @apply bg-info shadow-[0_0_12px_rgba(59,130,246,0.6)]; }
+  .status-dot-warning { @apply bg-warning shadow-[0_0_12px_rgba(245,158,11,0.6)]; }
+  .status-dot-error { @apply bg-error shadow-[0_0_12px_rgba(239,68,68,0.6)]; }
+  .status-dot-idle { @apply bg-muted; }
+
+  /* Hero background dot grid — Restored for texture. */
+  .hero-dot-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgb(var(--color-text-muted) / 0.15) 1px, transparent 0);
+    background-size: 32px 32px;
   }
 
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    padding: 1px;
-    border-radius: inherit;
-    background: linear-gradient(135deg, rgb(var(--color-accent)), rgb(var(--color-accent-light)));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-
-  /* Status indicators */
-  .status-dot {
-    @apply w-2 h-2 rounded-full;
-  }
-
-  .status-dot-success {
-    @apply bg-success shadow-[0_0_8px_rgba(34,197,94,0.5)];
-  }
-
-  .status-dot-info {
-    @apply bg-info shadow-[0_0_8px_rgba(59,130,246,0.5)];
-  }
-
-  .status-dot-warning {
-    @apply bg-warning shadow-[0_0_8px_rgba(245,158,11,0.5)];
-  }
-
-  .status-dot-error {
-    @apply bg-error shadow-[0_0_8px_rgba(239,68,68,0.5)];
-  }
-
-  .status-dot-idle {
-    @apply bg-muted;
-  }
-
-  /* Code blocks */
+  /* Code blocks — Clean & technical. */
   .code-block {
-    @apply bg-surface border border-border rounded-lg p-4 font-mono text-sm overflow-x-auto;
-  }
-
-  /* Event stream item */
-  .event-item {
-    @apply flex items-center gap-3 px-4 py-2 border-l-2 border-transparent
-           hover:bg-white/[0.02] transition-colors duration-150;
-  }
-
-  .event-item-success {
-    @apply border-l-success/50;
-  }
-
-  .event-item-pending {
-    @apply border-l-info/50;
-  }
-
-  .event-item-error {
-    @apply border-l-error/50;
+    @apply bg-black/40 border border-white/10 rounded-xl p-4 font-mono text-sm overflow-x-auto;
   }
 }
 
 @layer utilities {
-  /* Glow effects */
-  .glow-accent {
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black;
   }
 
-  .glow-success {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
-  }
-
-  .glow-error {
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
-  }
-
-  /* Animation delays */
-  .animation-delay-100 {
-    animation-delay: 100ms;
-  }
-  .animation-delay-200 {
-    animation-delay: 200ms;
-  }
-  .animation-delay-300 {
-    animation-delay: 300ms;
-  }
-  .animation-delay-500 {
-    animation-delay: 500ms;
-  }
-  .animation-delay-700 {
-    animation-delay: 700ms;
-  }
-
-  /* Hide scrollbar but allow scrolling */
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+  /* Hide scrollbar utility. */
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }

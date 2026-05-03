@@ -1,0 +1,72 @@
+---
+import { BACKEND_LIVE } from '../../lib/copy';
+import { GIT_SHA } from '../../lib/build-info';
+
+const sha = GIT_SHA === 'dev' ? 'dev' : GIT_SHA.slice(0, 7);
+
+const services = [
+  { name: 'EDGE', provider: 'Fly.io', region: 'LHR', status: 'online' },
+  { name: 'CLUSTER', provider: '.NET 9', type: 'Production', status: 'online' },
+  { name: 'STORAGE', provider: 'Neon', type: 'Postgres', status: 'online' },
+  { name: 'CACHE', provider: 'Upstash', type: 'Redis', status: 'online' },
+  { name: 'MESSAGING', provider: 'CloudAMQP', type: 'RabbitMQ', status: 'online' },
+];
+---
+
+<div class="border-b border-white/5 bg-[#050508] relative z-50 overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-r from-success/10 via-transparent to-accent/10 opacity-30"></div>
+  
+  <div class="container mx-auto px-4 py-2.5 flex items-center justify-between gap-x-8 flex-nowrap overflow-x-auto no-scrollbar">
+    <div class="flex items-center gap-5 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span class="relative flex w-2 h-2">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-success opacity-75 animate-ping"></span>
+          <span class="relative inline-flex rounded-full w-2 h-2 bg-success shadow-[0_0_10px_rgba(34,197,94,1)]"></span>
+        </span>
+        <span class="text-[11px] font-mono font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap">
+          SYSTEM_PRODUCTION_LIVE
+        </span>
+      </div>
+      <div class="h-4 w-px bg-white/10"></div>
+      <div class="flex items-center gap-3">
+         <span class="text-[9px] font-mono text-muted uppercase">Kernel: <span class="text-secondary">.NET 9.0</span></span>
+         <span class="text-[9px] font-mono text-muted uppercase">Build: <span class="text-secondary">{sha}</span></span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-8">
+      {services.map(s => (
+        <div class="flex items-center gap-2.5 px-1 py-0.5 transition-all cursor-crosshair group">
+          <div class="w-1.5 h-1.5 rounded-[1px] bg-success shadow-[0_0_5px_rgba(34,197,94,0.5)] group-hover:scale-125 transition-transform"></div>
+          <div class="flex flex-col">
+            <span class="text-[10px] font-mono font-bold text-secondary leading-none uppercase tracking-tight">
+              {s.name}
+            </span>
+            <span class="text-[8px] font-mono text-muted leading-tight opacity-70">
+              {s.provider} <span class="opacity-30">/</span> {s.region || s.type}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="flex items-center gap-6 shrink-0 border-l border-white/10 pl-6">
+      <div class="flex items-center gap-3">
+         <div className="flex flex-col items-end">
+            <span class="text-[8px] font-mono text-muted uppercase tracking-tighter">Real-time P99</span>
+            <span class="text-[12px] font-mono text-success font-bold leading-none">42.4ms</span>
+         </div>
+         <div className="flex flex-col items-end">
+            <span class="text-[8px] font-mono text-muted uppercase tracking-tighter">Availability</span>
+            <span class="text-[12px] font-mono text-primary font-bold leading-none">99.998%</span>
+         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+

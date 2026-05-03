@@ -1,133 +1,182 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, ArrowRight, Monitor, Layout, Columns } from 'lucide-react';
+import { GithubIcon } from '../../lib/brand-icons';
+import { EventTicker } from './EventTicker';
+import { HeroPreview, type HeroPreviewData } from './HeroPreview';
+import { SystemTopology } from './SystemTopology';
+import { EventMesh } from './EventMesh';
+import { LiveMetricsRow } from '../metrics/LiveMetricsRow';
+import type { LiveMetrics } from '../../lib/api/demo-client';
 
-const techStack = ['.NET 9', 'Clean Architecture', 'Event-Driven', 'DDD', 'CQRS', 'MassTransit'];
-
-const metrics = [
-  { value: 15, label: 'Years Building Software' },
-  { value: 5, label: 'Bounded Contexts' },
-  { value: 99.9, label: 'Uptime', suffix: '%' },
-  { value: 50, label: 'P99 Latency', prefix: '<', suffix: 'ms' },
-];
-
-function AnimatedNumber({ value, suffix = '', prefix = '' }: { value: number; suffix?: string; prefix?: string }) {
-  const [display, setDisplay] = useState(0);
-
+function useMagnetic(strength = 0.18) {
+  const ref = useRef<HTMLAnchorElement>(null);
   useEffect(() => {
-    const duration = 1000;
-    const start = performance.now();
-
-    const animate = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(value * eased));
-      if (progress < 1) requestAnimationFrame(animate);
+    const el = ref.current;
+    if (!el) return;
+    const fine = window.matchMedia('(pointer: fine)').matches;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!fine || reduced) return;
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) * strength;
+      const dy = (e.clientY - (r.top + r.height / 2)) * strength;
+      el.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px)`;
     };
-
-    requestAnimationFrame(animate);
-  }, [value]);
-
-  return <>{prefix}{display}{suffix}</>;
+    const onLeave = () => { el.style.transform = ''; };
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseleave', onLeave);
+    return () => {
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseleave', onLeave);
+    };
+  }, [strength]);
+  return ref;
 }
 
-export function Hero() {
+interface HeroProps {
+  preview: HeroPreviewData;
+  initialMetrics?: LiveMetrics;
+}
+
+export function Hero({ preview, initialMetrics }: HeroProps) {
   const [visible, setVisible] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<'split' | 'immersive'>('split');
+  const ctaRef = useMagnetic();
 
   useEffect(() => {
     setVisible(true);
+    const saved = localStorage.getItem('hero_layout_mode');
+    if (saved === 'split' || saved === 'immersive') setLayoutMode(saved);
   }, []);
 
+  const toggleLayout = () => {
+    const next = layoutMode === 'split' ? 'immersive' : 'split';
+    setLayoutMode(next);
+    localStorage.setItem('hero_layout_mode', next);
+  };
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background - CSS only, no JS */}
-      <div className="absolute inset-0 bg-gradient-to-b from-base via-base to-surface" />
-      <div className="absolute inset-0 opacity-[0.02]" style={{
-        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
-        backgroundSize: '40px 40px'
-      }} />
+    <section
+      data-hero
+      className="relative min-h-screen flex flex-col bg-base overflow-hidden border-b border-white/5"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(99,102,241,0.12),transparent_70%)]" />
+      <div className="absolute inset-0 hero-dot-grid opacity-[0.1]" />
 
-      {/* Gradient orbs - Pure CSS */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] animate-pulse-slow" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent-light/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '1s' }} />
-
-      {/* Content */}
-      <div className={`relative z-10 container mx-auto px-4 py-24 text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-
-        {/* Headline */}
-        <h1 className="text-5xl md:text-7xl font-bold text-primary mb-4 leading-tight">
-          I build resilient, secure, and scalable distributed systems.
-        </h1>
-        <h2 className="text-4xl md:text-6xl font-bold mb-8">
-          <span className="bg-gradient-to-r from-accent to-accent-light bg-clip-text text-transparent">
-            Here's one running.
-          </span>
-        </h2>
-
-        {/* Tech badges - CSS animation */}
-        <div className="flex flex-wrap justify-center gap-2 mb-10">
-          {techStack.map((tech, i) => (
-            <span
-              key={tech}
-              className="px-3 py-1 text-sm border border-border rounded-full text-secondary animate-fade-in"
-              style={{ animationDelay: `${300 + i * 50}ms`, animationFillMode: 'backwards' }}
-            >
-              {tech}
-            </span>
-          ))}
-        </div>
-
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <a
-            href="#demo"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-accent to-accent-light text-white font-medium text-lg hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] transition-shadow"
-          >
-            <span className="text-xl">✨</span>
-            Try Live Demo
-          </a>
-          <a
-            href="#architecture"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-accent/50 text-accent font-medium text-lg hover:bg-accent/10 transition-colors"
-          >
-            View Architecture
-            <span>→</span>
-          </a>
-        </div>
-
-        {/* Metrics */}
-        <div className="flex flex-wrap justify-center gap-4">
-          {metrics.map((m, i) => (
-            <div
-              key={m.label}
-              className="min-w-[120px] p-4 rounded-xl bg-white/[0.02] backdrop-blur border border-white/[0.05] animate-fade-in"
-              style={{ animationDelay: `${600 + i * 100}ms`, animationFillMode: 'backwards' }}
-            >
-              <div className="text-3xl font-bold font-mono text-primary">
-                <AnimatedNumber value={m.value} prefix={m.prefix} suffix={m.suffix} />
-              </div>
-              <div className="text-sm text-secondary">{m.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Links */}
-        <div className="flex items-center justify-center gap-6 mt-12 text-sm animate-fade-in" style={{ animationDelay: '1s' }}>
-          <a href="https://github.com/chidionyema/haworks" target="_blank" rel="noopener"
-             className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
-            View Source
-          </a>
-          <a href="/cv.pdf" download className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            Download CV
-          </a>
-        </div>
+      {/* Meta-Toggle: Showcase frontend craft + agency */}
+      <div className="absolute top-6 right-6 z-50">
+         <button 
+           onClick={toggleLayout}
+           className="flex items-center gap-2 px-3 py-1.5 glass rounded-full text-[10px] font-bold uppercase tracking-widest text-muted hover:text-primary transition-all border border-white/10"
+         >
+            {layoutMode === 'split' ? <Layout className="w-3 h-3" /> : <Columns className="w-3 h-3" />}
+            Layout: {layoutMode}
+         </button>
       </div>
+      
+      <div className={`flex-1 flex flex-col relative z-10 transition-opacity duration-1000 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        
+        <AnimatePresence mode="wait">
+          {layoutMode === 'split' ? (
+            <motion.div 
+              key="split"
+              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+              className="flex-1 container mx-auto px-4 flex flex-col lg:flex-row items-center gap-12 py-12"
+            >
+               {/* Left: Hook */}
+               <div className="w-full lg:w-[45%] text-left space-y-8">
+                  <div className="flex flex-col gap-1">
+                     <div className="font-mono text-sm font-black uppercase tracking-[0.4em] text-accent">Chidi Onyema</div>
+                     <h1 className="font-display text-4xl md:text-5xl xl:text-6xl text-primary font-black leading-[0.9] tracking-tighter uppercase">
+                        Senior .NET <br/> Engineering.
+                     </h1>
+                  </div>
 
-      {/* Scroll indicator - CSS animation */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 rounded-full border-2 border-secondary/30 flex items-start justify-center p-2">
-          <div className="w-1 h-2 rounded-full bg-secondary/50" />
+                  <p className="text-secondary text-lg font-medium leading-relaxed max-w-lg opacity-80 uppercase tracking-tight font-mono">
+                     Distributed systems for 99.99% availability. <br/>
+                     Live cluster telemetry active.
+                  </p>
+
+                  <LiveMetricsRow initialMetrics={initialMetrics} />
+
+                  <div className="flex flex-wrap items-center gap-6">
+                     <a
+                       ref={ctaRef}
+                       href="#demo"
+                       className="px-8 py-4 bg-primary text-black font-bold rounded-full hover:bg-white transition-all shadow-2xl flex items-center gap-2 group"
+                     >
+                       PROVE_SYSTEM_STATE <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                     </a>
+                     <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-muted">
+                        <a href="https://github.com/chidionyema/haworks" target="_blank" rel="noopener" className="hover:text-primary transition-colors flex items-center gap-2">
+                           <GithubIcon className="w-4 h-4" /> REPOSITORY
+                        </a>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Right: Proof */}
+               <div className="flex-1 w-full relative">
+                  <div className="font-mono text-[9px] text-accent font-black uppercase tracking-[0.4em] mb-4 opacity-40 text-center lg:text-left">
+                     [ LIVE_TOPOLOGY_LHR_01 ]
+                  </div>
+                  <div className="glass p-1">
+                     <SystemTopology />
+                  </div>
+               </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="immersive"
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }}
+              className="flex-1 relative flex items-center justify-center p-4 md:p-12"
+            >
+               {/* Background Mesh Viz */}
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+                  <EventMesh />
+               </div>
+
+               {/* Foreground Console */}
+               <div className="relative z-10 max-w-3xl w-full">
+                  <div className="glass p-8 md:p-16 text-center space-y-10 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border-white/10 backdrop-blur-2xl">
+                     <div className="flex justify-center mb-6">
+                        <EventTicker />
+                     </div>
+                     
+                     <div className="space-y-4">
+                        <div className="font-mono text-sm font-black uppercase tracking-[0.6em] text-accent">Chidi Onyema</div>
+                        <h1 className="font-display text-5xl md:text-6xl text-primary font-black leading-none tracking-tighter uppercase">
+                           Senior .NET <br/> Engineering.
+                        </h1>
+                        <p className="text-secondary text-xl font-medium max-w-xl mx-auto opacity-80">
+                           Distributed cluster active in production. <br/>
+                           Prove the system state below.
+                        </p>
+                     </div>
+
+                     <div className="flex flex-wrap items-center justify-center gap-6">
+                        <a
+                          ref={ctaRef}
+                          href="#demo"
+                          className="px-10 py-5 bg-white text-black font-bold text-lg rounded-full hover:bg-slate-100 transition-all shadow-[0_0_50px_rgba(255,255,255,0.2)] flex items-center gap-3 group"
+                        >
+                          Access Control Center <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </a>
+                     </div>
+
+                     <div className="pt-8 border-t border-white/5 flex justify-center font-mono text-[10px] font-black uppercase tracking-widest text-muted">
+                        <LiveMetricsRow initialMetrics={initialMetrics} />
+                     </div>
+                  </div>
+               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Footnote triptych — common to both, anchors the page. */}
+        <div className="container mx-auto px-4 pb-12">
+           <HeroPreview {...preview} />
         </div>
       </div>
     </section>

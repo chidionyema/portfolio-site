@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0b0e"/>
+      <stop offset="100%" stop-color="#13131a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.85" cy="0.15" r="0.6">
+      <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#7c5cff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#ffffff" fill-opacity="0.025"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Hairline border (signature editorial detail) -->
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1"/>
+
+  <!-- Top label -->
+  <g font-family="ui-monospace, 'JetBrains Mono', monospace" font-size="14" fill="#8a8a90" letter-spacing="3">
+    <text x="80" y="100">CHIDI ONYEMA</text>
+    <text x="80" y="124" fill="#5a5a60">SENIOR · NET ARCHITECT · LONDON</text>
+  </g>
+
+  <!-- Headline (Fraunces; falls back to a serif on rasterizer) -->
+  <g font-family="Fraunces, 'Times New Roman', Georgia, serif" fill="#f5f5f0">
+    <text x="80" y="290" font-size="72" font-weight="600" letter-spacing="-1.6">I build resilient,</text>
+    <text x="80" y="372" font-size="72" font-weight="600" letter-spacing="-1.6">secure, and scalable</text>
+    <text x="80" y="454" font-size="72" font-weight="600" letter-spacing="-1.6" fill="url(#accent)">distributed systems.</text>
+  </g>
+
+  <!-- Footer row: tech tags + URL -->
+  <g font-family="ui-monospace, 'JetBrains Mono', monospace" font-size="14" fill="#8a8a90" letter-spacing="2">
+    <text x="80" y="540">.NET 9</text>
+    <text x="170" y="540">EVENT-DRIVEN</text>
+    <text x="320" y="540">CQRS</text>
+    <text x="1120" y="540" text-anchor="end" fill="#a78bfa">chidionyema.dev</text>
+  </g>
+
+  <!-- Bottom hairline accent -->
+  <line x1="80" y1="558" x2="1120" y2="558" stroke="#ffffff" stroke-opacity="0.06"/>
+</svg>

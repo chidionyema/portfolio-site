@@ -1,79 +1,161 @@
 ---
+import SiteNav from '../components/system/SiteNav.astro';
+import { StatusStrip } from '../components/system/StatusStrip';
+import { getHealthSnapshot } from '../lib/api/demo-client';
+
+const initialHealth = await getHealthSnapshot().catch(() => undefined);
+
+// Self-hosted fonts. Astro/Vite emits these as content-hashed .woff2 in
+// /_astro/*. Inter and JetBrains Mono use latin-only subsets directly;
+// Fraunces Variable only ships 3 unicode subsets (vietnamese / latin-ext /
+// latin) so the browser's unicode-range matching auto-loads only latin.
+import '@fontsource-variable/fraunces';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '@fontsource/jetbrains-mono/latin-500.css';
+
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
 }
 
 const {
-  title = "Chidi Onyema | Senior .NET Architect",
-  description = "See a distributed system running live. .NET 9, Clean Architecture, Event-Driven, DDD."
+  title = "Chidi Onyema | Senior .NET Contractor",
+  description = "Distributed .NET microservices in production. Live demos, real metrics, source on GitHub. Senior contractor in London.",
+  ogImage = "/og.png",
 } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://chidionyema.dev').toString();
+const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toString();
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
 
-    <!-- Preconnect to critical origins -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Theme bootstrap. Runs synchronously before paint to avoid a flash of the
+      wrong theme. Reads localStorage if set, else honors prefers-color-scheme.
+      Dark is the default — only the .light class flips tokens.
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+          var theme = stored ?? (prefersLight ? 'light' : 'dark');
+          if (theme === 'light') document.documentElement.classList.add('light');
+          document.documentElement.dataset.theme = theme;
+        } catch (_) {}
+      })();
+    </script>
+
 
     <!-- Favicon - inline SVG for zero requests -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z'/%3E%3C/svg%3E" />
 
-    <!-- Critical font - system fonts first, then load Inter -->
-    <style>
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 400 700;
-        font-display: swap;
-        src: url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2') format('woff2');
-        unicode-range: U+0000-00FF;
-      }
-      @font-face {
-        font-family: 'JetBrains Mono';
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: url('https://fonts.gstatic.com/s/jetbrainsmono/v18/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxjPVmUsaaDhw.woff2') format('woff2');
-        unicode-range: U+0000-00FF;
-      }
-    </style>
+    <!-- Fonts are self-hosted. See src/styles/global.css for the @fontsource imports. -->
 
-    <!-- Critical CSS inlined -->
+
+    <!-- Critical CSS inlined — tokens match src/styles/global.css. Theme-aware. -->
     <style is:inline>
-      :root{--color-base:10 10 15;--color-surface:18 18 26;--color-accent:99 102 241}
+      :root{--color-base:11 11 14;--color-surface:19 19 26;--color-accent:124 92 255;--color-text-primary:245 245 240;--hairline:1px solid rgb(255 255 255 / 0.08)}
+      .light{--color-base:250 250 246;--color-surface:243 243 237;--color-accent:99 70 230;--color-text-primary:14 14 16;--hairline:1px solid rgb(0 0 0 / 0.10)}
       *,*::before,*::after{box-sizing:border-box}
       html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-      body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#0a0a0f;color:#f8fafc;-webkit-font-smoothing:antialiased}
+      body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:rgb(var(--color-base));color:rgb(var(--color-text-primary));-webkit-font-smoothing:antialiased}
       .container{width:100%;max-width:1280px;margin:0 auto}
-      .glass{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:1rem}
-      .gradient-text{background:linear-gradient(to right,#6366f1,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent}
+      .surface,.glass{background:rgb(var(--color-surface));border:var(--hairline);border-radius:1rem}
+      .font-display{font-family:Fraunces,ui-serif,Georgia,serif;letter-spacing:-0.02em}
+      .gradient-text{background:linear-gradient(to right,rgb(var(--color-accent)),rgb(167 139 250));-webkit-background-clip:text;background-clip:text;color:transparent}
       @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
       .animate-fade-in{animation:fade-in 0.5s ease-out forwards}
-      @keyframes pulse-slow{0%,100%{opacity:1}50%{opacity:0.5}}
-      .animate-pulse-slow{animation:pulse-slow 4s ease-in-out infinite}
     </style>
+
+    <link rel="canonical" href={canonical} />
 
     <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Chidi Onyema, Senior .NET Contractor" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
 
     <title>{title}</title>
-
-    <!-- Preload the demo section (user likely to interact) -->
-    <link rel="prefetch" href="/demo" />
   </head>
   <body>
+    <StatusStrip initialSnapshot={initialHealth} client:load />
+    <SiteNav />
+
     <slot />
+
+    <!--
+      Site-nav visibility. On pages with a [data-hero] element, the nav stays
+      hidden until the user scrolls roughly past it; on every other page (deep
+      dives, 404, future routes) the nav shows immediately.
+    -->
+    <script is:inline>
+      (function () {
+        var nav = document.getElementById('site-nav');
+        if (!nav) return;
+        var hero = document.querySelector('[data-hero]');
+        if (!hero) {
+          nav.setAttribute('data-show', 'true');
+          return;
+        }
+        var threshold = function () {
+          return hero.getBoundingClientRect().bottom + window.scrollY - 80;
+        };
+        var t = threshold();
+        var update = function () {
+          nav.setAttribute('data-show', String(window.scrollY > t));
+        };
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', function () { t = threshold(); update(); });
+        update();
+      })();
+    </script>
+
+    <!--
+      Scroll-reveal init. One IntersectionObserver, observes every [data-reveal].
+      Honors prefers-reduced-motion by revealing everything immediately.
+    -->
+    <script is:inline>
+      (function () {
+        var els = document.querySelectorAll('[data-reveal]');
+        if (!els.length) return;
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced || !('IntersectionObserver' in window)) {
+          els.forEach(function (el) { el.classList.add('is-visible'); });
+          return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible');
+              io.unobserve(e.target);
+            }
+          });
+        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
+        els.forEach(function (el) { io.observe(el); });
+      })();
+    </script>
 
     <!-- Load non-critical CSS asynchronously -->
     <link rel="stylesheet" href="/src/styles/global.css" media="print" onload="this.media='all'" />

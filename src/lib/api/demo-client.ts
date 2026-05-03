@@ -101,6 +101,48 @@ export interface RateLimitResponse extends DemoSession {
   requestNumber?: number;
 }
 
+export interface ServiceHealth {
+  id: string;
+  name: string;
+  status: 'online' | 'degraded' | 'offline';
+  latencyMs: number;
+  message?: string;
+}
+
+export interface HealthSnapshot {
+  services: ServiceHealth[];
+  systemStatus: 'healthy' | 'degraded' | 'down';
+  p99LatencyMs: number;
+  availability: number;
+  timestamp: string;
+}
+
+export interface Span {
+  spanId: string;
+  parentSpanId: string | null;
+  service: string;
+  operation: string;
+  startMs: number;
+  durationMs: number;
+  status: 'OK' | 'Error';
+  attributes: Record<string, any>;
+}
+
+export interface Trace {
+  traceId: string;
+  rootSpanId: string;
+  durationMs: number;
+  spans: Span[];
+}
+
+export interface LiveMetrics {
+  ingressEvents24h: number;
+  clusterAvailability: number;
+  p99LatencyMs: number;
+  activeSessions: number;
+  timestamp: string;
+}
+
 export interface VaultStatusResponse extends DemoSession {
   currentVersion: number;
   createdAt: string;
@@ -324,6 +366,14 @@ export async function simulateStampede(
 }
 
 /**
+ * Get demo product ID
+ */
+export async function getDemoProduct(): Promise<{ id: string }> {
+  const response = await fetch(`${API_URL}/api/demo/cache/product/demo`);
+  return handleResponse(response);
+}
+
+/**
  * Get cached product
  */
 export async function getCachedProduct(productId: string): Promise<CachedProductResponse> {
@@ -439,3 +489,54 @@ export async function sendRateLimitBurst(
   });
   return handleResponse(response);
 }
+
+/**
+ * Get system health snapshot
+ */
+export async function getHealthSnapshot(): Promise<HealthSnapshot> {
+  const response = await fetch(`${API_URL}/api/health/snapshot`);
+  return handleResponse(response);
+}
+
+/**
+ * Get health stream URL
+ */
+export function getHealthStreamUrl(): string {
+  return `${API_URL}/api/health/stream`;
+}
+
+/**
+ * Get system metrics snapshot
+ */
+export async function getMetricsSnapshot(): Promise<LiveMetrics> {
+  const response = await fetch(`${API_URL}/api/metrics/snapshot`);
+  return handleResponse(response);
+}
+
+/**
+ * Get metrics stream URL
+ */
+export function getMetricsStreamUrl(): string {
+  return `${API_URL}/api/metrics/stream`;
+}
+
+/**
+ * Trigger Chaos Scenario
+ */
+export async function triggerChaos(scenario: string, durationSeconds: number): Promise<{ trace_id: string }> {
+  const response = await fetch(`${API_URL}/api/demo/chaos/trigger`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scenario, durationSeconds }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Get trace by ID from Grafana Tempo (via Backend)
+ */
+export async function getTrace(traceId: string): Promise<Trace> {
+  const response = await fetch(`${API_URL}/api/traces/${traceId}`);
+  return handleResponse(response);
+}
+

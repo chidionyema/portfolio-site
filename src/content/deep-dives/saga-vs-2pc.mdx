@@ -1,0 +1,167 @@
+---
+title: 'Saga vs Two-Phase Commit'
+description: 'When you can have ACID across services, when you cannot, and why the answer in 2026 is almost always sagas.'
+publishedAt: 2026-05-02
+readingTime: 11
+iconKey: saga
+related: ['transactional-outbox']
+---
+
+A surprising number of distributed-systems arguments are arguments about whether you can have a database transaction across multiple services. You can — it's called two-phase commit, and it works, and almost nobody uses it. Most production systems use sagas instead. Sagas are weaker, harder to reason about for first-time readers, and require more code per business operation.
+
+So why have they won?
+
+Because the things 2PC requires — synchronous coordination, locked rows, mutually trusted participants, low-latency networks, available coordinators — describe an environment that no longer exists at most companies. The internet beat 2PC. Sagas adapted to it. This article is about that trade space, what each pattern actually buys you, and how to decide.
+
+## Two-phase commit, briefly
+
+The protocol is in the name. A coordinator asks every participant: *can you commit?* (phase 1, prepare). Each participant locks the rows it would change, writes a prepared record to its own log, and replies *yes* or *no*. If everyone says yes, the coordinator tells everyone *commit* (phase 2). If anyone says no, the coordinator tells everyone *rollback*.
+
+Done correctly, this gives you ACID semantics across multiple resource managers. Either every participant commits or every participant rolls back, even if a participant crashes between phases. The recovery protocol is what the prepared log is for: on restart, a participant phones the coordinator to ask "what did we decide?" and finishes accordingly.
+
+It is a real protocol, not a strawman. JTA, MSDTC, and XA implement it. PostgreSQL has `PREPARE TRANSACTION`. Java EE made it routine in monoliths.
+
+It also has three properties that turn out to matter:
+
+1. **It locks resources for the duration of the protocol.** Phase 1 acquires locks; phase 2 releases them. The window is small under good conditions and unbounded under bad ones.
+2. **It is blocking.** If the coordinator dies after phase 1 and before phase 2, every participant sits on its locks until a human intervenes or a timeout fires. The protocol cannot make progress without the coordinator.
+3. **It assumes synchronous, low-latency, mutually-trusted participants.** The phases are RPCs. The coordinator holds open connections to all participants. A 200ms cross-region round-trip becomes a >800ms transaction floor.
+
+In a single datacenter, with a small number of trusted resource managers (usually a database and a JMS queue), 2PC is fine and people used it for decades. The moment you move to a service-per-team architecture, with services owned by different groups, deployed independently, and reachable only over HTTPS, every one of those properties becomes a problem.
+
+## What sagas give up, and what they get back
+
+A saga replaces "one big transaction across services" with **a sequence of local transactions, each in its own service, each with a defined compensation**. There is no global lock and no coordinator with veto power; the saga just executes step by step, and if a step fails, it runs the inverse of the previous successful steps.
+
+Order checkout, expressed as a saga, looks like this:
+
+| Step | Forward action            | Compensation                |
+|------|---------------------------|-----------------------------|
+| 1    | `Order.Create`            | `Order.Cancel`              |
+| 2    | `Inventory.Reserve`       | `Inventory.Release`         |
+| 3    | `Payment.Authorise`       | `Payment.Void`              |
+| 4    | `Shipping.Schedule`       | `Shipping.Cancel`           |
+| 5    | `Order.Confirm`           | (terminal)                  |
+
+If `Payment.Authorise` fails at step 3, the saga runs `Inventory.Release` then `Order.Cancel` and stops. If `Shipping.Schedule` fails at step 4, the saga runs `Payment.Void`, `Inventory.Release`, `Order.Cancel`. The forward action and the compensation are designed together; there is no point shipping a saga step whose effect cannot be undone.
+
+What you give up:
+
+- **No global rollback semantics.** A user reading `Order` after step 2 but before step 3 will see an order that is valid-and-pending. The saga is a story over time, not an atomic event.
+- **Compensations may be impossible.** If step 4 has the side effect of sending an SMS, your "compensation" is "send a follow-up SMS apologising," which is sometimes acceptable and sometimes not. Sagas force you to confront this at design time, which is good, but the world doesn't always let you have a clean inverse.
+- **Reasoning is harder.** "What state is the system in?" is no longer answerable by a single SELECT. You need a saga state machine or aggregate.
+
+What you get back:
+
+- **No coordination across services during execution.** Each step is a local transaction in one service. Nobody holds locks across the network.
+- **Failure isolation.** If `Payments` is down, `Orders` and `Inventory` keep working — the saga that needed `Payments` parks itself and resumes when payments returns. Other sagas, other orders, continue normally.
+- **Independent deployment.** No coordinator needs to be upgraded in lockstep with the participants.
+- **Composability under network partition.** You don't need everyone reachable at the same instant. Steps fire as messages.
+
+## Orchestration vs choreography
+
+Sagas come in two shapes, and the difference matters.
+
+**Orchestration** has a single component — the saga orchestrator — that knows the whole flow. It tells each service what to do next, listens for replies, and decides whether to advance, retry, or compensate. The OrderSaga in this site is orchestrated; the Orders service owns the saga state and drives the other services via commands.
+
+**Choreography** has no central piece. Each service publishes events, and other services react to them. Inventory hears `OrderCreated` and reserves stock; Payments hears `StockReserved` and authorises; Shipping hears `PaymentAuthorised` and schedules. Compensation works the same way: services react to "something failed" events.
+
+Each has tradeoffs:
+
+- **Orchestration** centralises business logic. You can read one file and know what an order does. It also means the orchestrator is a coupling point; it has to know about every step. For complex flows (>5 steps, multiple branches) orchestration almost always wins because choreography becomes impossible to reason about.
+
+- **Choreography** decentralises business logic. Adding a new participant is "subscribe to the event you care about" — no orchestrator change needed. But the *flow* is now spread across N services, and figuring out "what happens after `OrderCreated`?" requires reading the subscriber list of every service. For 2-3 step flows it's clean; beyond that it's a debugging nightmare.
+
+A useful rule: orchestrate the **business saga**, choreograph the **side effects**. The order saga is orchestrated. The "send a confirmation email" reaction is choreographed — it doesn't need to participate in commit/compensate because there's nothing to compensate.
+
+## Anatomy of a saga step
+
+A correct saga step is more than a function call. It needs:
+
+1. **Idempotency on the forward action.** The orchestrator may retry a step after a network blip. If `Inventory.Reserve` is called twice with the same `correlation_id`, the second call must return the same result without double-reserving. This is usually solved with the inbox pattern keyed by `(correlation_id, step_id)`.
+2. **Idempotency on the compensation.** Same reason.
+3. **A persisted state machine.** The orchestrator must remember what step it's on so it can resume after a crash. In practice this is a row in a `saga_instances` table, written in the same transaction as the step's effect via a transactional outbox (this site has [a deep-dive on that](/deep-dives/transactional-outbox)).
+4. **Timeouts.** A step that doesn't reply in N minutes gets compensated. Sagas without timeouts get stuck forever waiting for a participant that's never coming back.
+5. **A poison-message strategy.** If compensation itself fails repeatedly, a human must be told. This is what observability is for.
+
+If any of those five are missing, the saga has a bug class. Idempotency is the one that bites first.
+
+## Why 2PC almost always loses today
+
+Walk through what 2PC requires for the order checkout above:
+
+- A transaction coordinator that talks to `Orders`, `Inventory`, `Payments`, and `Shipping` as XA resource managers.
+- Every service exposing a `prepare` / `commit` / `rollback` interface that holds locks for the duration.
+- Synchronous calls, all open at once, all participants reachable.
+- The coordinator must be highly available, because a coordinator outage between phase 1 and phase 2 freezes every in-flight transaction.
+
+Now stress-test that against reality:
+
+- Payments is a SaaS. The vendor does not expose XA. Nor would you trust them to hold locks against your cart for 800ms.
+- Inventory and Shipping live in different teams' clusters, possibly different cloud accounts. The coordinator-as-bottleneck creates a deployment dependency between teams, which the entire move to microservices was supposed to eliminate.
+- A Black Friday spike means your coordinator becomes the throughput ceiling. Sagas spread the work; 2PC funnels it.
+
+There is a small set of cases where 2PC remains correct: you control all participants, they're all in one datacenter, lock contention is low, and you genuinely cannot tolerate the user-visible window where the system is mid-saga. Bank ledgers within a single bank are an example. Most application-layer flows are not.
+
+## How to decide, in 90 seconds
+
+A short checklist:
+
+1. **Are all participants under your control, in one DC, with XA support?** If no, 2PC is off the table. Use a saga.
+2. **Can you tolerate any user-visible time window where the system is mid-flight?** If yes, prefer a saga even if 2PC would work.
+3. **Is the flow longer than 3 steps?** Orchestrate, don't choreograph.
+4. **Can every step be undone, or is "compensation" really "apology"?** If the latter, design that into the UX up front.
+5. **Do you have an outbox + inbox or equivalent?** If not, build that first. A saga without exactly-once-effective semantics on each step is a bug factory.
+
+The answer to "saga vs 2PC?" in modern systems is "saga," and the more interesting question is *which kind of saga and how do I instrument it*. That's where most of the engineering effort actually goes.
+
+## What this looks like in code
+
+The saga orchestrator in this site is a state machine. Each event arriving on its bus advances the machine; each transition writes the next command to the outbox. Crashes between events are safe — the row in `saga_instances` records the state, and the next event finds the saga where it was.
+
+```csharp
+public class OrderSaga : Saga<OrderSagaData>,
+    IAmStartedByMessages<OrderPlaced>,
+    IHandleMessages<StockReserved>,
+    IHandleMessages<PaymentAuthorised>,
+    IHandleMessages<StockReservationFailed>,
+    IHandleMessages<PaymentDeclined>
+{
+    public Task Handle(OrderPlaced msg, IMessageHandlerContext ctx)
+    {
+        Data.OrderId = msg.OrderId;
+        Data.State   = "AwaitingStock";
+        return ctx.Send(new ReserveStock(msg.OrderId, msg.Lines));
+    }
+
+    public Task Handle(StockReserved msg, IMessageHandlerContext ctx)
+    {
+        Data.State = "AwaitingPayment";
+        return ctx.Send(new AuthorisePayment(Data.OrderId, msg.Total));
+    }
+
+    public Task Handle(PaymentAuthorised msg, IMessageHandlerContext ctx)
+    {
+        Data.State = "Confirmed";
+        MarkAsComplete();
+        return ctx.Publish(new OrderConfirmed(Data.OrderId));
+    }
+
+    public Task Handle(PaymentDeclined msg, IMessageHandlerContext ctx)
+    {
+        Data.State = "Compensating";
+        return ctx.Send(new ReleaseStock(Data.OrderId));
+    }
+
+    public Task Handle(StockReservationFailed msg, IMessageHandlerContext ctx)
+    {
+        return ctx.Publish(new OrderRejected(Data.OrderId, msg.Reason));
+    }
+}
+```
+
+What's not in this snippet but exists in the system: the `IMessageHandlerContext.Send` calls write to an outbox in the same transaction as `Data` is updated. The bus has retry policies. The saga has a 30-minute timeout that auto-compensates if anything goes silent. Idempotency is enforced at the consumer side via inbox dedup on the message id.
+
+This is what "production saga" looks like. Most of it is not the state machine itself — it's the supporting plumbing: outbox, inbox, retry, timeout, observability. People sometimes try to skip that scaffolding and write the state machine directly. It always works in dev. It always breaks in prod.
+
+The transactional outbox piece is in the [companion article](/deep-dives/transactional-outbox). The pattern is small; the discipline of using it consistently is what pays off.

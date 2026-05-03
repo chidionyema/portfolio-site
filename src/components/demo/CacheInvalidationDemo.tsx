@@ -1,4 +1,9 @@
+// SIMULATED — pattern walkthrough only. Wire to backend API: src/lib/api/cacheinvalidation.ts (see docs/UI_FEATURES_PLAN.md §5).
+
 import { useState, useEffect } from 'react';
+import { Eye, Check, X, Pencil, Trash2, Radio, ClipboardList, type LucideIcon } from 'lucide-react';
+import { useDemoSession } from '../../hooks/useDemoSession';
+import { getCachedProduct, updateProduct as apiUpdateProduct, invalidateCache as apiInvalidateCache, getDemoProduct } from '../../lib/api/demo-client';
 
 interface CacheEntry {
   name: string;
@@ -23,10 +28,39 @@ export function CacheInvalidationDemo() {
     cachedAt: new Date(),
     ttl: 60,
   });
+  const [demoProductId, setDemoProductId] = useState<string | null>(null);
   const [cacheStatus, setCacheStatus] = useState<'hit' | 'miss' | 'stale'>('hit');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [newPrice, setNewPrice] = useState('59.99');
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const { events, isConnected } = useDemoSession('cache-invalidation');
+
+  // Initial load
+  useEffect(() => {
+    getDemoProduct().then(data => {
+      setDemoProductId(data.id);
+      return getCachedProduct(data.id);
+    }).then(res => {
+      setProduct({
+        name: res.product.name,
+        price: res.product.price,
+        version: res.product.version,
+        cachedAt: new Date(),
+        ttl: 60
+      });
+    }).catch(console.error);
+  }, []);
+
+  // Telemetry
+  useEffect(() => {
+    if (events.length > 0) {
+      const lastEvent = events[0];
+      if (lastEvent.action === 'remove' || lastEvent.action === 'remove_by_prefix') {
+        addLog('invalidate', `L2 Invalidation Triggered`);
+      }
+    }
+  }, [events]);
 
   // TTL countdown
   useEffect(() => {
@@ -49,61 +83,54 @@ export function CacheInvalidationDemo() {
   };
 
   const readFromCache = async () => {
-    addLog('read', `GET /product/123`);
-    await new Promise(r => setTimeout(r, 50));
-
-    if (product.ttl > 0) {
-      setCacheStatus('hit');
-      addLog('hit', `Cache HIT - TTL: ${product.ttl}s`);
-    } else {
-      setCacheStatus('miss');
-      addLog('miss', `Cache MISS - fetching from DB`);
-      await new Promise(r => setTimeout(r, 100));
-      setProduct(prev => ({
-        ...prev,
+    if (!demoProductId) return;
+    addLog('read', `GET /api/demo/cache/product/${demoProductId.split('-')[0]}`);
+    
+    try {
+      const res = await getCachedProduct(demoProductId);
+      setCacheStatus(res.cacheInfo?.isHit ? 'hit' : 'miss');
+      setProduct({
+        name: res.product.name,
+        price: res.product.price,
+        version: res.product.version,
         cachedAt: new Date(),
-        ttl: 300
-      }));
-      addLog('hit', `Cache populated from DB`);
+        ttl: 60
+      });
+      addLog(res.cacheInfo?.isHit ? 'hit' : 'miss', `Cache ${res.cacheInfo?.isHit ? 'HIT' : 'MISS'} (Source: ${res.cacheInfo?.source})`);
+    } catch (err) {
+      addLog('invalidate', 'Read failed');
     }
   };
 
   const updateProduct = async () => {
+    if (!demoProductId) return;
     setIsUpdating(true);
     const price = parseFloat(newPrice);
 
-    addLog('update', `PUT /product/123 - Price: £${price}`);
-    await new Promise(r => setTimeout(r, 100));
-
-    addLog('update', `Database updated`);
-    await new Promise(r => setTimeout(r, 50));
-
-    addLog('invalidate', `DEL cache:product:123`);
-    await new Promise(r => setTimeout(r, 30));
-
-    addLog('publish', `PUBLISH cache:invalidate → All instances notified`);
-    await new Promise(r => setTimeout(r, 50));
-
-    setProduct(prev => ({
-      ...prev,
-      price,
-      version: prev.version + 1,
-      cachedAt: new Date(),
-      ttl: 300
-    }));
-
-    setCacheStatus('miss');
-    addLog('miss', `Next read will fetch fresh data`);
-
-    setIsUpdating(false);
+    addLog('update', `PUT /product/${demoProductId.split('-')[0]} - Price: £${price}`);
+    
+    try {
+      await apiUpdateProduct(demoProductId, { price });
+      addLog('update', `Database updated`);
+      addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
+      setCacheStatus('stale');
+      setProduct(prev => ({ ...prev, ttl: 0 }));
+    } catch (err) {
+      addLog('invalidate', 'Update failed');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const manualInvalidate = async () => {
+    if (!demoProductId) return;
     addLog('invalidate', `Manual invalidation triggered`);
-    await new Promise(r => setTimeout(r, 30));
-    addLog('publish', `PUBLISH cache:invalidate:product:123`);
-    setProduct(prev => ({ ...prev, ttl: 0 }));
-    setCacheStatus('stale');
+    try {
+      await apiInvalidateCache(demoProductId);
+      addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
+      setProduct(prev => ({ ...prev, ttl: 0 }));
+      setCacheStatus('stale');
+    } catch (err) {}
   };
 
   const formatTime = (d: Date) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -118,19 +145,19 @@ export function CacheInvalidationDemo() {
     publish: 'text-purple-400',
   };
 
-  const actionIcons = {
-    read: '📖',
-    hit: '✓',
-    miss: '✗',
-    update: '✏️',
-    invalidate: '🗑️',
-    publish: '📡',
+  const actionIcons: Record<'read' | 'hit' | 'miss' | 'update' | 'invalidate' | 'publish', LucideIcon> = {
+    read: Eye,
+    hit: Check,
+    miss: X,
+    update: Pencil,
+    invalidate: Trash2,
+    publish: Radio,
   };
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       {/* Product State */}
-      <div className="glass rounded-xl p-6">
+      <div className="surface rounded-xl p-6">
         <h3 className="text-lg font-semibold text-primary mb-4 flex items-center justify-between">
           <span>Product Cache</span>
           <span className={`px-2 py-0.5 text-xs rounded-full ${
@@ -221,7 +248,7 @@ export function CacheInvalidationDemo() {
       </div>
 
       {/* Invalidation Log */}
-      <div className="glass rounded-xl p-6">
+      <div className="surface rounded-xl p-6">
         <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
           <span>Invalidation Log</span>
           {logs.length > 0 && <span className="w-2 h-2 rounded-full bg-success animate-pulse" />}
@@ -230,7 +257,7 @@ export function CacheInvalidationDemo() {
         <div className="space-y-1 max-h-[300px] overflow-y-auto">
           {logs.length === 0 ? (
             <div className="py-8 text-center text-secondary">
-              <div className="text-3xl mb-2 opacity-50">📋</div>
+              <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-40" strokeWidth={1.5} />
               <p>No activity yet</p>
               <p className="text-sm text-muted mt-1">Read or update the product to see cache flow</p>
             </div>
@@ -241,7 +268,7 @@ export function CacheInvalidationDemo() {
                 className="flex items-center gap-2 px-3 py-2 text-sm animate-fade-in"
                 style={{ animationDelay: `${i * 20}ms` }}
               >
-                <span>{actionIcons[log.action]}</span>
+                {(() => { const Icon = actionIcons[log.action]; return <Icon className={`w-3.5 h-3.5 shrink-0 ${actionColors[log.action]}`} strokeWidth={1.75} />; })()}
                 <span className="font-mono text-xs text-muted w-16 shrink-0">{formatTime(log.timestamp)}</span>
                 <span className={actionColors[log.action]}>{log.message}</span>
               </div>

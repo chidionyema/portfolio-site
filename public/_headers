@@ -1,0 +1,30 @@
+# Global headers — Cloudflare Pages reads this file at deploy time.
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+# Hashed Astro assets are immutable — cache forever.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fonts shipped by @fontsource land in /_astro/* via Vite, but if any get
+# hoisted to /fonts/*, treat them the same.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# OG image — change rarely; one day cache is fine.
+/og.png
+  Cache-Control: public, max-age=86400
+
+# Sitemap — refresh hourly.
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+
+# HTML — must revalidate so deploys propagate immediately.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

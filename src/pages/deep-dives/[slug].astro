@@ -1,0 +1,122 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { ArrowLeft, Clock, CalendarDays } from 'lucide-react';
+import { DeepDiveIcon } from '../../lib/icons';
+import { CommandPalette } from '../../components/system/CommandPalette';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('deep-dives', ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry, allEntries: entries },
+  }));
+}
+
+const { entry, allEntries } = Astro.props;
+const { Content } = await entry.render();
+
+const deepDives = allEntries.map((e: any) => ({
+  slug: e.slug,
+  title: e.data.title,
+  description: e.data.description,
+  iconKey: e.data.iconKey,
+}));
+
+const Icon = DeepDiveIcon[entry.data.iconKey as keyof typeof DeepDiveIcon] ?? DeepDiveIcon.architecture;
+
+const related = await Promise.all(
+  entry.data.related.map(async (slug: string) => {
+    try {
+      return await getEntry('deep-dives', slug);
+    } catch {
+      return null;
+    }
+  })
+).then((arr) => arr.filter(Boolean));
+
+const formatDate = (d: Date) =>
+  new Intl.DateTimeFormat('en-GB', { dateStyle: 'long' }).format(d);
+---
+
+<BaseLayout title={`${entry.data.title} · Chidi Onyema`} description={entry.data.description}>
+  <article class="py-16 md:py-24">
+    <div class="container mx-auto px-4 max-w-3xl">
+      <a
+        href="/#deep-dives"
+        class="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-primary transition-colors mb-8"
+      >
+        <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />
+        Back to deep-dives
+      </a>
+
+      <header class="mb-10 pb-8 border-b border-border">
+        <Icon className="w-10 h-10 text-accent mb-5" strokeWidth={1.5} />
+        <h1 class="font-display text-display-lg text-primary leading-tight mb-4">
+          {entry.data.title}
+        </h1>
+        <p class="text-lg text-secondary leading-relaxed mb-6">
+          {entry.data.description}
+        </p>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-mono uppercase tracking-wider text-muted">
+          <span class="inline-flex items-center gap-1.5">
+            <CalendarDays className="w-3.5 h-3.5" strokeWidth={1.75} />
+            {formatDate(entry.data.publishedAt)}
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" strokeWidth={1.75} />
+            {entry.data.readingTime} min read
+          </span>
+        </div>
+      </header>
+
+      <div class="prose prose-editorial max-w-none">
+        <Content />
+      </div>
+
+      {related.length > 0 && (
+        <aside class="mt-16 pt-8 border-t border-border">
+          <div class="text-xs font-mono uppercase tracking-wider text-muted mb-4">Related</div>
+          <ul class="space-y-3">
+            {related.map((rel: any) => (
+              <li>
+                <a
+                  href={`/deep-dives/${rel.slug}`}
+                  class="group flex items-baseline justify-between gap-4 p-4 surface rounded-xl hover:border-accent/40 transition-colors"
+                >
+                  <div>
+                    <div class="font-display text-lg text-primary group-hover:text-accent transition-colors">
+                      {rel.data.title}
+                    </div>
+                    <div class="text-sm text-secondary mt-1">{rel.data.description}</div>
+                  </div>
+                  <span class="text-xs font-mono text-muted shrink-0">
+                    {rel.data.readingTime} min
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
+    </div>
+  </article>
+
+  <footer class="py-10 border-t border-border">
+    <div class="container mx-auto px-4 max-w-3xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <a href="/" class="text-sm text-muted hover:text-primary transition-colors">
+        ← Chidi Onyema
+      </a>
+      <a
+        href={`https://github.com/chidionyema/portfolio-site/blob/main/src/content/deep-dives/${entry.slug}.mdx`}
+        target="_blank"
+        rel="noopener"
+        class="text-xs font-mono uppercase tracking-wider text-muted hover:text-secondary transition-colors"
+      >
+        edit on github
+      </a>
+    </div>
+  </footer>
+
+  <CommandPalette deepDives={deepDives} client:idle />
+</BaseLayout>

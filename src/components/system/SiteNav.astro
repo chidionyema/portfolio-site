@@ -1,0 +1,53 @@
+---
+import { ThemeToggle } from './ThemeToggle';
+---
+
+<header
+  id="site-nav"
+  class="fixed top-0 inset-x-0 z-30 border-b border-border bg-base/85 backdrop-blur-md"
+>
+  <div class="container mx-auto px-4 h-14 flex items-center justify-between gap-4">
+    <a
+      href="/"
+      class="font-mono text-[11px] uppercase tracking-[0.18em] text-secondary hover:text-primary transition-colors whitespace-nowrap py-3 -my-3 focus-ring"
+    >
+      Chidi Onyema
+    </a>
+
+    <nav aria-label="Primary" class="hidden sm:flex items-center gap-7 text-[11px] font-mono uppercase tracking-[0.16em] text-muted">
+      <a href="/#demo" class="hover:text-primary transition-colors">Demos</a>
+      <a href="/#deep-dives" class="hover:text-primary transition-colors">Writing</a>
+      <a href="/#about" class="hover:text-primary transition-colors">About</a>
+    </nav>
+
+    <div class="flex items-center gap-2.5">
+      <a
+        href="mailto:hello@chidionyema.dev"
+        class="inline-flex items-center px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:bg-accent-light transition-colors focus-ring whitespace-nowrap"
+      >
+        Contact
+      </a>
+      <ThemeToggle client:idle />
+    </div>
+  </div>
+</header>
+
+<style>
+  /*
+   * Hidden by default. The init script in BaseLayout flips data-show
+   * once the user scrolls past the hero (or immediately on pages without one).
+   */
+  #site-nav {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #site-nav[data-show='true'] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* Honor reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    #site-nav { transition: none; }
+  }
+</style>

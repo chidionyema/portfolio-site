@@ -1,0 +1,63 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ArrowLeft, Search } from 'lucide-react';
+import { CommandPalette } from '../components/system/CommandPalette';
+
+const dd = await getCollection('deep-dives', ({ data }) => !data.draft);
+const deepDives = dd.map((e) => ({
+  slug: e.slug,
+  title: e.data.title,
+  description: e.data.description,
+  iconKey: e.data.iconKey,
+}));
+---
+
+<BaseLayout
+  title="404 · Chidi Onyema"
+  description="The page you were looking for doesn't exist."
+>
+  <main class="min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-xl w-full text-center">
+      <div class="font-mono text-[11px] uppercase tracking-[0.2em] text-muted mb-6">
+        Error · 404
+      </div>
+
+      <h1 class="font-display text-display-lg text-primary leading-tight mb-4">
+        That page is missing.
+      </h1>
+
+      <p class="text-secondary leading-relaxed mb-10 max-w-md mx-auto">
+        The link is dead, the slug changed, or this page never existed.
+        None of those are interesting bugs.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent to-accent-light text-white text-sm font-medium hover:shadow-lg hover:shadow-accent/25 transition-shadow focus-ring"
+        >
+          <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+          Back to home
+        </a>
+        <button
+          type="button"
+          id="open-palette-btn"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-sm text-secondary hover:text-primary hover:border-accent transition-colors focus-ring"
+        >
+          <Search className="w-4 h-4" strokeWidth={1.75} />
+          Open command palette
+          <kbd class="ml-1 px-1.5 py-0.5 rounded bg-surface text-muted text-[10px] font-mono">⌘K</kbd>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <CommandPalette deepDives={deepDives} client:load />
+
+  <script is:inline>
+    document.getElementById('open-palette-btn')?.addEventListener('click', function () {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+    });
+  </script>
+</BaseLayout>
