@@ -7,7 +7,9 @@ export interface SagaStepEvent {
   traceId?: string;
   step: string;
   service: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'compensating';
+  status: 'success' | 'failed' | 'pending' | 'compensating' | 'processing';
+  description?: string;
+  latencyMs?: number;
   timestamp: string;
 }
 
@@ -40,11 +42,9 @@ export interface RateLimitEvent {
 export interface EventFlowEvent {
   sessionId: string;
   traceId?: string;
-  eventType: string;
-  source: string;
-  status: 'persisted' | 'dispatched' | 'consumed' | 'acknowledged';
-  queueDepth: number;
-  payload?: Record<string, unknown>;
+  eventId: string;
+  stage: 'persisted' | 'relayed' | 'consumed';
+  data?: string | null;
   timestamp: string;
 }
 

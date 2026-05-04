@@ -1,11 +1,15 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Zap, ShieldAlert, Code2, Cpu } from 'lucide-react';
+import { ArrowRight, Zap, ShieldAlert, Code2, Cpu, BookOpen } from 'lucide-react';
 import { DEMO_FOOTER } from '../../lib/copy';
 import { DemoSidebar, DemoMobileNav, findDemo, findGroupOf } from './DemoSidebar';
 import { ChaosEngine } from '../system/ChaosEngine';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { CodeDrawer } from './CodeDrawer';
+import { DemoContext } from './DemoContext';
+import { TraceViewer } from './TraceViewer';
+import { useLatestTraceId } from '../../hooks/useLatestTraceId';
+import { traceStore } from '../../lib/trace-store';
 
 const CheckoutDemo          = lazy(() => import('./CheckoutDemo').then(m => ({ default: m.CheckoutDemo })));
 const EventFlowDemo         = lazy(() => import('./EventFlowDemo').then(m => ({ default: m.EventFlowDemo })));
@@ -65,6 +69,7 @@ export function DemoHub() {
   const [isChaosOpen, setIsChaosOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'live' | 'source'>('live');
   const { updateChaos } = useDemoSession();
+  const latestTraceId = useLatestTraceId();
 
   useEffect(() => {
     setActiveId(readDemoFromURL());
@@ -74,6 +79,7 @@ export function DemoHub() {
     setActiveId(id);
     writeDemoToURL(id);
     setViewMode('live'); // Reset to live view on switch
+    traceStore.set(null); // Clear trace from prior demo
   };
 
   useEffect(() => {
@@ -140,17 +146,37 @@ export function DemoHub() {
                </div>
 
                <div className="flex items-start gap-6">
-                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl shrink-0 shadow-xl">
-                     <demo.Icon className="w-10 h-10 text-accent-light" strokeWidth={1.5} />
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl shrink-0 shadow-xl text-accent">
+                     <demo.Icon className="w-10 h-10" strokeWidth={1.5} />
                   </div>
                   <div className="space-y-2">
-                     <div className="text-xs font-bold uppercase tracking-[0.4em] text-accent mb-1">{group.label}</div>
+                     <div className="flex items-center gap-3 mb-2">
+                        <div className="text-xs font-bold uppercase tracking-[0.4em] text-accent-light">{group.label}</div>
+                        <div className="h-px w-4 bg-white/10" />
+                        <motion.div
+                          key={`${activeId}-pill`}
+                          initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
+                          className="px-2 py-0.5 bg-success/10 border border-success/20 rounded text-[9px] font-black uppercase tracking-widest text-success"
+                        >
+                           {demo.valueProp}
+                        </motion.div>
+                     </div>
                      <h3 className="font-display text-5xl text-primary leading-none tracking-tight font-bold">
                         {demo.label}
                      </h3>
                      <p className="text-secondary text-lg font-medium leading-relaxed max-w-2xl pt-4">
                         {demo.desc}
                      </p>
+                     {demo.deepDiveSlug && (
+                        <a
+                          href={`/deep-dives/${demo.deepDiveSlug}`}
+                          className="inline-flex items-center gap-2 mt-4 px-3 py-2 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-accent-light hover:text-white transition-all group/link"
+                        >
+                           <BookOpen className="w-3 h-3" />
+                           <span>Read the spec</span>
+                           <ArrowRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+                        </a>
+                     )}
                   </div>
                </div>
             </header>
@@ -165,9 +191,23 @@ export function DemoHub() {
                        exit={{ opacity: 0, y: -10 }}
                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                      >
+                        <DemoContext demoId={activeId} />
                         <Suspense fallback={<LoadingSkeleton />}>
                            <DemoContent id={activeId} />
                         </Suspense>
+                        <AnimatePresence>
+                          {latestTraceId && (
+                            <motion.div
+                              key={latestTraceId}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="mt-8"
+                            >
+                              <TraceViewer traceId={latestTraceId} />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                      </motion.div>
                   ) : (
                      <motion.div

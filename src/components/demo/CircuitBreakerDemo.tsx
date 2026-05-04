@@ -1,6 +1,16 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Zap, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Cpu, Activity, Timer, AlertCircle } from 'lucide-react';
+import {
+  ShieldCheck,
+  ShieldAlert,
+  Activity,
+  Loader2,
+  RefreshCcw,
+  Zap,
+  AlertTriangle,
+  ArrowRight,
+  Radar,
+} from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { CircuitBreakerEvent } from '../../lib/api/signalr';
 
@@ -9,73 +19,127 @@ type CircuitState = 'closed' | 'open' | 'half-open';
 interface ResilienceLog {
   id: string;
   timestamp: Date;
-  pattern: 'CircuitBreaker' | 'Hedging' | 'Bulkhead';
-  status: 'success' | 'failure' | 'hedged' | 'rejected';
+  status: 'success' | 'failure' | 'rejected' | 'probe-success' | 'probe-failure';
   message: string;
   latency: number;
 }
 
+interface StateTransition {
+  id: string;
+  state: CircuitState;
+  timestamp: Date;
+}
+
+const STATE_NODES: { id: CircuitState; label: string; tone: string }[] = [
+  { id: 'closed',    label: 'Closed',    tone: 'success' },
+  { id: 'half-open', label: 'Half_Open', tone: 'warning' },
+  { id: 'open',      label: 'Open',      tone: 'error' },
+];
+
 export function CircuitBreakerDemo() {
   const [circuitState, setCircuitState] = useState<CircuitState>('closed');
-  const [failures, setFailures] = useState(0);
-  const [localLogs, setLocalLogs] = useState<ResilienceLog[]>([]);
-  const [isSimulatingSlow, setIsSimulatingSlow] = useState(false);
-  const [isSimulatingError, setIsSimulatingError] = useState(false);
-  const [bulkheadUsage, setBulkheadUsage] = useState(0);
+  const [transitions, setTransitions] = useState<StateTransition[]>([]);
+  const [logs, setLogs] = useState<ResilienceLog[]>([]);
+  const [isTripping, setIsTripping] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [probeArmed, setProbeArmed] = useState(false); // next request will be the probe
+  const [probeInFlight, setProbeInFlight] = useState(false);
 
   const { executeCommand, events, isConnected } = useDemoSession('circuit');
+  const lastEventIdRef = useRef<string>('');
 
-  const THRESHOLD = 2; // Matches backend ResilienceOptions
-  const BULKHEAD_LIMIT = 5;
-
+  // Subscribe to backend state changes
   useEffect(() => {
-     if (events.length > 0) {
-        const lastEvent = events[0] as CircuitBreakerEvent;
-        if (lastEvent.state) {
-           setCircuitState(lastEvent.state);
-        }
-        // Backend doesn't send failureCount yet in the event, but we can track locally or wait for update
-     }
+    if (events.length === 0) return;
+    const lastEvent = events[0] as CircuitBreakerEvent;
+    if (!lastEvent.state || !lastEvent.timestamp) return;
+
+    const eventKey = `${lastEvent.state}-${lastEvent.timestamp}`;
+    if (eventKey === lastEventIdRef.current) return;
+    lastEventIdRef.current = eventKey;
+
+    setCircuitState(lastEvent.state);
+    setTransitions((prev) => [
+      { id: crypto.randomUUID(), state: lastEvent.state, timestamp: new Date(lastEvent.timestamp) },
+      ...prev.slice(0, 4),
+    ]);
+
+    if (lastEvent.state === 'half-open') {
+      setProbeArmed(true);
+    } else if (lastEvent.state === 'closed' || lastEvent.state === 'open') {
+      setProbeArmed(false);
+      setProbeInFlight(false);
+    }
   }, [events]);
 
-  const runRequest = async () => {
+  const issueRequest = async (shouldFail: boolean): Promise<void> => {
     const start = Date.now();
-    try {
-      const result = await executeCommand('/circuit/request', {
-        shouldFail: isSimulatingError
-      });
-      
-      setLocalLogs(prev => [{
-         id: crypto.randomUUID(),
-         timestamp: new Date(),
-         pattern: 'CircuitBreaker',
-         status: result.success ? 'success' : 'failure',
-         message: result.success ? `Request successful` : (result.isRejected ? 'Rejected: Circuit Open' : result.error || 'Failed'),
-         latency: Date.now() - start
-      }, ...prev.slice(0, 15)]);
+    const wasProbe = probeArmed;
+    if (wasProbe) {
+      setProbeInFlight(true);
+      setProbeArmed(false);
+    }
+    setIsRequesting(true);
 
-      if (!result.success) {
-         setFailures(prev => Math.min(prev + 1, THRESHOLD));
-      } else {
-         setFailures(0);
-      }
-    } catch (err) {
-       setLocalLogs(prev => [{
+    try {
+      const result = await executeCommand('/circuit/request', { shouldFail });
+      const latency = Date.now() - start;
+      const status: ResilienceLog['status'] =
+        wasProbe
+          ? result.success ? 'probe-success' : 'probe-failure'
+          : result.success ? 'success' : result.isRejected ? 'rejected' : 'failure';
+
+      const message =
+        wasProbe
+          ? result.success ? 'Probe succeeded — circuit closing' : 'Probe failed — circuit reopening'
+          : result.success ? 'Request OK'
+          : result.isRejected ? 'Rejected — circuit open'
+          : result.error || 'Request failed';
+
+      setLogs((prev) => [
+        { id: crypto.randomUUID(), timestamp: new Date(), status, message, latency },
+        ...prev.slice(0, 14),
+      ]);
+    } catch {
+      setLogs((prev) => [
+        {
           id: crypto.randomUUID(),
           timestamp: new Date(),
-          pattern: 'CircuitBreaker',
           status: 'failure',
           message: 'Network Error / Timeout',
-          latency: Date.now() - start
-       }, ...prev.slice(0, 15)]);
+          latency: Date.now() - start,
+        },
+        ...prev.slice(0, 14),
+      ]);
+    } finally {
+      setIsRequesting(false);
+      setProbeInFlight(false);
     }
   };
 
-  const toggleFailureMode = async () => {
-     try {
-        await executeCommand('/circuit/toggle-failure', { failureMode: !isSimulatingError });
-        setIsSimulatingError(!isSimulatingError);
-     } catch (err) {}
+  const tripBreaker = async () => {
+    setIsTripping(true);
+    // Threshold is 2 in backend, fire 3 to be deterministic.
+    for (let i = 0; i < 3; i++) {
+      await issueRequest(true);
+    }
+    setIsTripping(false);
+  };
+
+  const resetBreaker = async () => {
+    try {
+      await executeCommand('/circuit/reset', {});
+      setLogs((prev) => [
+        {
+          id: crypto.randomUUID(),
+          timestamp: new Date(),
+          status: 'success',
+          message: 'Manual reset — breaker forced closed',
+          latency: 0,
+        },
+        ...prev.slice(0, 14),
+      ]);
+    } catch {}
   };
 
   return (
@@ -84,128 +148,247 @@ export function CircuitBreakerDemo() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <ShieldCheck className="w-4 h-4 text-accent" />
-            Resilience_Policy_Pipeline
+            Circuit_Breaker_State_Machine
           </h3>
+          <span className="text-[10px] font-mono text-muted uppercase tracking-widest">
+            Threshold: 2 · Cooldown: 6s
+          </span>
         </div>
 
-        <div className="surface p-8 shadow-2xl space-y-10">
-           <div className="flex items-center justify-between px-2">
-              {[
-                { label: 'Bulkhead', icon: Cpu, status: bulkheadUsage >= BULKHEAD_LIMIT ? 'error' : 'success' },
-                { label: 'Circuit', icon: Zap, status: circuitState === 'open' ? 'error' : circuitState === 'half-open' ? 'warning' : 'success' },
-                { label: 'Hedging', icon: Timer, status: isSimulatingSlow ? 'warning' : 'success' }
-              ].map((step, i) => (
-                <div key={step.label} className="flex flex-col items-center gap-3">
-                   <div className={`p-4 rounded-2xl border-2 transition-all duration-500 ${
-                      step.status === 'success' ? 'bg-success/10 border-success/40 text-success shadow-[0_0_15px_rgba(34,197,94,0.2)]' :
-                      step.status === 'warning' ? 'bg-warning/10 border-warning/40 text-warning shadow-[0_0_15px_rgba(245,158,11,0.2)]' :
-                      'bg-error/10 border-error/40 text-error shadow-[0_0_15px_rgba(239,68,68,0.2)]'
-                   }`}>
-                      <step.icon className="w-6 h-6" />
-                   </div>
-                   <span className="text-[10px] font-black uppercase tracking-widest text-muted">{step.label}</span>
-                </div>
-              ))}
-           </div>
+        <div className="surface p-8 shadow-2xl space-y-8">
+          <StateMachineDiagram state={circuitState} probeInFlight={probeInFlight} />
 
-           <div className="space-y-4">
-              <div className="flex justify-between text-[10px] font-mono font-bold uppercase tracking-widest text-muted">
-                 <span>Bulkhead_Parallelism</span>
-                 <span className={bulkheadUsage >= BULKHEAD_LIMIT ? 'text-error animate-pulse' : 'text-primary'}>
-                   {bulkheadUsage} / {BULKHEAD_LIMIT} Slots
-                 </span>
-              </div>
-              <div className="flex gap-1.5 h-2">
-                 {[...Array(BULKHEAD_LIMIT)].map((_, i) => (
-                   <div key={i} className={`flex-1 rounded-full transition-colors ${i < bulkheadUsage ? 'bg-accent shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-white/5'}`} />
-                 ))}
-              </div>
-           </div>
+          <ProbeIndicator armed={probeArmed} inFlight={probeInFlight} state={circuitState} />
 
-           <div className="glass-subtle p-6 flex items-center justify-between font-mono">
-              <div className="space-y-1">
-                 <div className="text-[10px] font-black text-muted uppercase tracking-widest">Circuit_State</div>
-                 <div className={`text-xl font-black uppercase tracking-tight ${circuitState === 'open' ? 'text-error' : circuitState === 'half-open' ? 'text-warning' : 'text-success'}`}>
-                    {circuitState}
-                 </div>
-              </div>
-              <div className="flex gap-2">
-                 {[...Array(THRESHOLD)].map((_, i) => (
-                   <div key={i} className={`w-1.5 h-6 rounded-sm ${i < failures ? 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 'bg-white/5'}`} />
-                 ))}
-              </div>
-           </div>
+          <TransitionTimeline transitions={transitions} />
 
-           <button
-             onClick={runRequest}
-             disabled={!isConnected}
-             className="w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl hover:bg-slate-100 transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-20 flex items-center justify-center gap-3"
-           >
-             <Activity className="w-5 h-5" />
-             Execute_Policy_Pipeline
-           </button>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => issueRequest(false)}
+              disabled={!isConnected || isTripping || isRequesting}
+              className="py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+            >
+              {isRequesting && !isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+              {probeArmed ? 'Send_Probe' : 'Send_Request'}
+            </button>
+            <button
+              onClick={tripBreaker}
+              disabled={!isConnected || isTripping || isRequesting}
+              className="py-4 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+            >
+              {isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+              {isTripping ? 'Tripping...' : 'Trip_Breaker'}
+            </button>
+          </div>
+
+          <button
+            onClick={resetBreaker}
+            disabled={!isConnected}
+            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-secondary font-bold text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+          >
+            <RefreshCcw className="w-3.5 h-3.5" />
+            Manual_Reset
+          </button>
         </div>
       </div>
 
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <ShieldAlert className="w-4 h-4 text-error" />
-          Fault_Injection_Control
+          Resilience_Audit_Trail
         </h3>
-        
-        <div className="grid grid-cols-2 gap-4">
-           <button 
-             onClick={() => setIsSimulatingSlow(!isSimulatingSlow)}
-             className={`p-6 rounded-2xl border transition-all text-left space-y-3 ${isSimulatingSlow ? 'bg-warning/10 border-warning/40 text-warning shadow-xl' : 'surface text-secondary hover:bg-white/5'}`}
-           >
-              <Timer className="w-6 h-6" />
-              <div>
-                 <div className="text-xs font-black uppercase tracking-widest">Latent_Service</div>
-                 <div className="text-[10px] opacity-60 font-mono mt-1">Inject 2000ms Delay</div>
-              </div>
-           </button>
-           <button 
-             onClick={toggleFailureMode}
-             className={`p-6 rounded-2xl border transition-all text-left space-y-3 ${isSimulatingError ? 'bg-error/10 border-error/40 text-error shadow-xl' : 'surface text-secondary hover:bg-white/5'}`}
-           >
-              <ShieldAlert className="w-6 h-6" />
-              <div>
-                 <div className="text-xs font-black uppercase tracking-widest">Faulty_Service</div>
-                 <div className="text-[10px] opacity-60 font-mono mt-1">Inject 503 Errors</div>
-              </div>
-           </button>
-        </div>
 
-        <div className="surface shadow-2xl flex-1 h-[270px] flex flex-col overflow-hidden font-mono">
-           <div className="px-6 py-4 border-b border-white/5 text-[10px] font-black text-muted uppercase tracking-[0.2em]">
-              Resilience_Audit_Trail
-           </div>
-           <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-              <AnimatePresence initial={false}>
-                {localLogs.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-muted/20 text-[10px] font-black uppercase tracking-[0.4em] italic">
-                    Pipeline_Idle
-                  </div>
-                ) : (
-                  localLogs.map((log) => (
-                    <motion.div key={log.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={`flex items-center justify-between p-3 rounded-lg border-l-2 bg-white/[0.01] ${
-                        log.status === 'success' ? 'border-success/40 text-success/80' :
-                        log.status === 'hedged' ? 'border-warning/40 text-warning/80' :
-                        'border-error/40 text-error/80'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 text-[10px] font-bold">
-                         <span className="opacity-30">[{log.pattern}]</span>
-                         <span className="truncate max-w-[180px] uppercase">{log.message}</span>
-                      </div>
-                      <span className="opacity-40 text-[9px] tabular-nums">{log.latency}ms</span>
-                    </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
-           </div>
+        <div className="surface shadow-2xl h-[540px] flex flex-col overflow-hidden font-mono">
+          <div className="px-6 py-4 border-b border-white/5 text-[10px] font-black text-muted uppercase tracking-[0.2em] flex items-center justify-between">
+            <span>Event_Log</span>
+            <span className="text-success/60">{logs.length} entries</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            <AnimatePresence initial={false}>
+              {logs.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-muted/20 text-[10px] font-black uppercase tracking-[0.4em] italic">
+                  Pipeline_Idle
+                </div>
+              ) : (
+                logs.map((log) => (
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`flex items-center justify-between p-3 rounded-lg border-l-2 bg-white/[0.01] ${
+                      log.status === 'success' || log.status === 'probe-success'
+                        ? 'border-success/40 text-success/80'
+                        : log.status === 'rejected'
+                        ? 'border-warning/40 text-warning/80'
+                        : 'border-error/40 text-error/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 text-[10px] font-bold">
+                      <span className="opacity-30 uppercase">[{log.status.replace('-', '_')}]</span>
+                      <span className="truncate max-w-[220px] uppercase">{log.message}</span>
+                    </div>
+                    <span className="opacity-40 text-[9px] tabular-nums">{log.latency}ms</span>
+                  </motion.div>
+                ))
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+interface StateMachineDiagramProps {
+  state: CircuitState;
+  probeInFlight: boolean;
+}
+
+function StateMachineDiagram({ state, probeInFlight }: StateMachineDiagramProps) {
+  return (
+    <div className="relative">
+      <div className="flex items-center justify-between gap-3">
+        {STATE_NODES.map((node, idx) => {
+          const isActive = node.id === state;
+          const toneClass =
+            node.tone === 'success'
+              ? 'border-success/50 bg-success/10 text-success'
+              : node.tone === 'warning'
+              ? 'border-warning/50 bg-warning/10 text-warning'
+              : 'border-error/50 bg-error/10 text-error';
+          return (
+            <div key={node.id} className="flex items-center flex-1 last:flex-initial gap-3">
+              <motion.div
+                animate={{
+                  scale: isActive ? 1.05 : 1,
+                  opacity: isActive ? 1 : 0.35,
+                }}
+                transition={{ duration: 0.25 }}
+                className={`flex-1 px-4 py-5 rounded-xl border-2 text-center font-mono ${toneClass}`}
+              >
+                <div className="text-[9px] font-black uppercase tracking-[0.3em] opacity-70">State</div>
+                <div className="text-sm font-black uppercase mt-2">{node.label}</div>
+                {isActive && (
+                  <div className="mt-2 w-1.5 h-1.5 rounded-full bg-current mx-auto animate-pulse shadow-[0_0_10px_currentColor]" />
+                )}
+              </motion.div>
+              {idx < STATE_NODES.length - 1 && (
+                <ArrowRight
+                  className={`w-5 h-5 shrink-0 transition-colors ${
+                    (idx === 0 && state === 'half-open') || (idx === 1 && state === 'open')
+                      ? 'text-accent-light'
+                      : 'text-white/10'
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <AnimatePresence>
+        {probeInFlight && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none flex items-center justify-center"
+          >
+            <Radar className="w-12 h-12 text-warning/60 animate-pulse" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+interface ProbeIndicatorProps {
+  armed: boolean;
+  inFlight: boolean;
+  state: CircuitState;
+}
+
+function ProbeIndicator({ armed, inFlight, state }: ProbeIndicatorProps) {
+  const visible = armed || inFlight;
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="glass-subtle p-4 flex items-center gap-3 border border-warning/20"
+        >
+          <Radar className={`w-4 h-4 text-warning ${inFlight ? 'animate-spin-slow' : 'animate-pulse'}`} />
+          <div className="flex-1">
+            <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
+              {inFlight ? 'Probe_In_Flight' : 'Probe_Armed'}
+            </div>
+            <div className="text-[10px] text-muted font-mono mt-1">
+              {inFlight
+                ? 'Single test request admitted. Outcome decides next state.'
+                : `Cooldown elapsed — circuit is half-open. The next request is the probe.`}
+            </div>
+          </div>
+          <Zap className="w-3.5 h-3.5 text-warning/60" />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+interface TransitionTimelineProps {
+  transitions: StateTransition[];
+}
+
+function TransitionTimeline({ transitions }: TransitionTimelineProps) {
+  if (transitions.length === 0) {
+    return (
+      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-muted/40 border-t border-white/5 pt-5">
+        <span>Transition_Log</span>
+        <span className="italic">No transitions observed</span>
+      </div>
+    );
+  }
+  return (
+    <div className="border-t border-white/5 pt-5 space-y-3 font-mono">
+      <div className="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Transition_Log</div>
+      <ul className="space-y-1.5">
+        {transitions.map((t, idx) => (
+          <li
+            key={t.id}
+            className={`flex items-center justify-between text-[10px] ${
+              idx === 0 ? 'text-primary' : 'text-muted/60'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="opacity-40 tabular-nums">[{formatTime(t.timestamp)}]</span>
+              <span
+                className={`font-black uppercase tracking-widest ${
+                  t.state === 'open'
+                    ? 'text-error'
+                    : t.state === 'half-open'
+                    ? 'text-warning'
+                    : 'text-success'
+                }`}
+              >
+                {t.state.replace('-', '_')}
+              </span>
+            </div>
+            {idx === 0 && (
+              <span className="text-[9px] uppercase tracking-widest text-accent-light">current</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function formatTime(d: Date): string {
+  return d.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    fractionalSecondDigits: 1,
+  });
 }

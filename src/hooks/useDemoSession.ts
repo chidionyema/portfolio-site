@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { signalRClient } from '../lib/api/signalr';
+import { traceStore } from '../lib/trace-store';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || 'https://api.chidionyema.dev';
 
@@ -82,7 +83,8 @@ export function useDemoSession(moduleName?: string) {
 
       const data = await response.json();
       const traceId = response.headers.get('X-Trace-Id');
-      
+      if (traceId) traceStore.set(traceId);
+
       return { ...data, traceId };
     } catch (err: any) {
       console.error('Command Execution Failed:', err);

@@ -8,7 +8,9 @@ export interface DemoMeta {
   id: string;
   label: string;
   desc: string;
+  valueProp: string;
   Icon: LucideIcon;
+  deepDiveSlug?: string;
 }
 
 export interface DemoGroup {
@@ -22,33 +24,33 @@ export const demoGroups: DemoGroup[] = [
     id: 'data',
     label: 'Core_Data_Integrity',
     demos: [
-      { id: 'checkout',    label: 'Distributed_Saga',         desc: 'Transaction orchestration across Fly.io nodes', Icon: DemoIcon.checkout },
-      { id: 'events',      label: 'Transactional_Outbox',       desc: 'Atomic event persistence and broker relay',    Icon: DemoIcon.events },
-      { id: 'concurrency', label: 'Optimistic_Locking',  desc: 'Pre-emptive conflict detection in Postgres',   Icon: DemoIcon.concurrency },
+      { id: 'checkout',    label: 'Distributed_Saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Solves "Split-Brain" in microservices', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc' },
+      { id: 'events',      label: 'Transactional_Outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Ensures Zero-Loss message delivery', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox' },
+      { id: 'concurrency', label: 'Optimistic_Locking',  desc: 'Pre-emptive conflict detection in Postgres',   valueProp: 'Prevents Data Corruption on race conditions', Icon: DemoIcon.concurrency },
     ],
   },
   {
     id: 'resilience',
     label: 'High_Availability',
     demos: [
-      { id: 'circuit',     label: 'Circuit_Breaker', desc: 'Fail-fast and graceful recovery pipeline', Icon: DemoIcon.circuit },
-      { id: 'idempotency', label: 'Deterministic_Identity',     desc: 'Safe retries with Redis-backed identity',   Icon: DemoIcon.idempotency },
-      { id: 'ratelimit',   label: 'Traffic_Shaping',      desc: 'Token-bucket throttling and QoS',       Icon: DemoIcon.ratelimit },
+      { id: 'circuit',     label: 'Circuit_Breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Prevents Cascading System Failure', Icon: DemoIcon.circuit },
+      { id: 'idempotency', label: 'Deterministic_Identity',     desc: 'Safe retries with Redis-backed identity',   valueProp: 'Eliminates Duplicate Side-Effects', Icon: DemoIcon.idempotency },
+      { id: 'ratelimit',   label: 'Traffic_Shaping',      desc: 'Token-bucket throttling and QoS',       valueProp: 'Guarantees Service Availability under Load', Icon: DemoIcon.ratelimit },
     ],
   },
   {
     id: 'caching',
     label: 'Distributed_State',
     demos: [
-      { id: 'stampede', label: 'HybridCache_L2',     desc: '.NET 9 multi-tier thundering herd prevention',  Icon: DemoIcon.stampede },
-      { id: 'cache',    label: 'PubSub_Invalidation', desc: 'Real-time cache coherence across nodes',     Icon: DemoIcon.cache },
+      { id: 'stampede', label: 'HybridCache_L2',     desc: '.NET 9 multi-tier thundering herd prevention',  valueProp: 'Protects DB from Thundering Herd', Icon: DemoIcon.stampede },
+      { id: 'cache',    label: 'PubSub_Invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Guarantees Cache Coherence', Icon: DemoIcon.cache },
     ],
   },
   {
     id: 'secrets',
     label: 'Security_Infrastructure',
     demos: [
-      { id: 'vault', label: 'Dynamic_Credentials', desc: 'Zero-downtime Vault rotation workflows', Icon: DemoIcon.vault },
+      { id: 'vault', label: 'Dynamic_Credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Eliminates Static Secret Exposure', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
     ],
   },
 ];
