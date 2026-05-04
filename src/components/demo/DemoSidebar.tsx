@@ -53,6 +53,13 @@ export const demoGroups: DemoGroup[] = [
       { id: 'vault', label: 'Dynamic_Credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Eliminates Static Secret Exposure', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
     ],
   },
+  {
+    id: 'observability',
+    label: 'Observability',
+    demos: [
+      { id: 'tracing', label: 'Distributed_Tracing', desc: 'Spans across 6 services rendered as a flame graph', valueProp: 'Follows the Request End-to-End', Icon: DemoIcon.tracing },
+    ],
+  },
 ];
 
 export const allDemos: DemoMeta[] = demoGroups.flatMap((g) => g.demos);

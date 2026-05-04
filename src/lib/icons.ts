@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Shuffle,
   Gauge,
+  Telescope,
   // states
   Check,
   X,
@@ -75,6 +76,7 @@ export const DemoIcon = {
   cache: RefreshCw,
   concurrency: Shuffle,
   ratelimit: Gauge,
+  tracing: Telescope,
 } as const;
 
 /** Run-state semantics for streams, requests, and cache results. */

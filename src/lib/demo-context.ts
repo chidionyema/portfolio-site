@@ -77,4 +77,12 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     watch:
       'Saturate the bucket: traffic above the rate is shed cleanly while well-behaved clients keep their share. The system stays available even under abuse.',
   },
+  tracing: {
+    problem:
+      'A user reports their checkout was slow. Logs from three services are interleaved in different log aggregators. You spend forty minutes correlating timestamps before you can answer "where was the time spent?"',
+    mechanism:
+      'Every request carries a trace id; every operation it touches emits a span tagged with that id, parent span id, service, operation, and duration. A flame graph reads the parent/child structure and shows the full call tree at a glance.',
+    watch:
+      'One request fans out across orders-domain, inventory, payments (which itself calls Stripe), notifications, and the outbox. The flame graph lets you read total time, where the long tail lives, and which span owned the failure when one occurs.',
+  },
 };

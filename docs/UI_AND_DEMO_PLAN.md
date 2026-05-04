@@ -106,7 +106,7 @@ Captured here so they're not lost. **Not** part of the current pass; addressed a
 
 | Feature | Backend ref | Demo sketch | Est. |
 | --- | --- | --- | --- |
-| Distributed tracing as a first-class demo (the "follow the request" flame graph across consumer hops) | `src/Infrastructure/Telemetry/ActivitySources.cs:1-82` | `POST /api/demo/tracing/start` → SignalR streams span tree | 6–8h |
+| ~~Distributed tracing as a first-class demo~~ — *shipped 2026-05-05.* `POST /api/demo/tracing/start` builds a 7-span / 6-service trace and stores it in a new `IDemoTraceStore` singleton (`Infrastructure/Telemetry/DemoTraceStore.cs`). `GET /api/traces/{id}` (in `SystemController`) was previously a mock that returned a single fixed span; now it queries the store, so every demo's `X-Trace-Id` resolves to a real flame graph in the hub-level `<TraceViewer>`. New `DistributedTracingDemo.tsx` lives under a new `Observability` sidebar group with `Happy_Path` / `Stripe_Failure` scenarios. | `src/Infrastructure/Telemetry/DemoTraceStore.cs`, `DemoController.StartTrace` | — | done |
 | JTI token revocation w/ L1 + L2 cache | `src/Infrastructure/Identity/TokenRevocationService.cs:1-114` | Issue → Revoke → Validate, show cache layer hit timings | 4–6h |
 | Reservation-based checkout (Flow B) + sweeper | `src/Infrastructure/BackgroundServices/ReservationSweeperService.cs:1-145` | 30s reservation TTL; watch sweeper expire it & release stock | 4–6h |
 | Bulkhead isolation + Null vs Critical fallback | `src/Infrastructure/Resilience/BulkheadOptions.cs`, `Fallbacks/*` | 100 concurrent requests; 25 execute / 50 queue / rest 429 | 3–4h |

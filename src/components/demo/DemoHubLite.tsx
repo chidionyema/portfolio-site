@@ -20,6 +20,7 @@ const CacheStampedeDemo     = lazy(() => import('./CacheStampedeDemo').then(m =>
 const CacheInvalidationDemo = lazy(() => import('./CacheInvalidationDemo').then(m => ({ default: m.CacheInvalidationDemo })));
 const ConcurrencyDemo       = lazy(() => import('./ConcurrencyDemo').then(m => ({ default: m.ConcurrencyDemo })));
 const RateLimiterDemo       = lazy(() => import('./RateLimiterDemo').then(m => ({ default: m.RateLimiterDemo })));
+const DistributedTracingDemo = lazy(() => import('./DistributedTracingDemo').then(m => ({ default: m.DistributedTracingDemo })));
 
 const DEFAULT_DEMO = 'checkout';
 
@@ -60,6 +61,7 @@ function DemoContent({ id }: { id: string }) {
     case 'cache':       return <CacheInvalidationDemo />;
     case 'concurrency': return <ConcurrencyDemo />;
     case 'ratelimit':   return <RateLimiterDemo />;
+    case 'tracing':     return <DistributedTracingDemo />;
     default:            return null;
   }
 }
