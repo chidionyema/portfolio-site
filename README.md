@@ -44,7 +44,8 @@ The five interactive demos call into the `ritualworks` monolith's
 cd ../ritualworks
 git checkout feature/ha-portfolio-integration
 dotnet run --project src/haworks.AppHost
-# API binds to http://localhost:5000 (and https://localhost:5001)
+# API binds to http://localhost:5050 (and https://localhost:5051)
+# (Not :5000 — macOS Control Center / AirPlay Receiver squats on it.)
 # Wait for "Distributed application started." in the console.
 
 # Terminal 2 — bring up the portfolio site
@@ -88,6 +89,6 @@ See [`.env.example`](./.env.example) for the full contract. Production
 defaults are baked into the deploy; local dev overrides via `.env.local`:
 
 ```bash
-PUBLIC_API_URL=http://localhost:5000        # ritualworks API on Aspire
-PUBLIC_SIGNALR_URL=http://localhost:5000/hubs/demo
+PUBLIC_API_URL=http://localhost:5050        # ritualworks API on Aspire
+PUBLIC_SIGNALR_URL=http://localhost:5050/hubs/demo
 ```
