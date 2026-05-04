@@ -16,9 +16,11 @@ export interface SagaStepEvent {
 export interface VaultRotationEvent {
   sessionId: string;
   traceId?: string;
-  stage: 'started' | 'activated' | 'grace_period' | 'revoked';
+  // Backend emits 'rotating' and 'rotated' today (DemoVaultService). The
+  // demo's UI maps these to internal labels (started / activated / etc).
+  stage: 'rotating' | 'rotated';
   version: number;
-  previousVersion: number;
+  previousVersion: string | null;
   timestamp: string;
 }
 
@@ -34,8 +36,9 @@ export interface CircuitBreakerEvent {
 export interface RateLimitEvent {
   sessionId: string;
   traceId?: string;
+  allowed: boolean;
   remaining: number;
-  retryAfter?: number;
+  retryAfterSeconds?: number | null;
   timestamp: string;
 }
 

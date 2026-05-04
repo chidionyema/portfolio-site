@@ -74,8 +74,10 @@ export const EventMesh: React.FC<EventMeshProps> = ({ pingTrigger }) => {
     }
   }, [pingTrigger]);
 
-  // Listen to edge-flow events from the topology stream
-  const { lastEvent } = useEventStream<{ edge: string }>('/api/topology/stream');
+  // Listen to edge-flow events from the topology stream. useEventStream returns
+  // an `events` array (newest first); we take [0] as the latest tick.
+  const { events } = useEventStream({ url: '/api/topology/stream' });
+  const lastEvent = events[0] as { edge?: string } | undefined;
 
   useEffect(() => {
     if (lastEvent?.edge) {

@@ -22,7 +22,7 @@ export interface DemoGroup {
 export const demoGroups: DemoGroup[] = [
   {
     id: 'data',
-    label: 'Core_Data_Integrity',
+    label: 'Reliable_Transactions',
     demos: [
       { id: 'checkout',    label: 'Distributed_Saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Solves "Split-Brain" in microservices', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc' },
       { id: 'events',      label: 'Transactional_Outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Ensures Zero-Loss message delivery', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox' },
@@ -31,7 +31,7 @@ export const demoGroups: DemoGroup[] = [
   },
   {
     id: 'resilience',
-    label: 'High_Availability',
+    label: 'Resilience_Under_Load',
     demos: [
       { id: 'circuit',     label: 'Circuit_Breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Prevents Cascading System Failure', Icon: DemoIcon.circuit },
       { id: 'idempotency', label: 'Deterministic_Identity',     desc: 'Safe retries with Redis-backed identity',   valueProp: 'Eliminates Duplicate Side-Effects', Icon: DemoIcon.idempotency },
@@ -40,7 +40,7 @@ export const demoGroups: DemoGroup[] = [
   },
   {
     id: 'caching',
-    label: 'Distributed_State',
+    label: 'Cache_Coherence',
     demos: [
       { id: 'stampede', label: 'Multi_Tier_Cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'Protects DB from Thundering Herd', Icon: DemoIcon.stampede },
       { id: 'cache',    label: 'PubSub_Invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Guarantees Cache Coherence', Icon: DemoIcon.cache },
@@ -48,7 +48,7 @@ export const demoGroups: DemoGroup[] = [
   },
   {
     id: 'secrets',
-    label: 'Security_Infrastructure',
+    label: 'Secret_Lifecycle',
     demos: [
       { id: 'vault', label: 'Dynamic_Credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Eliminates Static Secret Exposure', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
     ],

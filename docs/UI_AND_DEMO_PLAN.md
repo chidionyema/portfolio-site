@@ -121,11 +121,106 @@ Captured here so they're not lost. **Not** part of the current pass; addressed a
 
 ---
 
+## TODO — Aspire end-to-end smoke test
+
+Outstanding from the 2026-05-04 session. Substantial code shipped across both repos; never actually exercised against a running stack. The earlier attempt timed out before Aspire was fully up.
+
+**Prereqs (all applied 2026-05-04, verified in code):**
+- Backend CORS allows `http://localhost:4321` (Astro default) — `SecurityServiceExtensions.cs:80-93`.
+- `[IgnoreAntiforgeryToken]` on `DemoController` so demo POSTs aren't blocked by global CSRF.
+- Frontend `.env.development` points at `https://localhost:7121` (the actual API HTTPS port from `launchSettings.json`).
+- Docker Desktop must be running before `dotnet run --project src/haworks.AppHost`.
+
+**How to run:**
+
+```bash
+# terminal 1 — backend
+cd /path/to/ritualworks
+dotnet run --project src/haworks.AppHost --launch-profile https
+
+# wait for the Aspire dashboard to show all resources green
+# then terminal 2 — frontend
+cd /path/to/portfolio-site
+npm run dev
+```
+
+Open `http://localhost:4321`. Click through every demo. Watch the SignalR connection pill (top-left of the demo hub) — it should read `SignalR_Live` once the API is up.
+
+**What to verify, demo by demo:**
+
+| Demo | Expected behavior |
+| --- | --- |
+| Saga (`Path_Happy`) | `initiated → stock_reserved → payment_ready → completed` events appear in the audit log |
+| Saga (`Fault_Stock`) | Saga reaches `stock_failed`, then `compensated` |
+| Saga (`Fault_Pay`) | Saga reaches `payment_failed`, compensation runs |
+| Saga (`Stock_Race`) | **New.** Two lanes appear; one ends with 🏆 (Cart_A or Cart_B), the other with the X icon. SagaIds differ. |
+| Outbox | Trigger 3 events while paused → all in `pending` state, queue depth = 3 → click `Resume_Relay` → `relayed` then `consumed` events stream in. Broker tile flips green again. |
+| Circuit Breaker | `Trip_Breaker` → 3 failing requests → state → `Open`. After 6s → state → `Half_Open`, "Probe_Armed" badge. Click `Send_Probe` → on success, state → `Closed`. |
+| Idempotency | TTL=10s. `Send_Request` → `Commit_New`. Replay within 10s → `Replay_Cached`. Wait 10s, replay → `Replay_After_Expiry` (new orderId). `Fire_Race` → 4 outcomes, exactly 1 `Race_Winner`, 3 `Race_Loser`, all sharing the winner's orderId. |
+| Vault rotation | Existing behavior — verify `OnVaultRotation` events still flow. |
+| Cache stampede | Single-process protection visible (multi-replica deferred — see 2.5). |
+| Cache invalidation | Pub/sub event fires across nodes. |
+| Concurrency | Optimistic-lock conflict surfaces on simultaneous edits. |
+| Rate limit | 429 with retry-after on burst above the limit. |
+
+**Likely first-run hiccups:**
+- Self-signed cert on `localhost:7121` blocks the SignalR/fetch handshake. Fix: visit `https://localhost:7121/swagger` once and accept the cert, or `dotnet dev-certs https --trust`.
+- Astro picks a port other than 4321 if 4321 is occupied. Either pass `--port 4321` or update CORS to also allow whatever Astro chose.
+- Aspire's first run pulls Docker images for postgres/redis/rabbitmq/vault/minio/clamav — can take several minutes.
+- Saga events that don't reach the page → previously-flagged routing fix (frontend now subscribes to the returned sagaId via `signalRClient.subscribe(...)`). If saga events still don't arrive, double-check the connection pill says `SignalR_Live` and the browser network tab shows the websocket open.
+
+**Document findings:** if any demo doesn't behave as above, file the gap in this doc with a concrete repro before fixing. Don't smoke-test and silently fix — the gaps are useful evidence for the next round.
+
+---
+
+## Light-mode + mobile audit (2026-05-05)
+
+Static-analysis pass per the design review. **Findings only — no fixes in this round.**
+
+### Light mode is half-built (high impact)
+
+The `.light` class on `<html>` only swaps **5 tokens**: `--color-base`, `--color-surface`, `--color-accent`, `--color-text-primary`, `--hairline` (BaseLayout.astro:70-71 critical CSS). The rest stay at their dark-mode values.
+
+**Concrete failures:**
+
+- **Secondary + muted text becomes low-contrast.** `--color-text-secondary: 148 163 184` and `--color-text-muted: 100 116 139` are defined only in `:root` (`global.css:29-30`). In light mode the background flips to `250 250 246` but the secondary/muted text stays grey. Contrast ratio ~2.8:1 for secondary, ~3.6:1 for muted — both fail WCAG AA.
+- **`bg-white` CTAs disappear into the page.** The "primary action" pattern across every demo is `bg-white text-black` (the `Send_Request` / `Dispatch_New_Order` / `Commit_Event` buttons). Tailwind literal `bg-white` does not theme-swap. On a light background these buttons become near-invisible.
+- **Glass surfaces lose their depth.** `.glass` and `.glass-subtle` use `bg-white/[0.03]` — a 3% white overlay. On light bg this is meaningless; the layering effect that makes the dark theme feel "premium console" collapses.
+- **Semantic state colors don't recompute for light bg.** Success/warning/error/info pills (`text-success`, `bg-warning/10`, etc.) use the same RGB triplets in both modes. They look fine on dark; on light they're slightly washed out but not actively broken.
+- **The status-dot glow shadows** (`shadow-[0_0_8px_rgba(34,197,94,0.6)]`) are tuned for dark surfaces. On light, the green/amber/red glows look faint or absent.
+- **TraceViewer span colors** are hardcoded dark-theme picks (`#6366f1`, `#f59e0b`, etc.). Legible on dark, less so on light.
+
+**Files affected:** every demo component (most use `bg-white` for the primary CTA), `LiveMetricsRow.tsx`, `StatusTray.tsx`, `Scorecard.tsx`, `CodeDrawer.tsx`.
+
+**Suggested fix (separate pass):**
+1. Define light-mode overrides for `--color-text-secondary`, `--color-text-muted`, and the four semantic colors (`success/info/warning/error`) inside `.light` in `global.css` and the BaseLayout critical CSS.
+2. Replace `bg-white text-black` CTA pattern with a token-driven class — e.g. a `btn-primary` component that resolves to `rgb(var(--color-accent))` in both modes, or `bg-primary text-base` so the button always contrasts with the page.
+3. Tune `.glass` overlays per-mode (white/[0.03] on dark, black/[0.04] on light).
+
+**Effort estimate:** 4–6h for full light-mode parity. Or: deprecate light mode entirely (remove `setTheme('light')` from CommandPalette) until the design system is dual-theme by construction. The latter is cheaper.
+
+### Mobile is mostly fine, three concrete risks
+
+`lg:grid-cols-2` (which collapses to single column below 1024px) is used across every demo. The collapse is correct — controls stack on top of telemetry, both stay full-width. Most demos read fine.
+
+**Risks worth verifying on a real phone:**
+
+1. **Stats tiles wrap awkwardly.** `LiveMetricsRow` uses `grid-cols-3` with a `max-w-md` cap. At <360px width the three tiles compress; the `text-lg` numeric values may overflow. Low risk.
+2. **Tracking-heavy labels overflow narrow phones.** Many labels use `tracking-[0.4em]` (40% letter-spacing). E.g. `Hydrating_Production_State…` plus that tracking value can exceed a 320px viewport. Affects: `DemoHubLite` loading skeleton, demo group headers, audit-trail headers.
+3. **Race-mode swimlanes are too narrow at <640px.** The `CheckoutDemo` `stockRace` view renders two `RaceLaneCard`s in a `grid lg:grid-cols-2`. On mobile they stack — fine — but each lane's `min-h-[280px]` event log + header eats vertical real estate (~600px per lane = 1200px for both). Considerable scrolling. Low priority since stockRace is a niche scenario.
+
+**Not a problem despite fears:**
+
+- `text-[10px]` / `text-[9px]` body text stays legible on phones at default system size. Becomes unreadable when the user has Large Text accessibility enabled — but that's the broader Tailwind hardcoded-px-vs-rem tradeoff, not specific to this site.
+- Mobile sidebar (`DemoMobileNav` in `DemoSidebar.tsx`) uses native `<details>`/`<summary>` for disclosure. Accessible by default, no swipe needed.
+
+**Effort to address:** 1–2h for the three concrete risks (mostly tightening `tracking-` values on narrow viewports via `sm:` breakpoint).
+
+---
+
 ## Order of operations (going forward)
 
-1. **Smoke-test what's shipped this session** end-to-end against a running Aspire stack. Backend prereqs already applied (CORS, antiforgery, dev URL alignment). Aspire was built but not booted in the smoke test — that's the next thing to do before any new demo work.
+1. **Aspire end-to-end smoke test** (above). Highest priority because everything else is paper changes until verified.
 2. **Bucket 2 leftovers** — finish #5 `webhookFirst` (5–7h) and #2.2 jitter visualization (3–4h), then #9 cache-stampede-across-replicas (6–9h).
 3. **Bucket 3** — pick the highest-leverage one for the audience (almost certainly *distributed tracing as a demo*) and ship it.
-4. **TS hygiene sweep** — there's still a baseline of pre-existing type errors in `RateLimiterDemo`, `VaultRotationDemo`, `EventMesh`, and `sitemap.xml.ts`. Worth a dedicated 1–2h pass to align the SignalR event types and clean up the implicit-any warnings in `sitemap.xml.ts`.
-
-Backend prerequisites for the smoke test are tracked separately (CORS origin, antiforgery on `DemoController`, dev URL alignment — already applied 2026-05-04).
+4. **TS hygiene sweep** — clear the baseline of pre-existing type errors. Worth doing on a clean day (1–2h).

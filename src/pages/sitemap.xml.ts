@@ -1,14 +1,16 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 
 const SITE = 'https://chidionyema.dev';
 
+type DeepDive = CollectionEntry<'deep-dives'>;
+
 export const GET: APIRoute = async () => {
-  const dives = await getCollection('deep-dives', ({ data }) => !data.draft);
+  const dives = await getCollection('deep-dives', ({ data }: DeepDive) => !data.draft);
 
   const urls = [
     { loc: `${SITE}/`, changefreq: 'weekly', priority: '1.0' },
-    ...dives.map((d) => ({
+    ...dives.map((d: DeepDive) => ({
       loc: `${SITE}/deep-dives/${d.slug}/`,
       lastmod: (d.data.updatedAt ?? d.data.publishedAt).toISOString().slice(0, 10),
       changefreq: 'monthly',
