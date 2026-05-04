@@ -17,6 +17,11 @@ interface Particle {
   edge: Edge;
   progress: number; // 0 to 1
   speed: number;
+  isPing?: boolean;
+}
+
+interface EventMeshProps {
+  pingTrigger?: number;
 }
 
 /**
@@ -24,7 +29,7 @@ interface Particle {
  * Visualizes real-time message flow between system nodes.
  * Fed by the /topology/stream SSE.
  */
-export const EventMesh: React.FC = () => {
+export const EventMesh: React.FC<EventMeshProps> = ({ pingTrigger }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   
@@ -44,6 +49,30 @@ export const EventMesh: React.FC = () => {
     { from: 'api', to: 'redis' },
     { from: 'api', to: 'vault' },
   ], []);
+
+  // Listen to the ping trigger from the parent
+  useEffect(() => {
+    if (pingTrigger && pingTrigger > 0) {
+      // Inject a high-speed "Ping" sequence
+      const sequence = [
+        { from: 'api', to: 'mq' },
+        { from: 'mq', to: 'db' },
+        { from: 'db', to: 'api' }
+      ];
+      
+      sequence.forEach((s, i) => {
+        setTimeout(() => {
+          const edge = { from: s.from, to: s.to };
+          particlesRef.current.push({
+            edge,
+            progress: 0,
+            speed: 0.04, // 4x faster than normal traffic
+            isPing: true
+          });
+        }, i * 150);
+      });
+    }
+  }, [pingTrigger]);
 
   // Listen to edge-flow events from the topology stream
   const { lastEvent } = useEventStream<{ edge: string }>('/api/topology/stream');
@@ -88,7 +117,6 @@ export const EventMesh: React.FC = () => {
       });
 
       // Draw Particles
-      ctx.fillStyle = 'rgba(var(--color-accent), 0.6)';
       particlesRef.current = particlesRef.current.filter(p => p.progress < 1);
       particlesRef.current.forEach(p => {
         const from = nodes.find(n => n.id === p.edge.from)!;
@@ -97,9 +125,16 @@ export const EventMesh: React.FC = () => {
         const x = from.x * width + (to.x * width - from.x * width) * p.progress;
         const y = from.y * height + (to.y * height - from.y * height) * p.progress;
         
+        ctx.fillStyle = p.isPing ? '#7c5cff' : 'rgba(var(--color-accent), 0.6)';
         ctx.beginPath();
-        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.arc(x, y, p.isPing ? 4 : 2, 0, Math.PI * 2);
         ctx.fill();
+
+        if (p.isPing) {
+          ctx.strokeStyle = 'rgba(124, 92, 255, 0.4)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
         
         p.progress += p.speed;
       });

@@ -1,5 +1,12 @@
-export const CODE_SNIPPETS: Record<string, string> = {
-  checkout: `// MassTransit Automatonymous State Machine
+export interface CodeSnippet {
+  code: string;
+  highlights: number[]; // Line numbers to highlight
+  impact: string;       // Contextual impact statement
+}
+
+export const CODE_SNIPPETS: Record<string, CodeSnippet> = {
+  checkout: {
+    code: `// MassTransit Automatonymous State Machine
 public class OrderSaga : MassTransitStateMachine<OrderState>
 {
     public OrderSaga()
@@ -25,8 +32,12 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
         );
     }
 }`,
+    highlights: [11, 12, 13, 17, 18, 19],
+    impact: "Orchestrates distributed state without 2PC (Two-Phase Commit)."
+  },
 
-  events: `// Transactional Outbox Pattern with Entity Framework Core
+  events: {
+    code: `// Transactional Outbox Pattern with Entity Framework Core
 public async Task Handle(CreateOrderCommand command)
 {
     await using var transaction = await _db.Database.BeginTransactionAsync();
@@ -49,8 +60,12 @@ public async Task Handle(CreateOrderCommand command)
     
     // Background Relay (OutboxProcessor.cs) will pick this up every 500ms
 }`,
+    highlights: [4, 11, 12, 13, 14, 15, 16, 17, 19, 20],
+    impact: "Ensures Atomicity between DB updates and Message Broker publishing."
+  },
 
-  circuit: `// Polly v8 Resilience Pipeline Configuration
+  circuit: {
+    code: `// Polly v8 Resilience Pipeline Configuration
 var pipeline = new ResiliencePipelineBuilder()
     .AddRetry(new RetryStrategyOptions
     {
@@ -73,8 +88,12 @@ var pipeline = new ResiliencePipelineBuilder()
         HedgingDelay = TimeSpan.FromMilliseconds(250)
     })
     .Build();`,
+    highlights: [10, 11, 12, 13, 14, 15, 16, 17],
+    impact: "Prevents cascading failures by failing fast when downstream services are unhealthy."
+  },
 
-  stampede: `// .NET 9 HybridCache with Thundering Herd Protection
+  stampede: {
+    code: `// .NET 9 HybridCache with Thundering Herd Protection
 public async Task<Product> GetProductAsync(string id, CancellationToken ct)
 {
     // HybridCache handles L1 (Memory) and L2 (Redis) automatically.
@@ -90,8 +109,12 @@ public async Task<Product> GetProductAsync(string id, CancellationToken ct)
         token: ct
     );
 }`,
+    highlights: [7, 8, 9, 10, 11, 12],
+    impact: "Solves the 'Cache Stampede' problem using internal per-key async locking."
+  },
 
-  vault: `// Zero-Downtime PostgreSQL Rotation (Vault Service)
+  vault: {
+    code: `// Zero-Downtime PostgreSQL Rotation (Vault Service)
 public async Task<DbConnection> GetActiveConnectionAsync()
 {
     // 1. Check local cache for unexpired Vault credentials
@@ -113,8 +136,12 @@ public async Task<DbConnection> GetActiveConnectionAsync()
     _cache.Set("db_creds", newCreds);
     return CreateConnection(newCreds);
 }`,
+    highlights: [11, 12, 14, 15, 16, 17],
+    impact: "Secures database access with dynamic, short-lived credentials."
+  },
 
-  idempotency: `// Redis-backed Idempotency Middleware
+  idempotency: {
+    code: `// Redis-backed Idempotency Middleware
 public async Task InvokeAsync(HttpContext context)
 {
     if (!context.Request.Headers.TryGetValue("X-Idempotency-Key", out var key))
@@ -140,8 +167,12 @@ public async Task InvokeAsync(HttpContext context)
 
     await _next(context);
 }`,
+    highlights: [10, 11, 12, 13, 14, 15],
+    impact: "Guarantees exact-once processing of critical business operations."
+  },
 
-  concurrency: `// EF Core Optimistic Concurrency with Postgres xmin
+  concurrency: {
+    code: `// EF Core Optimistic Concurrency with Postgres xmin
 public sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventory>
 {
     public void Configure(EntityTypeBuilder<Inventory> builder)
@@ -160,11 +191,15 @@ public sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventory>
 // In Repository:
 // Throws DbUpdateConcurrencyException if 'xmin' changed since Read
 await _context.SaveChangesAsync();`,
+    highlights: [10, 11, 12, 13, 14],
+    impact: "Leverages Postgres system columns for zero-overhead optimistic locking."
+  },
 
-  ratelimit: `// Redis Fixed Window Rate Limiting
+  ratelimit: {
+    code: `// Redis Fixed Window Rate Limiting
 public async Task<bool> IsAllowedAsync(string clientId)
 {
-    var key = $"ratelimit:{clientId}:{DateTime.UtcNow:mm}";
+    var key = \`ratelimit:\${clientId}:\${DateTime.UtcNow:mm}\`;
     
     // Atomic increment and expiry set
     var count = await _redis.StringIncrementAsync(key);
@@ -174,5 +209,8 @@ public async Task<bool> IsAllowedAsync(string clientId)
     }
 
     return count <= _options.MaxRequestsPerMinute;
-}`
+}`,
+    highlights: [7, 8, 9, 10, 11],
+    impact: "Protects service bandwidth using a distributed fixed-window counter."
+  }
 };

@@ -1,6 +1,7 @@
 ---
 import SiteNav from '../components/system/SiteNav.astro';
 import { StatusStrip } from '../components/system/StatusStrip';
+import { LiveEnvironmentToast } from '../components/system/LiveEnvironmentToast';
 import { getHealthSnapshot } from '../lib/api/demo-client';
 
 const initialHealth = await getHealthSnapshot().catch(() => undefined);
@@ -104,6 +105,8 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
     <SiteNav />
 
     <slot />
+
+    <LiveEnvironmentToast client:load />
 
     <!--
       Site-nav visibility. On pages with a [data-hero] element, the nav stays

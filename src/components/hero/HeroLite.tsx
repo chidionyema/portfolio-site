@@ -7,6 +7,7 @@ import { HeroPreview, type HeroPreviewData } from './HeroPreview';
 import { SystemTopology } from './SystemTopology';
 import { EventMesh } from './EventMesh';
 import { LiveMetricsRow } from '../metrics/LiveMetricsRow';
+import { HERO_PRIMARY_CTA } from '../../lib/copy';
 import type { LiveMetrics } from '../../lib/api/demo-client';
 
 function useMagnetic(strength = 0.18) {
@@ -42,7 +43,25 @@ interface HeroProps {
 export function Hero({ preview, initialMetrics }: HeroProps) {
   const [visible, setVisible] = useState(false);
   const [layoutMode, setLayoutMode] = useState<'split' | 'immersive'>('split');
+  const [ping, setPing] = useState<number | null>(null);
+  const [isPinging, setIsPinging] = useState(false);
+  const [pingTrigger, setPingTrigger] = useState(0);
   const ctaRef = useMagnetic();
+
+  const runPing = async () => {
+    setIsPinging(true);
+    setPingTrigger(p => p + 1);
+    const start = Date.now();
+
+    try {
+      await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5000'}/api/health/snapshot`);
+      setPing(Date.now() - start);
+    } catch (e) {
+      setPing(999);
+    } finally {
+      setIsPinging(false);
+    }
+  };
 
   useEffect(() => {
     setVisible(true);
@@ -106,8 +125,16 @@ export function Hero({ preview, initialMetrics }: HeroProps) {
                        href="#demo"
                        className="px-8 py-4 bg-primary text-black font-bold rounded-full hover:bg-white transition-all shadow-2xl flex items-center gap-2 group"
                      >
-                       PROVE_SYSTEM_STATE <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                       {HERO_PRIMARY_CTA} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                      </a>
+                     <button
+                       onClick={runPing}
+                       disabled={isPinging}
+                       className="px-6 py-4 border border-white/10 rounded-full font-mono text-[10px] font-black uppercase tracking-widest text-muted hover:text-accent hover:border-accent/40 transition-all flex items-center gap-3"
+                     >
+                       <div className={`w-1.5 h-1.5 rounded-full ${ping ? (ping < 150 ? 'bg-success' : 'bg-warning') : 'bg-white/20'} ${isPinging ? 'animate-pulse' : ''}`} />
+                       {isPinging ? 'Pinging_LHR...' : ping ? `LHR_RTT: ${ping}ms` : 'Ping_LHR_Production'}
+                     </button>
                      <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-muted">
                         <a href="https://github.com/chidionyema/haworks" target="_blank" rel="noopener" className="hover:text-primary transition-colors flex items-center gap-2">
                            <GithubIcon className="w-4 h-4" /> REPOSITORY
@@ -134,7 +161,7 @@ export function Hero({ preview, initialMetrics }: HeroProps) {
             >
                {/* Background Mesh Viz */}
                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
-                  <EventMesh />
+                  <EventMesh pingTrigger={pingTrigger} />
                </div>
 
                {/* Foreground Console */}
@@ -161,8 +188,16 @@ export function Hero({ preview, initialMetrics }: HeroProps) {
                           href="#demo"
                           className="px-10 py-5 bg-white text-black font-bold text-lg rounded-full hover:bg-slate-100 transition-all shadow-[0_0_50px_rgba(255,255,255,0.2)] flex items-center gap-3 group"
                         >
-                          Access Control Center <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          {HERO_PRIMARY_CTA} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </a>
+                        <button
+                          onClick={runPing}
+                          disabled={isPinging}
+                          className="px-8 py-5 border border-white/20 rounded-full font-mono text-xs font-black uppercase tracking-[0.2em] text-white/60 hover:text-accent hover:border-accent/40 transition-all flex items-center gap-4"
+                        >
+                          <div className={`w-2 h-2 rounded-full ${ping ? (ping < 150 ? 'bg-success' : 'bg-warning') : 'bg-white/20'} ${isPinging ? 'animate-pulse' : ''}`} />
+                          {isPinging ? 'Establishing_Handshake...' : ping ? `RTT: ${ping}ms // LHR_01` : 'Ping_Remote_Cluster'}
+                        </button>
                      </div>
 
                      <div className="pt-8 border-t border-white/5 flex justify-center font-mono text-[10px] font-black uppercase tracking-widest text-muted">

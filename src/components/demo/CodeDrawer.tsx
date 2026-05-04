@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Code2, Copy, Check, ExternalLink } from 'lucide-react';
+import { Code2, Copy, Check, Zap } from 'lucide-react';
 import { GithubIcon } from '../../lib/brand-icons';
 import { CODE_SNIPPETS } from '../../lib/api/code-snippets';
 
@@ -10,7 +10,9 @@ interface CodeDrawerProps {
 
 export function CodeDrawer({ demoId }: CodeDrawerProps) {
   const [copied, setCopied] = useState(false);
-  const code = CODE_SNIPPETS[demoId] || '// Source code not found.';
+  const snippet = CODE_SNIPPETS[demoId];
+  const code = snippet?.code || '// Source code not found.';
+  const lines = code.split('\n');
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
@@ -27,9 +29,17 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
             <Code2 className="w-4 h-4 text-accent-light" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest leading-none mb-1">
-              Production_Source_Code
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+               <span className="text-[10px] font-black text-primary uppercase tracking-widest leading-none">
+                 Production_Source_Code
+               </span>
+               {snippet?.impact && (
+                 <div className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/20 rounded text-[7px] font-black text-accent-light uppercase animate-pulse">
+                    <Zap className="w-2 h-2 fill-current" />
+                    Key_Pattern_Identified
+                 </div>
+               )}
+            </div>
             <span className="text-[8px] text-muted uppercase tracking-[0.2em] leading-none">
               {demoId}.cs // .NET 9.0 Cluster
             </span>
@@ -69,25 +79,47 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
       </div>
 
       {/* Code Area */}
-      <div className="flex-1 overflow-auto p-8 relative group custom-scrollbar">
-        <div className="absolute top-4 right-6 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-           <span className="text-[8px] bg-white/5 border border-white/10 px-2 py-1 rounded font-black text-muted uppercase tracking-widest">
+      <div className="flex-1 overflow-auto relative group custom-scrollbar bg-[#08080a]">
+        <div className="absolute top-4 right-6 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+           <span className="text-[8px] bg-white/5 border border-white/10 px-2 py-1 rounded font-black text-muted uppercase tracking-widest backdrop-blur-md">
               Read_Only
            </span>
         </div>
         
-        <pre className="text-[13px] leading-relaxed text-secondary/90 whitespace-pre selection:bg-accent/30 selection:text-white">
-          <code className="language-csharp">
-            {code}
-          </code>
-        </pre>
+        <div className="py-8 min-w-full inline-block">
+          {lines.map((line, i) => {
+            const isHighlighted = snippet?.highlights.includes(i + 1);
+            return (
+              <div 
+                key={i} 
+                className={`
+                  flex items-start px-8 group/line relative
+                  ${isHighlighted ? 'bg-accent/10 border-l-2 border-accent' : 'border-l-2 border-transparent'}
+                `}
+              >
+                <span className="w-12 shrink-0 text-[10px] text-muted/30 select-none pt-1">{(i + 1).toString().padStart(2, '0')}</span>
+                <pre className={`
+                  text-[13px] leading-relaxed whitespace-pre selection:bg-accent/30 selection:text-white
+                  ${isHighlighted ? 'text-primary font-bold' : 'text-secondary/70'}
+                `}>
+                  {line || ' '}
+                </pre>
+                {isHighlighted && (
+                  <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                    <span className="text-[7px] font-black uppercase text-accent-light tracking-tighter bg-accent/10 px-1 rounded">Crucial_Logic</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Footer Info */}
       <div className="px-6 py-4 bg-accent/5 border-t border-white/5">
         <p className="text-[10px] text-secondary/60 font-medium leading-relaxed italic flex items-center gap-2">
           <span className="w-1 h-1 bg-accent-light rounded-full" />
-          "This snippet represents the actual implementation running in the Fly.io cluster. Patterns: DDD, Clean Architecture, MassTransit."
+          {snippet?.impact ? `"${snippet.impact}"` : `"This snippet represents the actual implementation running in the Fly.io cluster."`}
         </p>
       </div>
     </div>
