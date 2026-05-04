@@ -208,7 +208,7 @@ export function IdempotencyDemo() {
 
         <div className="surface p-8 shadow-2xl space-y-8 font-mono">
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/40">
+            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60">
               Request_Header: X-Idempotency-Key
             </label>
             <div className="flex gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl">
@@ -219,7 +219,7 @@ export function IdempotencyDemo() {
               <button
                 onClick={generateKey}
                 disabled={isLoading || isRacing}
-                className="p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-20"
+                className="focus-ring p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-20"
               >
                 <RefreshCcw className="w-5 h-5" />
               </button>
@@ -227,7 +227,7 @@ export function IdempotencyDemo() {
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/40">
+            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60">
               X-Idempotency-Ttl-Seconds
             </label>
             <div className="flex gap-2">
@@ -236,7 +236,7 @@ export function IdempotencyDemo() {
                   key={t}
                   onClick={() => setTtlPreset(t)}
                   disabled={isLoading || isRacing}
-                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                  className={`focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
                     ttlPreset === t
                       ? 'bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]'
                       : 'bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10'
@@ -255,7 +255,7 @@ export function IdempotencyDemo() {
             <button
               onClick={sendRequest}
               disabled={isLoading || isRacing}
-              className="py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
               Send_Request
@@ -263,7 +263,7 @@ export function IdempotencyDemo() {
             <button
               onClick={fireRace}
               disabled={isLoading || isRacing}
-              className="py-4 bg-warning/10 hover:bg-warning/15 border border-warning/30 text-warning font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+              className="focus-ring py-4 bg-warning/10 hover:bg-warning/15 border border-warning/30 text-warning font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isRacing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Swords className="w-4 h-4" />}
               {isRacing ? 'Racing...' : 'Fire_Race'}
@@ -273,7 +273,7 @@ export function IdempotencyDemo() {
           <div className="space-y-6 pt-6 border-t border-white/5">
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-3">
-                <Database className="w-4 h-4 text-muted/40" />
+                <Database className="w-4 h-4 text-muted/60" />
                 <span className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">
                   Distributed_Key_Cache
                 </span>
@@ -347,7 +347,7 @@ export function IdempotencyDemo() {
                         {o.isWinner ? (
                           <Trophy className="w-3 h-3 text-success" />
                         ) : (
-                          <Copy className="w-3 h-3 text-muted/40" />
+                          <Copy className="w-3 h-3 text-muted/60" />
                         )}
                       </div>
                       <div className="text-[10px] font-mono text-secondary truncate">
@@ -400,7 +400,7 @@ export function IdempotencyDemo() {
 
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/40 uppercase text-[10px] font-black tracking-widest">
+              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/60 uppercase text-[10px] font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-4">Timestamp</th>
                   <th className="px-6 py-4">Action</th>

@@ -146,11 +146,11 @@ export function ConcurrencyDemo() {
                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 font-mono">
                   <div className="p-5 bg-black/40 border border-white/5 rounded-2xl space-y-2 text-[11px]">
                      <div className="flex justify-between">
-                        <span className="text-muted/40 uppercase font-black tracking-widest">Snapshot_Value</span>
+                        <span className="text-muted/60 uppercase font-black tracking-widest">Snapshot_Value</span>
                         <span className="text-secondary font-bold">{user.readQuantity} units</span>
                      </div>
                      <div className="flex justify-between">
-                        <span className="text-muted/40 uppercase font-black tracking-widest">Snapshot_ETag</span>
+                        <span className="text-muted/60 uppercase font-black tracking-widest">Snapshot_ETag</span>
                         <span className="text-accent-light font-black">v{user.readVersion}</span>
                      </div>
                   </div>

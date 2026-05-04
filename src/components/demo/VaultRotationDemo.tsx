@@ -149,14 +149,14 @@ export function VaultRotationDemo() {
             <div className="space-y-8 relative z-10">
               <div className="grid gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/40">Credential_Username</label>
+                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Credential_Username</label>
                   <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex items-center justify-between font-mono">
                      <span className="text-accent-light font-bold">{credential.username}</span>
                      {isRotating && <RefreshCw className="w-4 h-4 text-warning animate-spin" />}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/40">Access_Token</label>
+                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Access_Token</label>
                   <div className="flex gap-2">
                     <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex-1 text-muted tracking-[0.4em] font-black font-mono overflow-hidden truncate">
                       {showPassword ? 'sha256:a9f2b48c1e...' : '••••••••••••••••'}
@@ -172,7 +172,7 @@ export function VaultRotationDemo() {
               </div>
 
               <div className="space-y-3">
-                 <div className="flex justify-between text-[9px] font-black text-muted/40 uppercase tracking-widest">
+                 <div className="flex justify-between text-[9px] font-black text-muted/60 uppercase tracking-widest">
                     <span>Provisioned</span>
                     <span className="text-warning/60">Rotation_Threshold</span>
                  </div>
@@ -234,14 +234,14 @@ export function VaultRotationDemo() {
 
            <div className="glass-subtle p-6 flex flex-col h-[230px] overflow-hidden">
               <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
-                 <ArrowRightLeft className="w-4 h-4 text-muted/40" />
+                 <ArrowRightLeft className="w-4 h-4 text-muted/60" />
                  <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">System_Auth_Events</span>
               </div>
               <div className="flex-1 overflow-y-auto space-y-4 font-mono">
                  <AnimatePresence initial={false}>
                     {localLogs.map((log) => (
                        <motion.div key={log.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex gap-4 text-[10px] items-start">
-                          <span className="text-muted/40 whitespace-nowrap">[{log.timestamp.toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 1 })}]</span>
+                          <span className="text-muted/60 whitespace-nowrap">[{log.timestamp.toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 1 })}]</span>
                           <span className={`font-bold uppercase tracking-tight ${log.type === 'success' ? 'text-success/80' : log.type === 'warning' ? 'text-warning/80' : 'text-secondary/80'}`}>
                              {log.message}
                           </span>

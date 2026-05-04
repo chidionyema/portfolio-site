@@ -161,7 +161,7 @@ export function EventFlowDemo() {
             <button
               onClick={triggerEvent}
               disabled={isProcessing || !isConnected}
-              className="py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 fill-current" />}
               Commit_Event
@@ -169,7 +169,7 @@ export function EventFlowDemo() {
             <button
               onClick={toggleRelay}
               disabled={isToggling || !isConnected}
-              className={`py-4 font-black text-xs uppercase tracking-widest rounded-2xl border transition-all disabled:opacity-30 flex items-center justify-center gap-2 ${
+              className={`focus-ring py-4 font-black text-xs uppercase tracking-widest rounded-2xl border transition-all disabled:opacity-30 flex items-center justify-center gap-2 ${
                 relay.isPaused
                   ? 'bg-success/10 border-success/30 text-success hover:bg-success/15'
                   : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/15'
@@ -213,12 +213,12 @@ export function EventFlowDemo() {
           </AnimatePresence>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/40">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
               Database_Outbox_Audit
             </label>
             <div className="glass-subtle overflow-hidden min-h-[220px]">
               <table className="w-full text-[10px] border-collapse">
-                <thead className="bg-white/5 border-b border-white/5 text-muted/40 uppercase tracking-widest">
+                <thead className="bg-white/5 border-b border-white/5 text-muted/60 uppercase tracking-widest">
                   <tr>
                     <th className="px-4 py-3 text-left font-black">Event_ID</th>
                     <th className="px-4 py-3 text-left font-black">Status</th>
@@ -248,7 +248,7 @@ export function EventFlowDemo() {
                           <td className="px-4 py-3.5">
                             <StatusPill status={m.status} />
                           </td>
-                          <td className="px-4 py-3.5 text-right text-muted/40 tabular-nums">
+                          <td className="px-4 py-3.5 text-right text-muted/60 tabular-nums">
                             [{formatTime(m.timestamp)}]
                           </td>
                         </motion.tr>

@@ -166,7 +166,7 @@ export function CircuitBreakerDemo() {
             <button
               onClick={() => issueRequest(false)}
               disabled={!isConnected || isTripping || isRequesting}
-              className="py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isRequesting && !isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
               {probeArmed ? 'Send_Probe' : 'Send_Request'}
@@ -174,7 +174,7 @@ export function CircuitBreakerDemo() {
             <button
               onClick={tripBreaker}
               disabled={!isConnected || isTripping || isRequesting}
-              className="py-4 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+              className="focus-ring py-4 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
               {isTripping ? 'Tripping...' : 'Trip_Breaker'}
@@ -184,7 +184,7 @@ export function CircuitBreakerDemo() {
           <button
             onClick={resetBreaker}
             disabled={!isConnected}
-            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-secondary font-bold text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+            className="focus-ring w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-secondary font-bold text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
           >
             <RefreshCcw className="w-3.5 h-3.5" />
             Manual_Reset
@@ -343,7 +343,7 @@ interface TransitionTimelineProps {
 function TransitionTimeline({ transitions }: TransitionTimelineProps) {
   if (transitions.length === 0) {
     return (
-      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-muted/40 border-t border-white/5 pt-5">
+      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-muted/60 border-t border-white/5 pt-5">
         <span>Transition_Log</span>
         <span className="italic">No transitions observed</span>
       </div>

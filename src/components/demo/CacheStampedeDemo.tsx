@@ -127,7 +127,7 @@ export function CacheStampedeDemo() {
                        {tier.active && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
                     </div>
                     <div className="flex flex-col items-center leading-none">
-                       <span className={`text-[10px] font-black uppercase tracking-widest ${tier.active ? 'text-primary' : 'text-muted/40'}`}>{tier.label}</span>
+                       <span className={`text-[10px] font-black uppercase tracking-widest ${tier.active ? 'text-primary' : 'text-muted/60'}`}>{tier.label}</span>
                        <span className="text-[9px] font-mono opacity-40 mt-1">{tier.time}</span>
                     </div>
                   </div>
@@ -177,7 +177,7 @@ export function CacheStampedeDemo() {
                   </div>
                   <div className="flex items-center gap-2.5">
                      <Lock className="w-4 h-4 text-success opacity-60" />
-                     <span className="text-[10px] font-black uppercase tracking-widest">REDIS_LOCK: <span className={isRunning === 'lock' ? 'text-success' : 'text-muted/40'}>{isRunning === 'lock' && activeTier === 'db' ? 'HELD' : 'OPEN'}</span></span>
+                     <span className="text-[10px] font-black uppercase tracking-widest">REDIS_LOCK: <span className={isRunning === 'lock' ? 'text-success' : 'text-muted/60'}>{isRunning === 'lock' && activeTier === 'db' ? 'HELD' : 'OPEN'}</span></span>
                   </div>
                </motion.div>
              )}
@@ -186,7 +186,7 @@ export function CacheStampedeDemo() {
 
         <div className="surface overflow-hidden shadow-xl">
           <table className="w-full text-left font-mono text-[10px] border-collapse">
-            <thead className="bg-[#0d0d12] border-b border-white/10 uppercase tracking-widest text-muted/40">
+            <thead className="bg-[#0d0d12] border-b border-white/10 uppercase tracking-widest text-muted/60">
               <tr>
                 <th className="px-4 py-3 font-black">Strategy</th>
                 <th className="px-4 py-3 font-black text-center">DB_Hits</th>

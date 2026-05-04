@@ -68,7 +68,7 @@ export function DemoHub() {
   const [activeId, setActiveId] = useState(DEFAULT_DEMO);
   const [isChaosOpen, setIsChaosOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'live' | 'source'>('live');
-  const { updateChaos } = useDemoSession();
+  const { updateChaos, isConnected, error: connectionError } = useDemoSession();
   const latestTraceId = useLatestTraceId();
 
   useEffect(() => {
@@ -109,9 +109,28 @@ export function DemoHub() {
             <header className="mb-16 relative">
                <div className="flex flex-wrap items-center justify-between gap-4 mb-12 border-b border-white/5 pb-8 font-mono text-[10px] font-bold uppercase tracking-[0.2em]">
                   <div className="flex items-center gap-8">
-                     <div className="flex items-center gap-2.5 text-success">
-                        <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                        <span className="tracking-normal font-black">Operational</span>
+                     <div
+                       className={`flex items-center gap-2.5 ${
+                         isConnected ? 'text-success' : connectionError ? 'text-error' : 'text-warning'
+                       }`}
+                       title={
+                         isConnected
+                           ? 'SignalR live — events streaming'
+                           : connectionError ?? 'Connecting to telemetry stream…'
+                       }
+                     >
+                        <div
+                          className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                            isConnected
+                              ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]'
+                              : connectionError
+                              ? 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.6)]'
+                              : 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.6)]'
+                          }`}
+                        />
+                        <span className="tracking-normal font-black">
+                           {isConnected ? 'SignalR_Live' : connectionError ? 'SignalR_Offline' : 'SignalR_Connecting'}
+                        </span>
                      </div>
                      <div className="flex items-center gap-2.5">
                         <span className="text-muted">Node:</span>
@@ -121,23 +140,26 @@ export function DemoHub() {
                   
                   <div className="flex items-center gap-3">
                      <div className="flex p-1 bg-black/40 rounded-xl border border-white/5 mr-2">
-                        <button 
+                        <button
                           onClick={() => setViewMode('live')}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'live' ? 'bg-accent text-white shadow-lg' : 'text-muted hover:text-secondary'}`}
+                          aria-pressed={viewMode === 'live'}
+                          className={`focus-ring flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'live' ? 'bg-accent text-white shadow-lg' : 'text-muted hover:text-secondary'}`}
                         >
                            <Cpu className="w-3 h-3" /> System
                         </button>
-                        <button 
+                        <button
                           onClick={() => setViewMode('source')}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'source' ? 'bg-accent text-white shadow-lg' : 'text-muted hover:text-secondary'}`}
+                          aria-pressed={viewMode === 'source'}
+                          className={`focus-ring flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'source' ? 'bg-accent text-white shadow-lg' : 'text-muted hover:text-secondary'}`}
                         >
                            <Code2 className="w-3 h-3" /> Source
                         </button>
                      </div>
 
-                     <button 
+                     <button
                        onClick={() => setIsChaosOpen(true)}
-                       className="flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-xl transition-all group"
+                       aria-label="Open chaos engine controls"
+                       className="focus-ring flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-xl transition-all group"
                      >
                         <ShieldAlert className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
                         <span className="tracking-widest">Inject_Chaos</span>

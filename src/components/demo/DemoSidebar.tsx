@@ -42,7 +42,7 @@ export const demoGroups: DemoGroup[] = [
     id: 'caching',
     label: 'Distributed_State',
     demos: [
-      { id: 'stampede', label: 'HybridCache_L2',     desc: '.NET 9 multi-tier thundering herd prevention',  valueProp: 'Protects DB from Thundering Herd', Icon: DemoIcon.stampede },
+      { id: 'stampede', label: 'Multi_Tier_Cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'Protects DB from Thundering Herd', Icon: DemoIcon.stampede },
       { id: 'cache',    label: 'PubSub_Invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Guarantees Cache Coherence', Icon: DemoIcon.cache },
     ],
   },
@@ -177,7 +177,7 @@ export function DemoMobileNav({ activeId, onSelect }: MobileNavProps) {
                     `}
                   >
                     <div className="flex items-center gap-4">
-                       <demo.Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-accent' : 'text-muted/40'}`} strokeWidth={2} />
+                       <demo.Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-accent' : 'text-muted/60'}`} strokeWidth={2} />
                        <span className="tracking-tight">{demo.label}</span>
                     </div>
                     {isActive && <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]" />}

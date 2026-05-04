@@ -194,7 +194,7 @@ export function RateLimiterDemo() {
            <div className="flex-1 overflow-y-auto font-mono text-[11px]">
               <table className="w-full text-left border-collapse">
                  <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10">
-                    <tr className="text-muted/40 uppercase text-[9px] font-black tracking-widest">
+                    <tr className="text-muted/60 uppercase text-[9px] font-black tracking-widest">
                        <th className="px-6 py-3">Timestamp</th>
                        <th className="px-6 py-3">Result</th>
                        <th className="px-6 py-3 text-right">TKNS_REM</th>

@@ -143,16 +143,22 @@ export function CheckoutDemo() {
         <label className="text-[10px] font-black text-muted uppercase tracking-[0.3em]">
           Select Execution Path
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+        <div
+          role="radiogroup"
+          aria-label="Saga scenario"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-1 mt-3 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
+        >
           {(Object.keys(SCENARIO_LABEL) as Scenario[]).map((s) => (
             <button
               key={s}
               onClick={() => setScenario(s)}
               disabled={isProcessing}
-              className={`py-3 px-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${
+              role="radio"
+              aria-checked={scenario === s}
+              className={`focus-ring py-2.5 px-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
                 scenario === s
-                  ? 'bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]'
-                  : 'bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10'
+                  ? 'bg-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]'
+                  : 'text-muted hover:text-secondary hover:bg-white/5'
               } disabled:opacity-30`}
             >
               {SCENARIO_LABEL[s]}
@@ -185,7 +191,7 @@ export function CheckoutDemo() {
         <button
           onClick={runSimulation}
           disabled={isProcessing || !isConnected}
-          className={`w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-20 flex items-center justify-center gap-3 ${
+          className={`focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-20 flex items-center justify-center gap-3 ${
             showTooltip ? 'animate-pulse ring-4 ring-accent/30 scale-[1.02]' : 'hover:bg-slate-100'
           }`}
         >
@@ -241,7 +247,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
 
         <div className="surface p-8 shadow-2xl">
           <div className="glass-subtle p-6 relative overflow-hidden">
-            <div className="flex items-center justify-between relative z-10 text-[10px] font-bold uppercase tracking-widest text-muted/40">
+            <div className="flex items-center justify-between relative z-10 text-[10px] font-bold uppercase tracking-widest text-muted/60">
               <span className={sagaState === 'Initial' || sagaState === 'initiated' ? 'text-primary' : ''}>Initial</span>
               <div className="h-px bg-white/10 flex-1 mx-4" />
               <span className={sagaState === 'stock_reserved' ? 'text-info' : ''}>Stock</span>
@@ -290,7 +296,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10">
-                <tr className="text-muted/40 uppercase text-[10px] font-black tracking-widest">
+                <tr className="text-muted/60 uppercase text-[10px] font-black tracking-widest">
                   <th className="px-6 py-3">Time</th>
                   <th className="px-6 py-3">Event_Type</th>
                   <th className="px-6 py-3 text-right">Status</th>

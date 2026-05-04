@@ -17,6 +17,16 @@ const SERVICE_COLORS: Record<string, string> = {
   'vault-service': '#06b6d4', // Cyan
 };
 
+// Deterministic fallback for services not in the explicit palette — keeps the
+// flame graph legible when the backend reports a service we haven't pinned yet.
+const FALLBACK_PALETTE = ['#0ea5e9', '#a855f7', '#14b8a6', '#f97316', '#84cc16', '#e11d48'];
+function colorForService(service: string): string {
+  if (SERVICE_COLORS[service]) return SERVICE_COLORS[service];
+  let hash = 0;
+  for (let i = 0; i < service.length; i++) hash = (hash * 31 + service.charCodeAt(i)) | 0;
+  return FALLBACK_PALETTE[Math.abs(hash) % FALLBACK_PALETTE.length];
+}
+
 export function TraceViewer({ traceId }: TraceViewerProps) {
   const [trace, setTrace] = useState<Trace | null>(null);
   const [loading, setLoading] = useState(false);
@@ -121,7 +131,7 @@ export function TraceViewer({ traceId }: TraceViewerProps) {
                       {sortedSpans.map(span => {
                         const width = (span.durationMs / trace.durationMs) * 100;
                         const left = (span.startMs / trace.durationMs) * 100;
-                        const color = SERVICE_COLORS[span.service] || '#94a3b8';
+                        const color = colorForService(span.service);
 
                         return (
                           <div 

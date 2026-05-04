@@ -68,7 +68,7 @@ export function ConnectionPoolMonitor({ activeVersion, previousVersion, isRotati
 
       <div className="pt-4 border-t border-white/5 space-y-3">
          <div className="flex justify-between items-center font-mono text-[10px] uppercase font-black tracking-widest">
-            <span className="text-muted/40">Active_Version:</span>
+            <span className="text-muted/60">Active_Version:</span>
             <span className="text-primary">{activeVersion}</span>
          </div>
          {isRotating && (
