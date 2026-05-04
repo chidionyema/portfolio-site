@@ -24,40 +24,40 @@ export const demoGroups: DemoGroup[] = [
     id: 'data',
     label: 'Reliable_Transactions',
     demos: [
-      { id: 'checkout',    label: 'Distributed_Saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Solves "Split-Brain" in microservices', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc' },
-      { id: 'events',      label: 'Transactional_Outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Ensures Zero-Loss message delivery', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox' },
-      { id: 'concurrency', label: 'Optimistic_Locking',  desc: 'Pre-emptive conflict detection in Postgres',   valueProp: 'Prevents Data Corruption on race conditions', Icon: DemoIcon.concurrency },
+      { id: 'checkout',    label: 'Distributed_Saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Stops orders from being half-charged', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc' },
+      { id: 'events',      label: 'Transactional_Outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Never silently drops a published event', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox' },
+      { id: 'concurrency', label: 'Optimistic_Locking',  desc: 'Pre-emptive conflict detection in Postgres',   valueProp: 'Two edits never overwrite each other', Icon: DemoIcon.concurrency },
     ],
   },
   {
     id: 'resilience',
     label: 'Resilience_Under_Load',
     demos: [
-      { id: 'circuit',     label: 'Circuit_Breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Prevents Cascading System Failure', Icon: DemoIcon.circuit },
-      { id: 'idempotency', label: 'Deterministic_Identity',     desc: 'Safe retries with Redis-backed identity',   valueProp: 'Eliminates Duplicate Side-Effects', Icon: DemoIcon.idempotency },
-      { id: 'ratelimit',   label: 'Traffic_Shaping',      desc: 'Token-bucket throttling and QoS',       valueProp: 'Guarantees Service Availability under Load', Icon: DemoIcon.ratelimit },
+      { id: 'circuit',     label: 'Circuit_Breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Stops a slow dep from taking everyone down', Icon: DemoIcon.circuit },
+      { id: 'idempotency', label: 'Deterministic_Identity',     desc: 'Safe retries with Redis-backed identity',   valueProp: 'Safe to retry — never charges twice', Icon: DemoIcon.idempotency },
+      { id: 'ratelimit',   label: 'Traffic_Shaping',      desc: 'Token-bucket throttling and QoS',       valueProp: 'One bad client cannot starve everyone else', Icon: DemoIcon.ratelimit },
     ],
   },
   {
     id: 'caching',
     label: 'Cache_Coherence',
     demos: [
-      { id: 'stampede', label: 'Multi_Tier_Cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'Protects DB from Thundering Herd', Icon: DemoIcon.stampede },
-      { id: 'cache',    label: 'PubSub_Invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Guarantees Cache Coherence', Icon: DemoIcon.cache },
+      { id: 'stampede', label: 'Multi_Tier_Cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'A popular cache key never floods the DB', Icon: DemoIcon.stampede },
+      { id: 'cache',    label: 'PubSub_Invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Updates show up everywhere within ms', Icon: DemoIcon.cache },
     ],
   },
   {
     id: 'secrets',
     label: 'Secret_Lifecycle',
     demos: [
-      { id: 'vault', label: 'Dynamic_Credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Eliminates Static Secret Exposure', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
+      { id: 'vault', label: 'Dynamic_Credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Database passwords rotate with no downtime', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
     ],
   },
   {
     id: 'observability',
     label: 'Observability',
     demos: [
-      { id: 'tracing', label: 'Distributed_Tracing', desc: 'Spans across 6 services rendered as a flame graph', valueProp: 'Follows the Request End-to-End', Icon: DemoIcon.tracing },
+      { id: 'tracing', label: 'Distributed_Tracing', desc: 'Spans across 6 services rendered as a flame graph', valueProp: 'Follow one request across every service', Icon: DemoIcon.tracing },
     ],
   },
 ];

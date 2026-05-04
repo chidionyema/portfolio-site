@@ -218,9 +218,71 @@ The `.light` class on `<html>` only swaps **5 tokens**: `--color-base`, `--color
 
 ---
 
+## Outstanding TODOs — consolidated (2026-05-05)
+
+Single source of truth for what's left. Ranked by impact within each tier.
+Effort estimates are rough — treat as "right order of magnitude," not commitments.
+
+### Tier 1 — Critical path / unblockers
+
+These either gate other work or close existing honesty gaps.
+
+- **T1.1 — Aspire end-to-end smoke test.** Documented in detail above. Highest leverage because it unblocks Flow B's three remaining gates (integration tests, EF migration, `ReservationConfirmedConsumer` integration test) AND verifies every demo's flame graph end-to-end. **Est: 2–4h** if the stack comes up clean; expect surprises (cert trust, port collisions, container pulls).
+- **T1.2 — Backend honesty pass: `/api/metrics/snapshot` + `/api/health/snapshot`.** Both return hardcoded literals today (`SystemController.cs:38-40,82-87`). My earlier fix made the *frontend* honest about offline state, but in normal operation the page still displays `18234`, `99.998%`, `42.4ms` — pulled from an API that isn't measuring anything.
+   - **Plan:** add a tiny `IDemoActivityCounters` singleton that tracks `ingressEvents24h` (incremented on every demo POST), `activeSessions` (Set of recent X-Demo-Session ids with a sliding window), `p99LatencyMs` (rolling histogram of per-request durations from a middleware). Wire `SystemController.GetMetricsSnapshot` to read it. Health snapshot's `latencyMs` per-service can pull from the same middleware tagged by route prefix.
+   - **Why this approach:** 2–4h of work, gives an honest "this is real activity on this server right now." Alternative (real Prometheus + scraper) is 8–12h and overkill for a portfolio.
+   - **Est: 2–4h.**
+- **T1.3 — `Cluster_Healthy // LHR_01` + `lhr_cluster_01` node label honesty.** Hardcoded strings in `index.astro` and `DemoHubLite.tsx` claim a specific datacenter. Either wire to a real env-var-driven label (e.g. read from `PUBLIC_CLUSTER_LABEL`) or rephrase to remove the geo-specific claim. **Est: 30min.**
+
+### Tier 2 — Reaching 8/10 on UX clarity
+
+The three small wins identified by the design review. *All landing in this session per user direction.*
+
+- **T2.1 — Plain-English `valueProp` rewrite.** Current valueProps assume domain vocabulary ("Solves Split-Brain in microservices", "Eliminates Duplicate Side-Effects"). Rewrite to outcome language a non-domain-expert engineer can parse. Owns `DemoSidebar.tsx`. **Est: 1h.**
+- **T2.2 — Auto-expand TraceViewer on first trace fire of a session.** Persist the choice in localStorage so subsequent visits respect the user's manual toggle. Owns `TraceViewer.tsx`. **Est: 30min.**
+- **T2.3 — Tooltips on dangerous-verb buttons.** Trip_Breaker, Manual_Reset, Pause_Relay, Resume_Relay, Fire_Race, Inject_Chaos. `title=` + `aria-label`. Reassure the user about reversibility. **Est: 30min.**
+
+### Tier 3 — Bucket 2 leftovers (deepen existing demos)
+
+- **T3.1 — Saga `webhookFirst` scenario** (5–7h). Crosses webhooks + payment session + saga state machine. Backend needs a synthetic Stripe webhook injection and a saga branch that handles the early-settled state.
+- **T3.2 — Circuit Breaker jitter visualization** (3–4h). Mostly frontend — render N concurrent simulated clients with their own retry-with-jitter timing so the staggered backoff is visible.
+
+### Tier 4 — Bucket 3 demos (new captures of backend capabilities)
+
+Listed in priority order for portfolio impact. *Distributed tracing already shipped 2026-05-05.*
+
+- **T4.1 — Reservation-based checkout (Flow B) UI** (4–6h). Flow B backend is now committed (commit `4543b46`). Demo creates a reservation with 30s TTL, watches the sweeper expire it. **Gated by T1.1** (Aspire smoke test) since the integration tests need to run first.
+- **T4.2 — JTI token revocation (L1 + L2 cache)** (4–6h). Issue → Revoke → Validate, surface cache-layer hit timings. Real OAuth pattern, very portfolio-credible.
+- **T4.3 — Bulkhead isolation + Null vs Critical fallback handlers** (3–4h). Smallest scope of the bunch; builds on the existing CircuitBreakerDemo.
+- **T4.4 — Idempotent webhook ingestion** (4–5h). Replay the same Stripe webhook 3×, first processes, rest dedupe.
+- **T4.5 — Vault dynamic DB credentials** (4–6h). Deepens the existing vault demo to show 5 separate role lifecycles (one per bounded context).
+- **T4.6 — MassTransit publish/consume observers** (3–5h). 6-stage outbox timeline with per-stage latencies; complements the outbox demo.
+- **T4.7 — Chunked upload + ClamAV + magic bytes** (6–10h). Largest of the bunch. EICAR test file rejected, resumable chunks. Worth doing only if uploads are actually a part of the pitch.
+
+### Tier 5 — Light-mode + mobile cleanup
+
+- **T5.1 — Light-mode parity.** Detailed findings in the audit section above. **Est: 4–6h** to fix properly, OR ~30min to deprecate light mode (remove `setTheme('light')` from CommandPalette) until the design system is dual-theme by construction. Leaning toward deprecate since light isn't currently the brand.
+- **T5.2 — Mobile concrete risks.** Three filed: stats overflow at <360px, `tracking-` overflow on narrow phones, race-mode swimlane height. **Est: 1–2h**.
+
+### Tier 6 — Smaller cleanups (bundle when convenient)
+
+- **T6.1 — Demo header competing chrome.** Status pill + Node label + System/Source toggle + Inject_Chaos all sit at full visual weight. Demote secondary info (Node label, view toggle background) so the demo title wins. **Est: 30min.**
+- **T6.2 — Drop `stash@{0}`** in ritualworks. Flow B's `DemoResilienceRegistry` is now in HEAD. Stash is redundant. **Est: 1 command.**
+- **T6.3 — Onboarding "start here" hint** on the default-loaded saga demo. Currently a tooltip appears after 3 seconds of inaction; consider a subtle persistent "👇 click Dispatch_New_Order to fire your first saga" line until the first run completes. **Est: 30min.**
+- **T6.4 — Document the `.env.development` convention.** The frontend depends on a gitignored `.env.development` that was set to `7123` (wrong) in someone's local clone. Add an `.env.example` with the right defaults so a fresh clone runs against the right port. **Est: 15min.**
+
+### Out of scope (operational hygiene)
+
+`TokenCleanupService`, `StockJanitorService` (sweeper safety net), health checks, telemetry plumbing, alerting service. Not user-facing.
+
+---
+
 ## Order of operations (going forward)
 
-1. **Aspire end-to-end smoke test** (above). Highest priority because everything else is paper changes until verified.
-2. **Bucket 2 leftovers** — finish #5 `webhookFirst` (5–7h) and #2.2 jitter visualization (3–4h), then #9 cache-stampede-across-replicas (6–9h).
-3. **Bucket 3** — pick the highest-leverage one for the audience (almost certainly *distributed tracing as a demo*) and ship it.
-4. **TS hygiene sweep** — clear the baseline of pre-existing type errors. Worth doing on a clean day (1–2h).
+1. **Tier 2 (reaching 8/10)** — landing in the same pass that produced this doc. (Self-referential; counts because it's the visible polish.)
+2. **Tier 1.1 (Aspire smoke test)** — single highest-impact unblocker.
+3. **Tier 1.2 + 1.3 (backend honesty pass)** — the displayed-but-fake numbers are the biggest credibility risk on the site.
+4. **Tier 4.1 (Flow B UI)** as soon as Tier 1.1 unblocks runtime verification.
+5. **Tier 5.1 (light-mode deprecate)** — quickest way to remove the lurking quality issue without committing to a 4–6h rewrite.
+6. **Tier 4.2 / 4.3 / 4.4 (smaller Bucket-3 demos)** — token revocation, bulkhead, webhook idempotency.
+7. **Everything else** as time allows.

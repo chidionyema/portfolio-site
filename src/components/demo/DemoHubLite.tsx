@@ -161,6 +161,7 @@ export function DemoHub() {
                      <button
                        onClick={() => setIsChaosOpen(true)}
                        aria-label="Open chaos engine controls"
+                       title="Opens chaos controls. You can inject latency, simulate broker outages, or kill specific services. Chaos resets when you close the panel."
                        className="focus-ring flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-xl transition-all group"
                      >
                         <ShieldAlert className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />

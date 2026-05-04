@@ -169,6 +169,12 @@ export function EventFlowDemo() {
             <button
               onClick={toggleRelay}
               disabled={isToggling || !isConnected}
+              title={
+                relay.isPaused
+                  ? 'Resumes the relay. Buffered events drain in FIFO order to the broker.'
+                  : 'Stops dispatching events to the broker. Triggers fire normally but stay in a local buffer until you resume.'
+              }
+              aria-label={relay.isPaused ? 'Resume relay and drain buffered events' : 'Pause relay and buffer new events locally'}
               className={`focus-ring py-4 font-black text-xs uppercase tracking-widest rounded-2xl border transition-all disabled:opacity-30 flex items-center justify-center gap-2 ${
                 relay.isPaused
                   ? 'bg-success/10 border-success/30 text-success hover:bg-success/15'

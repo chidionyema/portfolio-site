@@ -27,13 +27,38 @@ function colorForService(service: string): string {
   return FALLBACK_PALETTE[Math.abs(hash) % FALLBACK_PALETTE.length];
 }
 
+const TRACE_SEEN_KEY = 'ha_trace_seen';
+
 export function TraceViewer({ traceId }: TraceViewerProps) {
   const [trace, setTrace] = useState<Trace | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
+  // First time per browser session that a trace shows up, auto-expand so
+  // first-time visitors discover the flame graph. After that, default to
+  // collapsed and let users opt in via the disclosure caret.
+  const [expanded, setExpanded] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const seen = localStorage.getItem(TRACE_SEEN_KEY);
+      return seen !== 'true';
+    } catch {
+      return false;
+    }
+  });
   const [selectedSpan, setSelectedSpan] = useState<Span | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+
+  // Mark "trace seen" the first time this component mounts with a real id —
+  // even if the user never opens the disclosure, we count that as having
+  // seen the affordance once. Subsequent traces respect the user's choice.
+  useEffect(() => {
+    if (!traceId) return;
+    try {
+      localStorage.setItem(TRACE_SEEN_KEY, 'true');
+    } catch {
+      /* localStorage may be disabled — non-fatal */
+    }
+  }, [traceId]);
 
   const fetchTrace = async () => {
     if (!traceId) return;

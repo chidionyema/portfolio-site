@@ -263,6 +263,8 @@ export function IdempotencyDemo() {
             <button
               onClick={fireRace}
               disabled={isLoading || isRacing}
+              title="Fires 4 concurrent requests with the same idempotency key. Exactly one wins; the others read the winner's response. Reversible — clears the entry first."
+              aria-label="Fire four concurrent requests with the same idempotency key"
               className="focus-ring py-4 bg-warning/10 hover:bg-warning/15 border border-warning/30 text-warning font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isRacing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Swords className="w-4 h-4" />}

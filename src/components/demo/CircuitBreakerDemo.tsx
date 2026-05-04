@@ -166,6 +166,8 @@ export function CircuitBreakerDemo() {
             <button
               onClick={() => issueRequest(false)}
               disabled={!isConnected || isTripping || isRequesting}
+              title={probeArmed ? 'Sends the half-open probe — outcome decides whether the breaker closes or reopens.' : 'Sends a single request through the breaker.'}
+              aria-label={probeArmed ? 'Send half-open probe request' : 'Send single request through breaker'}
               className="focus-ring py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isRequesting && !isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
@@ -174,6 +176,8 @@ export function CircuitBreakerDemo() {
             <button
               onClick={tripBreaker}
               disabled={!isConnected || isTripping || isRequesting}
+              title="Fires 3 failing requests in sequence to trip the breaker. The breaker auto-recovers via the half-open probe after the 6s cooldown."
+              aria-label="Trip the breaker by firing three failing requests"
               className="focus-ring py-4 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
@@ -184,6 +188,8 @@ export function CircuitBreakerDemo() {
           <button
             onClick={resetBreaker}
             disabled={!isConnected}
+            title="Forces the breaker back to Closed without waiting for the cooldown. Discards the cached policy so the next call rebuilds with no failure history."
+            aria-label="Manually reset the breaker to Closed"
             className="focus-ring w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-secondary font-bold text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
           >
             <RefreshCcw className="w-3.5 h-3.5" />
