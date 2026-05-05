@@ -18,6 +18,8 @@ import type { CircuitBreakerEvent } from '../../lib/api/signalr';
 import { RequestReceiptHistory } from './RequestReceipt';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
+
 type CircuitState = 'closed' | 'open' | 'half-open';
 
 interface ResilienceLog {
@@ -44,9 +46,11 @@ export function CircuitBreakerDemo() {
   const [circuitState, setCircuitState] = useState<CircuitState>('closed');
   const [transitions, setTransitions] = useState<StateTransition[]>([]);
   const [logs, setLogs] = useState<ResilienceLog[]>([]);
+  const [baselineLogs, setBaselineLogs] = useState<ResilienceLog[]>([]);
   const [isTripping, setIsTripping] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
-  const [probeArmed, setProbeArmed] = useState(false); // next request will be the probe
+  const [isBaselineRequesting, setIsBaselineRequesting] = useState(false);
+  const [probeArmed, setProbeArmed] = useState(false);
   const [probeInFlight, setProbeInFlight] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
@@ -74,15 +78,16 @@ export function CircuitBreakerDemo() {
 
   // Subscribe to backend state changes
   useEffect(() => {
-    if (events.length === 0) return;
-    const lastEvent = events[0] as CircuitBreakerEvent;
-    if (!lastEvent.state || !lastEvent.timestamp) return;
+    if (events.length > 0) {
+      const lastEvent = events[0] as CircuitBreakerEvent;
+      if (!lastEvent.state || !lastEvent.timestamp) return;
 
-    const eventKey = `${lastEvent.state}-${lastEvent.timestamp}`;
-    if (eventKey === lastEventIdRef.current) return;
-    lastEventIdRef.current = eventKey;
+      const eventKey = `${lastEvent.state}-${lastEvent.timestamp}`;
+      if (eventKey === lastEventIdRef.current) return;
+      lastEventIdRef.current = eventKey;
 
-    updateCircuitLocal(lastEvent.state, lastEvent.timestamp);
+      updateCircuitLocal(lastEvent.state, lastEvent.timestamp);
+    }
   }, [events]);
 
   const issueRequest = async (shouldFail: boolean): Promise<void> => {
@@ -139,11 +144,48 @@ export function CircuitBreakerDemo() {
 
   const tripBreaker = async () => {
     setIsTripping(true);
-    // Threshold is 2 in backend, fire 3 to be deterministic.
-    for (let i = 0; i < 3; i++) {
-      await issueRequest(true);
-    }
+    // Fires Failures to trip breaker AND Baseline failures in parallel for contrast.
+    await Promise.all([
+       (async () => {
+          for (let i = 0; i < 3; i++) {
+             await issueRequest(true);
+          }
+       })(),
+       issueBaselineRequests()
+    ]);
     setIsTripping(false);
+  };
+
+  const issueBaselineRequests = async () => {
+     setIsBaselineRequesting(true);
+     const requests = Array.from({ length: 6 }).map(async () => {
+        const start = Date.now();
+        try {
+           const response = await fetch(`${API_URL}/api/demo/circuit/request`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ shouldFail: true, sessionId: 'baseline-test' })
+           });
+           const latency = Date.now() - start;
+           setBaselineLogs(prev => [{
+              id: crypto.randomUUID(),
+              timestamp: new Date(),
+              status: response.ok ? 'success' : 'failure',
+              message: response.ok ? 'Request OK (bypass)' : 'Request Failed (bypass)',
+              latency
+           }, ...prev.slice(0, 14)]);
+        } catch (err) {
+           setBaselineLogs(prev => [{
+              id: crypto.randomUUID(),
+              timestamp: new Date(),
+              status: 'failure',
+              message: 'Timeout (bypass)',
+              latency: Date.now() - start
+           }, ...prev.slice(0, 14)]);
+        }
+     });
+     await Promise.all(requests);
+     setIsBaselineRequesting(false);
   };
 
   const resetBreaker = async () => {
@@ -161,112 +203,165 @@ export function CircuitBreakerDemo() {
         },
         ...prev.slice(0, 14),
       ]);
+      setBaselineLogs([]);
     } catch {}
   };
 
   return (
-    <div className="space-y-8">
-    <div className="grid lg:grid-cols-2 gap-8">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-accent" />
-            Circuit breaker
-          </h3>
-          <span className="text-[10px] font-mono text-muted uppercase tracking-widest">
-            Threshold: 2 · Cooldown: 6s
-          </span>
-        </div>
+    <div className="space-y-10">
+      <div className="surface p-10 shadow-2xl flex flex-col items-center gap-8 relative overflow-hidden">
+         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-20" />
+         <div className="text-center space-y-2 relative z-10">
+            <h3 className="text-sm font-black text-primary uppercase tracking-[0.4em]">Scenario_Simulation</h3>
+            <p className="text-[10px] text-muted font-bold uppercase tracking-widest opacity-60">High load + Upstream failure contrast</p>
+         </div>
 
-        <div className="surface p-8 shadow-2xl space-y-8">
-          <StateMachineDiagram state={circuitState} probeInFlight={probeInFlight} />
-
-          <ProbeIndicator armed={probeArmed} inFlight={probeInFlight} state={circuitState} />
-
-          <TransitionTimeline transitions={transitions} />
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => issueRequest(false)}
-              disabled={isTripping || isRequesting}
-              title={probeArmed ? 'Sends the half-open probe — outcome decides whether the breaker closes or reopens.' : 'Sends a single request through the breaker.'}
-              aria-label={probeArmed ? 'Send half-open probe request' : 'Send single request through breaker'}
-              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-            >
-              {isRequesting && !isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-              {probeArmed ? 'Send probe' : 'Send request'}
-            </button>
+         <div className="flex flex-wrap justify-center gap-4 relative z-10">
             <button
               onClick={tripBreaker}
               disabled={isTripping || isRequesting}
-              title="Fires 3 failing requests in sequence to trip the breaker. The breaker auto-recovers via the half-open probe after the 6s cooldown."
-              aria-label="Trip the breaker by firing three failing requests"
-              className="focus-ring py-4 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+              className="px-10 py-5 bg-white text-black font-black text-xs uppercase tracking-[0.3em] rounded-2xl shadow-[0_20px_50px_rgba(255,255,255,0.15)] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-20 flex items-center gap-3"
             >
-              {isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-              {isTripping ? 'Tripping…' : 'Trip breaker'}
+              {isTripping ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
+              Trip & Hammer
             </button>
-          </div>
+            <button
+               onClick={() => issueRequest(false)}
+               disabled={isTripping || isRequesting}
+               className="px-8 py-5 bg-white/5 border border-white/10 text-primary font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all disabled:opacity-20"
+            >
+               {probeArmed ? 'Send Probe' : 'Single Request'}
+            </button>
+         </div>
 
-          <button
-            onClick={resetBreaker}
-            disabled={isRequesting}
-            title="Forces the breaker back to Closed without waiting for the cooldown. Discards the cached policy so the next call rebuilds with no failure history."
-            aria-label="Manually reset the breaker to Closed"
-            className="focus-ring w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-secondary font-bold text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-          >
-            <RefreshCcw className="w-3.5 h-3.5" />
-            Manual reset
-          </button>
-        </div>
+         <div className="w-full flex items-center justify-center gap-12 text-[9px] font-black uppercase tracking-widest text-muted/40">
+            <div className="flex items-center gap-2">
+               <div className="w-1.5 h-1.5 rounded-full bg-success" />
+               Threshold: 2 Errors
+            </div>
+            <div className="flex items-center gap-2">
+               <div className="w-1.5 h-1.5 rounded-full bg-warning" />
+               Cooldown: 6s
+            </div>
+         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
-          <ShieldAlert className="w-4 h-4 text-error" />
-          Event log
-        </h3>
+      <div className="grid lg:grid-cols-2 gap-8 relative">
+         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/5 -translate-x-1/2 hidden lg:block" />
 
-        <div className="surface shadow-2xl h-[540px] flex flex-col overflow-hidden font-mono">
-          <div className="px-6 py-4 border-b border-white/5 text-[10px] font-black text-muted uppercase tracking-[0.2em] flex items-center justify-between">
-            <span>{logs.length} entr{logs.length === 1 ? 'y' : 'ies'}</span>
-            <span className="text-success/60">most recent first</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-            <AnimatePresence initial={false}>
-              {logs.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-muted/40 text-[11px] italic">
-                  Fire a request from the controls above — this log will populate in real-time.
-                </div>
-              ) : (
-                logs.map((log) => (
-                  <motion.div
-                    key={log.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className={`flex items-center justify-between p-3 rounded-lg border-l-2 bg-white/[0.01] ${
-                      log.status === 'success' || log.status === 'probe-success'
-                        ? 'border-success/40 text-success/80'
-                        : log.status === 'rejected'
-                        ? 'border-warning/40 text-warning/80'
-                        : 'border-error/40 text-error/80'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 text-[10px] font-bold">
-                      <span className="opacity-30 uppercase">[{log.status.replace('-', ' ')}]</span>
-                      <span className="truncate max-w-[220px] uppercase">{log.message}</span>
-                    </div>
-                    <span className="opacity-40 text-[9px] tabular-nums">{log.latency}ms</span>
-                  </motion.div>
-                ))
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
+         {/* Lane: Without Breaker */}
+         <div className="space-y-6">
+            <div className="flex items-center justify-between">
+               <h3 className="text-xs font-black text-error uppercase tracking-[0.3em] flex items-center gap-3">
+                  <ShieldAlert className="w-4 h-4" />
+                  Without Breaker
+               </h3>
+               <span className="text-[9px] font-mono text-muted/40 uppercase">Baseline_Lane</span>
+            </div>
+
+            <div className="surface p-6 shadow-xl space-y-6 h-[600px] flex flex-col">
+               <div className="p-4 bg-error/5 border border-error/20 rounded-xl">
+                  <p className="text-[10px] text-error/80 font-bold leading-relaxed uppercase tracking-widest">
+                     System saturation. Every failing request blocks a thread for the full 3s timeout.
+                  </p>
+               </div>
+
+               <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                  <AnimatePresence initial={false}>
+                     {baselineLogs.length === 0 ? (
+                        <div className="h-full flex items-center justify-center text-muted/10 text-[11px] font-black uppercase tracking-[0.5em] italic">
+                           Idle
+                        </div>
+                     ) : (
+                        baselineLogs.map((log) => (
+                           <motion.div
+                              key={log.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="p-3 bg-white/[0.02] border-l-2 border-error/40 flex items-center justify-between font-mono"
+                           >
+                              <div className="flex items-center gap-3 text-[10px] font-bold">
+                                 <span className="text-error uppercase">Failure</span>
+                                 <span className="text-muted/60 uppercase">Timeout</span>
+                              </div>
+                              <span className="text-error font-black tabular-nums">{log.latency}ms</span>
+                           </motion.div>
+                        ))
+                     )}
+                  </AnimatePresence>
+               </div>
+            </div>
+         </div>
+
+         {/* Lane: With Breaker */}
+         <div className="space-y-6">
+            <div className="flex items-center justify-between">
+               <h3 className="text-xs font-black text-success uppercase tracking-[0.3em] flex items-center gap-3">
+                  <ShieldCheck className="w-4 h-4" />
+                  With Breaker
+               </h3>
+               <span className="text-[9px] font-mono text-muted/40 uppercase">Resilient_Lane</span>
+            </div>
+
+            <div className="surface p-8 shadow-2xl space-y-8 h-[600px] flex flex-col">
+               <StateMachineDiagram state={circuitState} probeInFlight={probeInFlight} />
+               
+               <AnimatePresence mode="wait">
+                  {probeArmed || probeInFlight ? (
+                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                        <ProbeIndicator armed={probeArmed} inFlight={probeInFlight} state={circuitState} />
+                     </motion.div>
+                  ) : (
+                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 overflow-y-auto pr-2 space-y-1.5 custom-scrollbar">
+                        {logs.length === 0 ? (
+                           <div className="h-full flex items-center justify-center text-muted/10 text-[11px] font-black uppercase tracking-[0.5em] italic">
+                              Monitoring
+                           </div>
+                        ) : (
+                           logs.map((log) => (
+                              <motion.div
+                                 key={log.id}
+                                 initial={{ opacity: 0, x: 20 }}
+                                 animate={{ opacity: 1, x: 0 }}
+                                 className={`flex items-center justify-between p-3 rounded-lg border-l-2 bg-white/[0.01] ${
+                                 log.status === 'success' || log.status === 'probe-success'
+                                    ? 'border-success/40 text-success/80'
+                                    : log.status === 'rejected'
+                                    ? 'border-warning/40 text-warning/80'
+                                    : 'border-error/40 text-error/80'
+                                 }`}
+                              >
+                                 <div className="flex items-center gap-3 text-[10px] font-bold font-mono">
+                                    <span className="opacity-30 uppercase">[{log.status.replace('-', ' ')}]</span>
+                                    <span className="truncate max-w-[140px] uppercase">{log.message}</span>
+                                 </div>
+                                 <span className="opacity-40 text-[9px] tabular-nums font-mono">{log.latency}ms</span>
+                              </motion.div>
+                           ))
+                        )}
+                     </motion.div>
+                  )}
+               </AnimatePresence>
+
+               <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                  <button onClick={resetBreaker} className="text-[10px] font-black text-muted hover:text-primary uppercase tracking-widest flex items-center gap-2">
+                     <RefreshCcw className="w-3 h-3" />
+                     Reset_State
+                  </button>
+                  <div className="flex items-center gap-2">
+                     <div className={`w-1.5 h-1.5 rounded-full ${circuitState === 'closed' ? 'bg-success' : circuitState === 'open' ? 'bg-error' : 'bg-warning'} animate-pulse`} />
+                     <span className="text-[9px] font-black text-muted uppercase tracking-tighter">{circuitState}</span>
+                  </div>
+               </div>
+            </div>
+         </div>
       </div>
-    </div>
 
-    <JitterStorm />
+      <JitterStorm />
+      
+      <div className="surface p-10">
+         <RequestReceiptHistory receipts={receipts} />
+      </div>
     </div>
   );
 }
