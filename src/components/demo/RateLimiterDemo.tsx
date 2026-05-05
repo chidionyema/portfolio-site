@@ -20,6 +20,7 @@ export function RateLimiterDemo() {
   const windowSeconds = 60;
   const [localRequests, setLocalRequests] = useState<RequestLog[]>([]);
   const [retryAfter, setRetryAfter] = useState(0);
+  const [resetAt, setResetAt] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
   const { executeCommand, events } = useDemoSession('ratelimit');
@@ -62,6 +63,7 @@ export function RateLimiterDemo() {
       setTokens(result.bucket.remaining);
       setLimit(result.bucket.limit);
       if (result.bucket.retryAfterSeconds) setRetryAfter(result.bucket.retryAfterSeconds);
+      if (result.bucket.resetAt) setResetAt(result.bucket.resetAt);
     } catch (err: any) {
        if (err.status === 429) {
           setLocalRequests(prev => [{
@@ -153,23 +155,39 @@ export function RateLimiterDemo() {
               <AnimatePresence>
                 {retryAfter > 0 && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    className="p-5 bg-error/10 border border-error/20 rounded-2xl space-y-4"
+                    initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-6 bg-error/10 border border-error/20 rounded-2xl shadow-xl space-y-5"
                   >
                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-error text-[11px] font-black uppercase tracking-widest">
-                           <AlertCircle className="w-4 h-4" />
-                           HTTP 429 — rate limit exceeded
+                        <div className="flex items-center gap-3 text-error text-[11px] font-black uppercase tracking-[0.2em]">
+                           <div className="relative">
+                              <AlertCircle className="w-5 h-5" />
+                              <motion.div 
+                                 animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                                 transition={{ repeat: Infinity, duration: 2 }}
+                                 className="absolute inset-0 bg-error rounded-full -z-10"
+                              />
+                           </div>
+                           HTTP 429 — Rate Limit Exceeded
                         </div>
-                        <span className="font-mono text-sm font-black text-error tabular-nums">{retryAfter}s</span>
+                        <div className="flex flex-col items-end">
+                           <span className="font-mono text-xl font-black text-error tabular-nums leading-none">{retryAfter}s</span>
+                           <span className="text-[9px] uppercase font-bold text-error/60 tracking-widest mt-1">Retry after</span>
+                        </div>
                      </div>
-                     <div className="h-1 bg-error/20 rounded-full overflow-hidden">
-                        <motion.div 
-                          className="h-full bg-error shadow-[0_0_10px_rgba(239,68,68,0.5)]"
-                          initial={{ width: '100%' }}
-                          animate={{ width: `${(retryAfter / windowSeconds) * 100}%` }}
-                          transition={{ duration: 1, ease: 'linear' }}
-                        />
+                     <div className="space-y-2">
+                        <div className="h-2 bg-error/10 rounded-full overflow-hidden border border-error/5">
+                           <motion.div 
+                             className="h-full bg-gradient-to-r from-error to-error/60 shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                             initial={{ width: '0%' }}
+                             animate={{ width: `${(1 - retryAfter / windowSeconds) * 100}%` }}
+                             transition={{ duration: 1, ease: 'linear' }}
+                           />
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] font-mono text-error/40 uppercase tracking-tighter">
+                           <span>Bucket refilling…</span>
+                           <span>{resetAt ? new Date(resetAt).toLocaleTimeString() : '—'}</span>
+                        </div>
                      </div>
                   </motion.div>
                 )}
