@@ -162,39 +162,39 @@ export function EventFlowDemo() {
             Guarantees [At-Least-Once] delivery to RabbitMQ Cluster.
           </p>
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={triggerEvent}
-              disabled={isProcessing}
-              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-            >
-              {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 fill-current" />}
-              Commit event
-            </button>
-            <button
-              onClick={toggleRelay}
-              disabled={isToggling}
-              title={
-                relay.isPaused
-                  ? 'Resumes the relay. Buffered events drain in FIFO order to the broker.'
-                  : 'Stops dispatching events to the broker. Triggers fire normally but stay in a local buffer until you resume.'
-              }
-              aria-label={relay.isPaused ? 'Resume relay and drain buffered events' : 'Pause relay and buffer new events locally'}
-              className={`focus-ring py-4 font-black text-xs uppercase tracking-widest rounded-2xl border transition-all disabled:opacity-30 flex items-center justify-center gap-2 ${
-                relay.isPaused
-                  ? 'bg-success/10 border-success/30 text-success hover:bg-success/15'
-                  : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/15'
-              }`}
-            >
-              {isToggling ? (
-                <RotateCw className="w-4 h-4 animate-spin" />
-              ) : relay.isPaused ? (
-                <Play className="w-4 h-4" />
-              ) : (
-                <Pause className="w-4 h-4" />
-              )}
-              {relay.isPaused ? 'Resume relay' : 'Pause relay'}
-            </button>
+          <div className="space-y-3">
+             <button
+               onClick={toggleRelay}
+               disabled={isToggling}
+               title={
+                 relay.isPaused
+                   ? 'Resumes the relay. Buffered events drain in FIFO order to the broker.'
+                   : 'Stops dispatching events to the broker. Triggers fire normally but stay in a local buffer until you resume.'
+               }
+               className={`focus-ring w-full py-5 font-black text-sm uppercase tracking-[0.3em] rounded-2xl border-2 transition-all disabled:opacity-30 flex items-center justify-center gap-3 shadow-lg hover:scale-[1.02] active:scale-95 ${
+                 relay.isPaused
+                   ? 'bg-success text-white border-success shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)]'
+                   : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/15'
+               }`}
+             >
+               {isToggling ? (
+                 <RotateCw className="w-5 h-5 animate-spin" />
+               ) : relay.isPaused ? (
+                 <Play className="w-5 h-5 fill-current" />
+               ) : (
+                 <Pause className="w-5 h-5 fill-current" />
+               )}
+               {relay.isPaused ? 'Resume_Relay' : 'Suspend_Relay'}
+             </button>
+
+             <button
+               onClick={triggerEvent}
+               disabled={isProcessing}
+               className="focus-ring w-full py-4 bg-white/5 border border-white/10 text-muted font-black text-xs uppercase rounded-xl tracking-widest hover:text-primary hover:bg-white/10 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+             >
+               {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+               Commit test event
+             </button>
           </div>
 
           <RequestReceiptHistory receipts={receipts} />
