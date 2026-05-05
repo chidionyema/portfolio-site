@@ -162,39 +162,39 @@ export function EventFlowDemo() {
             Guarantees [At-Least-Once] delivery to RabbitMQ Cluster.
           </p>
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={triggerEvent}
-              disabled={isProcessing}
-              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-            >
-              {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 fill-current" />}
-              Commit event
-            </button>
-            <button
-              onClick={toggleRelay}
-              disabled={isToggling}
-              title={
-                relay.isPaused
-                  ? 'Resumes the relay. Buffered events drain in FIFO order to the broker.'
-                  : 'Stops dispatching events to the broker. Triggers fire normally but stay in a local buffer until you resume.'
-              }
-              aria-label={relay.isPaused ? 'Resume relay and drain buffered events' : 'Pause relay and buffer new events locally'}
-              className={`focus-ring py-4 font-black text-xs uppercase tracking-widest rounded-2xl border transition-all disabled:opacity-30 flex items-center justify-center gap-2 ${
-                relay.isPaused
-                  ? 'bg-success/10 border-success/30 text-success hover:bg-success/15'
-                  : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/15'
-              }`}
-            >
-              {isToggling ? (
-                <RotateCw className="w-4 h-4 animate-spin" />
-              ) : relay.isPaused ? (
-                <Play className="w-4 h-4" />
-              ) : (
-                <Pause className="w-4 h-4" />
-              )}
-              {relay.isPaused ? 'Resume relay' : 'Pause relay'}
-            </button>
+          <div className="space-y-3">
+             <button
+               onClick={toggleRelay}
+               disabled={isToggling}
+               title={
+                 relay.isPaused
+                   ? 'Resumes the relay. Buffered events drain in FIFO order to the broker.'
+                   : 'Stops dispatching events to the broker. Triggers fire normally but stay in a local buffer until you resume.'
+               }
+               className={`focus-ring w-full py-5 font-black text-sm uppercase tracking-[0.3em] rounded-2xl border-2 transition-all disabled:opacity-30 flex items-center justify-center gap-3 shadow-lg hover:scale-[1.02] active:scale-95 ${
+                 relay.isPaused
+                   ? 'bg-success text-white border-success shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)]'
+                   : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/15'
+               }`}
+             >
+               {isToggling ? (
+                 <RotateCw className="w-5 h-5 animate-spin" />
+               ) : relay.isPaused ? (
+                 <Play className="w-5 h-5 fill-current" />
+               ) : (
+                 <Pause className="w-5 h-5 fill-current" />
+               )}
+               {relay.isPaused ? 'Resume_Relay' : 'Suspend_Relay'}
+             </button>
+
+             <button
+               onClick={triggerEvent}
+               disabled={isProcessing}
+               className="focus-ring w-full py-4 bg-white/5 border border-white/10 text-muted font-black text-xs uppercase rounded-xl tracking-widest hover:text-primary hover:bg-white/10 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+             >
+               {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+               Commit test event
+             </button>
           </div>
 
           <RequestReceiptHistory receipts={receipts} />
@@ -205,71 +205,110 @@ export function EventFlowDemo() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="glass-subtle p-5 border border-warning/20 flex items-center gap-4"
+                className="glass-subtle p-6 border border-warning/20 rounded-2xl shadow-xl space-y-5"
               >
-                <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
-                <div className="flex-1 space-y-1">
-                  <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
-                    Relay paused
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                     <div className="relative">
+                        <AlertTriangle className="w-5 h-5 text-warning" />
+                        <motion.div 
+                           animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                           transition={{ repeat: Infinity, duration: 2 }}
+                           className="absolute inset-0 bg-warning rounded-full -z-10"
+                        />
+                     </div>
+                     <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
+                        Relay Suspended
+                     </div>
                   </div>
-                  <div className="text-[10px] text-muted/80 leading-relaxed">
-                    The broker is unreachable. New events are buffered locally and
-                    will drain in FIFO order on resume.
+                  <div className="text-right flex flex-col items-end">
+                    <span className="font-mono text-xl font-black text-warning tabular-nums leading-none">{relay.queuedCount}</span>
+                    <span className="text-[8px] uppercase tracking-widest text-warning/60 font-bold mt-1">Events_Queued</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[9px] uppercase tracking-widest text-muted/60">Queued</div>
-                  <div className="text-2xl font-black text-warning tabular-nums">{relay.queuedCount}</div>
+
+                <div className="space-y-2">
+                   <div className="h-3 bg-warning/5 rounded-full overflow-hidden border border-warning/10 relative">
+                      {/* Threshold Markers */}
+                      <div className="absolute inset-0 px-1 pointer-events-none">
+                         {[10, 50].map(t => (
+                            <div key={t} className="absolute top-0 bottom-0 w-px bg-warning/20" style={{ left: `${t}%` }}>
+                               <span className="absolute top-full mt-1 -translate-x-1/2 text-[6px] font-black text-warning/30">{t}</span>
+                            </div>
+                         ))}
+                         <div className="absolute right-0 top-0 bottom-0 w-px bg-warning/40">
+                            <span className="absolute top-full mt-1 -translate-x-full pr-1 text-[6px] font-black text-warning/50">100</span>
+                         </div>
+                      </div>
+
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-warning to-warning/40 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                        initial={{ width: '0%' }}
+                        animate={{ width: `${Math.min((relay.queuedCount / 100) * 100, 100)}%` }}
+                        transition={{ type: 'spring', stiffness: 50, damping: 20 }}
+                      />
+                   </div>
+                   <div className="flex justify-between items-center text-[8px] font-mono text-warning/40 uppercase tracking-tighter pt-3">
+                      <span>Broker unreachable…</span>
+                      <span>Backlog_Saturation</span>
+                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
-              Outbox table
-            </label>
-            <div className="glass-subtle overflow-hidden min-h-[220px]">
-              <table className="w-full text-[10px] border-collapse">
-                <thead className="bg-white/5 border-b border-white/5 text-muted/60 uppercase tracking-widest">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-black">Event ID</th>
-                    <th className="px-4 py-3 text-left font-black">Status</th>
-                    <th className="px-4 py-3 text-right font-black">TS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.02]">
-                  <AnimatePresence initial={false}>
-                    {outbox.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="py-16 text-center text-muted/20 italic uppercase tracking-[0.4em]"
-                        >
-                          Fire a request from the controls above — this log will populate in real-time.
-                        </td>
-                      </tr>
-                    ) : (
-                      outbox.map((m) => (
-                        <motion.tr
-                          key={m.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="group hover:bg-white/[0.02] transition-colors"
-                        >
-                          <td className="px-4 py-3.5 text-secondary font-bold">{m.id.split('-')[0]}</td>
-                          <td className="px-4 py-3.5">
-                            <StatusPill status={m.status} />
-                          </td>
-                          <td className="px-4 py-3.5 text-right text-muted/60 tabular-nums">
-                            [{formatTime(m.timestamp)}]
-                          </td>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </tbody>
-              </table>
+            <div className="flex items-center justify-between">
+               <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
+                 Event Lifecycle
+               </label>
+               <span className="text-[9px] font-mono text-muted/40 uppercase">Recent_5_Cycles</span>
+            </div>
+            <div className="space-y-3 min-h-[300px]">
+               <AnimatePresence initial={false}>
+                 {outbox.length === 0 ? (
+                   <div className="py-20 text-center glass-subtle rounded-2xl border border-dashed border-white/5">
+                      <p className="text-[10px] font-mono text-muted/20 italic uppercase tracking-[0.4em]">Awaiting_First_Commit…</p>
+                   </div>
+                 ) : (
+                   outbox.slice(0, 5).map((m) => (
+                     <motion.div
+                       key={m.id}
+                       initial={{ opacity: 0, x: -20 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       className="glass-subtle p-4 rounded-2xl border border-white/5 space-y-4 group"
+                     >
+                       <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                             <span className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_5px_rgba(99,102,241,0.5)]" />
+                             <span className="text-[10px] font-mono font-bold text-secondary">ID: {m.id.split('-')[0]}</span>
+                          </div>
+                          <span className="text-[9px] text-muted/40 tabular-nums">{formatTime(m.timestamp)}</span>
+                       </div>
+
+                       <div className="flex items-center gap-2">
+                          {[
+                             { id: 'persisted', label: 'Persisted', active: true },
+                             { id: 'relayed', label: 'Relayed', active: m.status === 'published' || m.status === 'dispatched' },
+                             { id: 'consumed', label: 'Consumed', active: m.status === 'dispatched' }
+                          ].map((stage, idx, arr) => (
+                             <div key={stage.id} className="flex-1 flex items-center gap-2">
+                                <div className="flex-1 space-y-1.5">
+                                   <div className={`h-1 rounded-full transition-all duration-500 ${stage.active ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-white/5'}`} />
+                                   <div className={`text-[8px] font-black uppercase tracking-tighter transition-colors ${stage.active ? 'text-success' : 'text-muted/20'}`}>
+                                      {stage.label}
+                                   </div>
+                                </div>
+                                {idx < arr.length - 1 && (
+                                   <div className={`text-muted/10 font-bold mb-3 ${stage.active && !arr[idx+1].active ? 'animate-pulse text-accent/20' : ''}`}>→</div>
+                                )}
+                             </div>
+                          ))}
+                       </div>
+                     </motion.div>
+                   ))
+                 )}
+               </AnimatePresence>
             </div>
           </div>
         </div>
