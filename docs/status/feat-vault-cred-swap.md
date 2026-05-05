@@ -12,7 +12,7 @@
 ## Subtasks
 
 - [x] **S1** — Move `Force credential rotation` button to the top of the demo card; accent colour, prominent label. **Commit**: `refactor(vault): foreground rotate button`.
-- [ ] **S2** — Two cred cards side-by-side under the button: `v(n) active · expires in <ttl>s` (left) and `v(n+1) standby` (right, dimmed until rotation). **Commit**: `feat(vault): twin credential cards`.
+- [x] **S2** — Two cred cards side-by-side under the button: `v(n) active · expires in <ttl>s` (left) and `v(n+1) standby` (right, dimmed until rotation). **Commit**: `feat(vault): twin credential cards`.
 - [ ] **S3** — On rotation: animate `v(n)` sliding out left, `v(n+1)` taking active position, a new `v(n+2)` sliding into standby. Drive from existing `OnVaultRotation` SignalR events (`stage: 'rotating' | 'rotated'`). **Commit**: `feat(vault): rotation slide animation`.
 - [ ] **S4** — Drop the giant central TTL countdown. TTL is now small text on the active card. **Commit**: `refactor(vault): TTL becomes secondary detail`.
 - [ ] **S5** — Add an `App connection` pane below: a fake DB-connection status badge that stays green throughout rotation (no flicker, no drop). Pure presentational. **Commit**: `feat(vault): seamless app-connection signal`.
@@ -20,13 +20,13 @@
 
 ## Last activity
 
-2026-05-05 23:33 | S1 | refactor(vault): foreground rotate button
+2026-05-05 23:37 | S2 | feat(vault): twin credential cards
 
 ## Last build output
 
 ```
-23:33:37 [build] 5 page(s) built in 126.32s
-23:33:37 [build] Complete!
+23:37:01 [build] 5 page(s) built in 106.13s
+23:37:01 [build] Complete!
 ```
 
 ## Last acceptance smoke
