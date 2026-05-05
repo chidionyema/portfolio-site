@@ -4,14 +4,14 @@
 - **Base**: portfolio-site `main`
 - **File owned**: `src/components/demo/CircuitBreakerDemo.tsx`
 - **Brief**: `docs/DEMO_BRIEFS.md` § "Branch 3"
-- **Last subtask completed**: —
-- **Next subtask**: S1
-- **Last verified `npm run build`**: not yet
+- **Last subtask completed**: S1
+- **Next subtask**: S2
+- **Last verified `npm run build`**: 2026-05-06 00:02
 - **Last acceptance smoke**: —
 
 ## Subtasks
 
-- [ ] **S1** — Two-column layout: `Without breaker` / `With breaker`. **Commit**: `refactor(circuit): two-column comparison shell`.
+- [x] **S1** — Two column layout: `Without breaker` / `With breaker`. **Commit**: `refactor(circuit): two-column comparison shell`.
 - [ ] **S2** — Right column keeps today's existing breaker flow (no behaviour change). **Commit**: `chore(circuit): right column unchanged from current`.
 - [ ] **S3** — Left column: on `Trip & hammer`, fire 6 parallel `fetch` calls bypassing the demo's existing aggregation, against existing `/api/demo/circuit/request` with `shouldFail: true`. Render each as a row with raw latency. **Don't add a new BFF endpoint.** **Commit**: `feat(circuit): no-breaker baseline lane (client-side parallel hammers)`.
 - [ ] **S4** — Top-level `Trip & hammer` button fires both columns in parallel. Existing reset/toggle controls move below the columns. **Commit**: `feat(circuit): unified trigger drives both lanes`.
@@ -19,12 +19,13 @@
 
 ## Last activity
 
-—
+2026-05-06 00:02 | S1 | refactor(circuit): two-column comparison shell
 
 ## Last build output
 
 ```
-(paste tail of `npm run build` here)
+00:02:41 [build] 5 page(s) built in 9.29s
+00:02:41 [build] Complete!
 ```
 
 ## Last acceptance smoke
