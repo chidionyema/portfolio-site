@@ -16,9 +16,9 @@ state.
 - **Phase**: P1 — Frontend layout (portfolio-site)
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
 - **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
-- **Last subtask completed**: P1.5
-- **Next subtask**: P1.6 (see plan below)
-- **Last verified `npm run build` (frontend)**: 2026-05-05 23:27
+- **Last subtask completed**: P1.6
+- **Next subtask**: P1.7 (see plan below)
+- **Last verified `npm run build` (frontend)**: 2026-05-05 23:33
 - **Last verified `dotnet build` (backend)**: not yet run
 - **Last acceptance test run (paste literal output)**: —
 
@@ -63,7 +63,7 @@ build is green.
   row. Use `framer-motion` for active/finished transitions. **Commit:**
   `feat(checkout): vertical saga ladder`.
 
-- [ ] **P1.6** — Compensation drawer. Auto-expanding section that
+- [x] **P1.6** — Compensation drawer. Auto-expanding section that
   appears on `Abandoned`. Renders the bullets per § "Compensation
   drawer". Trace-id receipt strip uses the existing `RequestReceipt`
   component. **Commit:** `feat(checkout): compensation drawer`.
@@ -136,15 +136,15 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 
 ## Last activity
 
-2026-05-05 23:28 | P1.5 | Implemented vertical saga ladder with engineering names and customer labels. Use framer-motion for transitions. Verified build green.
+2026-05-05 23:33 | P1.6 | Implemented auto-expanding compensation drawer with event bullets and RequestReceipt. Verified build green.
 
 ---
 
 ## Last verified `npm run build` (frontend)
 
 ```
-23:27:49 [build] 5 page(s) built in 74.20s
-23:27:49 [build] Complete!
+23:33:38 [build] 5 page(s) built in 220.19s
+23:33:38 [build] Complete!
 ```
 
 ## Last verified `dotnet build` (backend)
