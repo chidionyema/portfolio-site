@@ -144,46 +144,57 @@ export function VaultRotationDemo() {
              Force credential rotation
           </button>
 
-          <div className="grid grid-cols-2 gap-4">
-             {/* Active Card v(n) */}
-             <div className="glass-subtle rounded-2xl p-5 border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                   <div className="p-2 bg-success/20 text-success rounded-lg">
-                      <Key className="w-4 h-4" />
+          <div className="relative h-[180px] overflow-hidden">
+             <AnimatePresence mode="popLayout" initial={false}>
+                <motion.div 
+                   key={version}
+                   initial={{ x: 100, opacity: 0 }}
+                   animate={{ x: 0, opacity: 1 }}
+                   exit={{ x: -100, opacity: 0 }}
+                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                   className="grid grid-cols-2 gap-4 absolute inset-0"
+                >
+                   {/* Active Card v(n) */}
+                   <div className="glass-subtle rounded-2xl p-5 border border-white/10 space-y-4">
+                      <div className="flex items-center justify-between">
+                         <div className="p-2 bg-success/20 text-success rounded-lg">
+                            <Key className="w-4 h-4" />
+                         </div>
+                         <div className="text-[10px] font-black text-success uppercase tracking-widest">Active</div>
+                      </div>
+                      <div>
+                         <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
+                         <div className="text-xl font-mono font-black text-primary">v({version || 'n'})</div>
+                      </div>
+                      <div className="pt-2 border-t border-white/5">
+                         <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Expires in</div>
+                         <div className="text-sm font-mono font-bold text-accent-light tabular-nums">
+                            {credential ? formatTime(credential.expiresAt) : '---'}
+                         </div>
+                      </div>
                    </div>
-                   <div className="text-[10px] font-black text-success uppercase tracking-widest">Active</div>
-                </div>
-                <div>
-                   <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
-                   <div className="text-xl font-mono font-black text-primary">v({version || 'n'})</div>
-                </div>
-                <div className="pt-2 border-t border-white/5">
-                   <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Expires in</div>
-                   <div className="text-sm font-mono font-bold text-accent-light tabular-nums">
-                      {credential ? formatTime(credential.expiresAt) : '---'}
-                   </div>
-                </div>
-             </div>
 
-             {/* Standby Card v(n+1) */}
-             <div className="glass-subtle rounded-2xl p-5 border border-white/5 opacity-40 space-y-4">
-                <div className="flex items-center justify-between">
-                   <div className="p-2 bg-white/5 text-muted rounded-lg">
-                      <Key className="w-4 h-4" />
+                   {/* Standby Card v(n+1) */}
+                   <div className="glass-subtle rounded-2xl p-5 border border-white/5 opacity-40 space-y-4">
+                      <div className="flex items-center justify-between">
+                         <div className="p-2 bg-white/5 text-muted rounded-lg">
+                            <Key className="w-4 h-4" />
+                         </div>
+                         <div className="text-[10px] font-black text-muted uppercase tracking-widest">Standby</div>
+                      </div>
+                      <div>
+                         <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
+                         <div className="text-xl font-mono font-black text-muted">v({version ? version + 1 : 'n+1'})</div>
+                      </div>
+                      <div className="pt-2 border-t border-white/5">
+                         <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Status</div>
+                         <div className="text-xs font-black text-muted uppercase tracking-widest">
+                            Ready
+                         </div>
+                      </div>
                    </div>
-                   <div className="text-[10px] font-black text-muted uppercase tracking-widest">Standby</div>
-                </div>
-                <div>
-                   <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
-                   <div className="text-xl font-mono font-black text-muted">v({version ? version + 1 : 'n+1'})</div>
-                </div>
-                <div className="pt-2 border-t border-white/5">
-                   <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Status</div>
-                   <div className="text-xs font-black text-muted uppercase tracking-widest">
-                      Ready
-                   </div>
-                </div>
-             </div>
+                </motion.div>
+             </AnimatePresence>
           </div>
 
           {credential ? (
