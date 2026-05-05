@@ -132,7 +132,7 @@ export function DemoSidebar({ activeId, onSelect }: SidebarProps) {
                       onSelect(demo.id);
                     }}
                     className={`
-                      flex items-center gap-5 px-10 py-4 text-[12px] font-mono font-bold
+                      flex items-center gap-5 px-10 py-5 text-[12px] font-mono font-bold
                       transition-all duration-75 relative border-l-2
                       ${isActive
                         ? 'bg-white/[0.04] text-primary border-accent shadow-[inset_10px_0_30px_-10px_rgba(99,102,241,0.2)]'

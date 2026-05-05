@@ -240,7 +240,7 @@ export function EventFlowDemo() {
                           colSpan={3}
                           className="py-16 text-center text-muted/20 italic uppercase tracking-[0.4em]"
                         >
-                          No events yet — commit one to start.
+                          Fire a request from the controls above — this log will populate in real-time.
                         </td>
                       </tr>
                     ) : (

@@ -310,7 +310,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
                         colSpan={3}
                         className="py-24 text-center text-muted/40 italic"
                       >
-                        Run a saga to see events flow.
+                        Fire a request from the controls above — this log will populate in real-time.
                       </td>
                     </tr>
                   ) : (
@@ -389,7 +389,7 @@ function RaceLaneCard({ lane, formatTime }: RaceLaneCardProps) {
         <ul className="divide-y divide-white/[0.03]">
           {lane.events.length === 0 ? (
             <li className="py-12 text-center text-muted/40 italic">
-              Awaiting events…
+              Awaiting cluster events…
             </li>
           ) : (
             lane.events.map((e, i) => (

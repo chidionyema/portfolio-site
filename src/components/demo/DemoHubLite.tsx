@@ -44,7 +44,7 @@ function LoadingSkeleton() {
         <Zap className="w-16 h-16 text-accent opacity-20" />
       </motion.div>
       <div className="text-xs font-mono text-muted animate-pulse">
-        Loading demo…
+        Establishing SignalR handshake with {CLUSTER_LABEL}...
       </div>
     </div>
   );
@@ -70,8 +70,20 @@ export function DemoHub() {
   const [activeId, setActiveId] = useState(DEFAULT_DEMO);
   const [isChaosOpen, setIsChaosOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'live' | 'source'>('live');
-  const { updateChaos, isConnected, error: connectionError } = useDemoSession();
+  const { chaos, updateChaos, isConnected, error: connectionError } = useDemoSession();
   const latestTraceId = useLatestTraceId();
+  const traceRef = useRef<HTMLDivElement>(null);
+
+  const isChaosActive = chaos.latencyMs > 0 || chaos.brokerDown || chaos.serviceFaulty;
+
+  useEffect(() => {
+    if (latestTraceId && !localStorage.getItem('ha_trace_scrolled')) {
+      setTimeout(() => {
+        traceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        localStorage.setItem('ha_trace_scrolled', 'true');
+      }, 800);
+    }
+  }, [latestTraceId]);
 
   useEffect(() => {
     setActiveId(readDemoFromURL());
@@ -162,10 +174,21 @@ export function DemoHub() {
                        onClick={() => setIsChaosOpen(true)}
                        aria-label="Open chaos engine controls"
                        title="Opens chaos controls. You can inject latency, simulate broker outages, or kill specific services. Chaos resets when you close the panel."
-                       className="focus-ring flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-xl transition-all group"
+                       className={`focus-ring flex items-center gap-2 px-4 py-2 rounded-xl transition-all group ${
+                         isChaosActive 
+                           ? 'bg-error text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] border-error' 
+                           : 'bg-error/10 hover:bg-error/20 border border-error/20 text-error'
+                       }`}
                      >
-                        <ShieldAlert className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-                        <span className="tracking-widest">Inject chaos</span>
+                        <div className="relative">
+                           <ShieldAlert className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+                           {isChaosActive && (
+                              <span className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse" />
+                           )}
+                        </div>
+                        <span className="tracking-widest font-black text-[10px]">
+                           {isChaosActive ? 'FAULT_INJECTED' : 'FAULT_INJECTION'}
+                        </span>
                      </button>
                   </div>
                </div>
@@ -223,6 +246,7 @@ export function DemoHub() {
                         <AnimatePresence>
                           {latestTraceId && (
                             <motion.div
+                              ref={traceRef}
                               key={latestTraceId}
                               initial={{ opacity: 0, y: 8 }}
                               animate={{ opacity: 1, y: 0 }}
@@ -261,11 +285,11 @@ export function DemoHub() {
                  {next && (
                     <button
                       onClick={() => handleSelect(next.id)}
-                      className="focus-ring text-secondary hover:text-primary transition-colors flex items-center gap-2 group uppercase tracking-[0.2em]"
+                      className="focus-ring bg-primary text-black px-5 py-2.5 rounded-full font-black transition-all flex items-center gap-2 group uppercase tracking-[0.15em] shadow-xl hover:bg-white hover:scale-105 active:scale-95"
                     >
-                       <span className="opacity-50">Up next:</span>
-                       <span className="font-bold">{next.label}</span>
-                       <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                       <span className="opacity-50 text-[9px]">Try next:</span>
+                       <span className="text-[10px]">{next.label}</span>
+                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </button>
                  )}
                  <a href="#deep-dives" className="text-accent-light hover:text-white transition-colors flex items-center gap-2 group uppercase tracking-[0.3em]">

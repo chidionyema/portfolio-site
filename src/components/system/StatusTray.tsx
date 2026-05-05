@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Activity, Server, Database, MessageSquare, ShieldCheck, Zap, Globe, Cpu } from 'lucide-react';
 import type { HealthSnapshot, ServiceHealth } from '../../lib/api/demo-client';
+import { CLUSTER_LABEL } from '../../lib/copy';
 
 interface StatusTrayProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export function StatusTray({ isOpen, onClose, snapshot }: StatusTrayProps) {
                   <div className="space-y-3 font-mono text-xs">
                     <div className="flex justify-between">
                       <span className="text-muted">REGION</span>
-                      <span className="text-secondary">LHR (London, UK)</span>
+                      <span className="text-secondary">{CLUSTER_LABEL}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">PROVIDER</span>

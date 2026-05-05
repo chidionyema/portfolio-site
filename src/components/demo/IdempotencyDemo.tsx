@@ -226,35 +226,39 @@ export function IdempotencyDemo() {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60">
-              X-Idempotency-Ttl-Seconds
-            </label>
-            <div className="flex gap-2">
-              {TTL_PRESETS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTtlPreset(t)}
-                  disabled={isLoading || isRacing}
-                  className={`focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
-                    ttlPreset === t
-                      ? 'bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]'
-                      : 'bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10'
-                  } disabled:opacity-30`}
-                >
-                  {t}s
-                </button>
-              ))}
+          <details className="space-y-3 group/details">
+            <summary className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60 cursor-pointer hover:text-secondary transition-colors list-none flex items-center gap-2">
+              <span className="w-1 h-1 bg-accent rounded-full group-open/details:bg-success" />
+              Advanced: Cache TTL Configuration
+            </summary>
+            <div className="pt-4 space-y-3">
+              <div className="flex gap-2">
+                {TTL_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTtlPreset(t)}
+                    disabled={isLoading || isRacing}
+                    className={`focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                      ttlPreset === t
+                        ? 'bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]'
+                        : 'bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10'
+                    } disabled:opacity-30`}
+                  >
+                    {t}s
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted/60 leading-relaxed">
+                Lower TTL → replays after expiry produce a NEW order. Higher TTL → replays return the cached one.
+              </p>
             </div>
-            <p className="text-[10px] text-muted/60 leading-relaxed">
-              Lower TTL → replays after expiry produce a NEW order. Higher TTL → replays return the cached one.
-            </p>
-          </div>
+          </details>
 
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={sendRequest}
               disabled={isLoading || isRacing}
+              title="Sends a real order to the database. The system uses the key above to ensure we never bill you twice."
               className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
@@ -394,9 +398,12 @@ export function IdempotencyDemo() {
           Audit log
         </h3>
 
-        <div className="surface shadow-2xl h-[620px] flex flex-col overflow-hidden">
+        <div className={`surface shadow-2xl h-[620px] flex flex-col overflow-hidden transition-all duration-500 ${isRacing ? 'border-error/40 ring-4 ring-error/5 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : ''}`}>
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-            <span className="text-muted/60 tracking-widest uppercase font-black">Recent requests</span>
+            <span className="text-muted/60 tracking-widest uppercase font-black flex items-center gap-2">
+              Recent requests 
+              {isRacing && <span className="text-error animate-pulse">[RACING]</span>}
+            </span>
             <Fingerprint className="w-4 h-4 text-accent/20" />
           </div>
 
@@ -417,7 +424,7 @@ export function IdempotencyDemo() {
                         colSpan={3}
                         className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black"
                       >
-                        Send a request to start.
+                        Fire a request from the controls above — this log will populate in real-time.
                       </td>
                     </tr>
                   ) : (
@@ -463,7 +470,7 @@ function ActionLabel({ status }: { status: LogStatus }) {
       : 'text-error';
   const label =
     status === 'created'
-      ? 'Commit new'
+      ? 'Order Created (First hit)'
       : status === 'replay-cached'
       ? 'Replay (cached)'
       : status === 'replay-after-expiry'

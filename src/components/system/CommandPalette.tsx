@@ -34,10 +34,18 @@ interface PaletteItem {
   run: Action;
   group: 'Demos' | 'Deep-dives' | 'Navigate' | 'Links';
   keywords?: string;
+  persona?: 'EM' | 'Engineer' | 'Recruiter';
 }
 
 
 const PALETTE_HINT_KEY = 'ha_palette_hint_dismissed';
+
+const PERSONA_MAP: Record<string, 'EM' | 'Engineer' | 'Recruiter'> = {
+  'demo:checkout': 'EM',
+  'demo:tracing': 'Engineer',
+  'demo:circuit': 'Recruiter',
+  'demo:idempotency': 'EM',
+};
 
 export function CommandPalette({ deepDives }: Props) {
   const [open, setOpen] = useState(false);
@@ -57,7 +65,7 @@ export function CommandPalette({ deepDives }: Props) {
       const dismissed = localStorage.getItem(PALETTE_HINT_KEY) === '1';
       if (!dismissed) {
         // Delay so the hint appears after the page has settled, not at first paint.
-        const t = window.setTimeout(() => setHintVisible(true), 4000);
+        const t = window.setTimeout(() => setHintVisible(true), 8000);
         return () => window.clearTimeout(t);
       }
     } catch {}
@@ -100,14 +108,16 @@ export function CommandPalette({ deepDives }: Props) {
     // Demos — keyed by group label so the user can search by capability.
     ...allDemos.map((d): PaletteItem => {
       const groupLabel = demoGroups.find((g) => g.demos.some((x) => x.id === d.id))!.label;
+      const id = `demo:${d.id}`;
       return {
-        id: `demo:${d.id}`,
+        id,
         label: d.label,
         hint: groupLabel,
         Icon: d.Icon,
         run: go(`/?demo=${d.id}#demo`),
         group: 'Demos',
         keywords: `${groupLabel} ${d.desc}`,
+        persona: PERSONA_MAP[id],
       };
     }),
     // Deep-dives, sourced from the content collection.
@@ -231,9 +241,20 @@ export function CommandPalette({ deepDives }: Props) {
                       "
                     >
                       <item.Icon className="w-4 h-4 text-muted shrink-0" strokeWidth={1.75} />
-                      <span className="flex-1 min-w-0 truncate">{item.label}</span>
+                      <div className="flex-1 flex items-center gap-3 min-w-0">
+                        <span className="truncate">{item.label}</span>
+                        {item.persona && (
+                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest leading-none ${
+                            item.persona === 'EM' ? 'bg-primary/10 text-primary border border-primary/20' :
+                            item.persona === 'Engineer' ? 'bg-accent/10 text-accent-light border border-accent/20' :
+                            'bg-warning/10 text-warning border border-warning/20'
+                          }`}>
+                            Recommended for {item.persona}s
+                          </span>
+                        )}
+                      </div>
                       {item.hint && (
-                        <span className="text-xs text-muted truncate max-w-[40%]">{item.hint}</span>
+                        <span className="text-xs text-muted truncate max-w-[30%]">{item.hint}</span>
                       )}
                     </Command.Item>
                   ))}

@@ -175,7 +175,7 @@ export function DistributedTracingDemo() {
             <AnimatePresence initial={false}>
               {history.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-muted/40 text-[11px] italic">
-                  Start a trace to see entries here.
+                  Fire a request from the controls above — this log will populate in real-time.
                 </div>
               ) : (
                 <ul className="divide-y divide-white/[0.03]">

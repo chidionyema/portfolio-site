@@ -2,6 +2,9 @@ export interface DemoContextCopy {
   problem: string;
   mechanism: string;
   watch: string;
+  problemSummary: string;
+  mechanismSummary: string;
+  strategy: string;
 }
 
 export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
@@ -12,6 +15,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'A saga turns the cross-service transaction into a sequence of local commits, each paired with a compensating action that runs on failure. State lives in the saga itself, not a distributed lock.',
     watch:
       'When a step fails, every prior step is reversed in order. The system never half-commits — it either reaches the end or unwinds cleanly back to the start.',
+    problemSummary: 'Cross-service crashes leave data inconsistent.',
+    mechanismSummary: 'Chained local commits with rollback logic.',
+    strategy: 'Stateful Saga Orchestration',
   },
   events: {
     problem:
@@ -20,6 +26,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Persist the event to an outbox table inside the same transaction as the business write. A separate relay reads the outbox and dispatches to the broker, with at-least-once delivery and idempotent consumers.',
     watch:
       'Pull the broker out from under the system mid-write — the row commits, the outbox row commits, and the event is delivered the moment the relay is back. Zero loss, no special handling.',
+    problemSummary: 'Publishing events can fail after database commits.',
+    mechanismSummary: 'Atomic outbox table + background relay.',
+    strategy: 'Transactional Outbox Pattern',
   },
   circuit: {
     problem:
@@ -28,6 +37,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'After N consecutive failures the breaker opens and rejects requests instantly. After a cooldown it lets a single probe through; success closes it, failure reopens. Bulkheads cap concurrency per dependency so one bad actor cannot drain the pool.',
     watch:
       'Compare two paths: fast-fail under an open breaker (visible in milliseconds) vs. the timeout cliff a circuit-less system would experience. Recovery is automatic and observable.',
+    problemSummary: 'Slow dependencies cascade into total system failure.',
+    mechanismSummary: 'Fail-fast circuit state with automatic probes.',
+    strategy: 'Polly Circuit Breaker & Bulkheads',
   },
   vault: {
     problem:
@@ -36,6 +48,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Vault issues short-lived credentials per service. A renewal worker rotates each lease before expiry; the app reads through an interface that returns the current lease without restart. Old leases revoke on the database side.',
     watch:
       'During a rotation the new lease is issued, the old one revoked, and not a single in-flight request fails. Two leases overlap for a few seconds; that overlap is the whole point.',
+    problemSummary: 'Static database passwords are a security risk.',
+    mechanismSummary: 'Dynamic roles with automated TTL rotation.',
+    strategy: 'HashiCorp Vault Dynamic Secrets',
   },
   idempotency: {
     problem:
@@ -44,6 +59,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'A deterministic key — namespaced per user, hashed with the request body — records the result of the first run. Replays find the cached result and return it without re-executing the side-effect. Concurrent collisions resolve via optimistic lock.',
     watch:
       'Hammer the same key from many directions: only one execution leaves a side-effect. Every other replay returns the same response, immediately, with no second charge.',
+    problemSummary: 'Duplicate payments caused by network retries.',
+    mechanismSummary: 'Deterministic keys prevent double execution.',
+    strategy: 'Redis-Backed Idempotency Middleware',
   },
   stampede: {
     problem:
@@ -52,6 +70,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'On a miss, only one caller acquires a per-key lock and rebuilds the value. The rest wait briefly on the lock and read the freshly-written value when it lands. .NET 9 HybridCache implements this with L1 (memory) + L2 (Redis) tiers.',
     watch:
       'Without protection, request count to the origin equals concurrency. With protection it equals one. The graph is the demo.',
+    problemSummary: 'Cache expiration floods the database (Stampede).',
+    mechanismSummary: 'Locking and request coalescing during misses.',
+    strategy: '.NET 9 HybridCache / Coalescing',
   },
   cache: {
     problem:
@@ -60,6 +81,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'On write, publish an invalidation message over Redis pub/sub. Every node subscribes and drops its local copy on receipt. Subsequent reads miss, re-fetch, and converge.',
     watch:
       'Update a record on instance A. Within milliseconds, instance B serves the new value — without a poll, a TTL, or a request-time round trip.',
+    problemSummary: 'Multi-node clusters serve stale cached data.',
+    mechanismSummary: 'Pub/sub messages drop stale local copies.',
+    strategy: 'Distributed Cache Invalidation',
   },
   concurrency: {
     problem:
@@ -68,6 +92,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Every row carries a version. Updates assert the version they read; if it changed, the database refuses the write and the application surfaces the conflict. The losing client can re-fetch, re-merge, and retry.',
     watch:
       'Both edits start; both submit. One commits, one is rejected with a clear conflict signal. Nothing is silently overwritten.',
+    problemSummary: 'Concurrent edits cause silent data overwrites.',
+    mechanismSummary: 'Version tracking prevents stale updates.',
+    strategy: 'EF Core Optimistic Concurrency',
   },
   ratelimit: {
     problem:
@@ -76,6 +103,9 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'A token-bucket limiter assigns each principal a refill rate and a burst capacity. Requests draw tokens; when the bucket is empty, the request is rejected with a 429 and a Retry-After hint. Quotas live in Redis so they apply across nodes.',
     watch:
       'Saturate the bucket: traffic above the rate is shed cleanly while well-behaved clients keep their share. The system stays available even under abuse.',
+    problemSummary: 'Single users can exhaust system capacity.',
+    mechanismSummary: 'Token-bucket throttling enforced across nodes.',
+    strategy: 'Distributed Token-Bucket (Redis)',
   },
   tracing: {
     problem:
@@ -84,5 +114,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Every request carries a trace id; every operation it touches emits a span tagged with that id, parent span id, service, operation, and duration. A flame graph reads the parent/child structure and shows the full call tree at a glance.',
     watch:
       'One request fans out across orders-domain, inventory, payments (which itself calls Stripe), notifications, and the outbox. The flame graph lets you read total time, where the long tail lives, and which span owned the failure when one occurs.',
+    problemSummary: 'Interleaved logs hide cross-service bottlenecks.',
+    mechanismSummary: 'Correlation IDs track requests across services.',
+    strategy: 'OpenTelemetry + Distributed Tracing',
   },
 };

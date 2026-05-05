@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Check, Loader2, Circle, ArrowUpRight, Clock } from 'lucide-react';
+import { CLUSTER_LABEL } from '../../lib/copy';
 
 export interface HeroPreviewData {
   firstDive: {
@@ -62,7 +63,7 @@ export function HeroPreview({ firstDive, demoCount, diveCount }: HeroPreviewData
         className="group bg-[#0d0d15] border border-white/5 p-4 hover:border-accent/50 transition-colors flex flex-col focus-ring rounded-xl shadow-2xl"
         aria-label={`Inspect ${demoCount} live services`}
       >
-        <CardLabel left={`Live State Machine · Cluster_LHR`} traceId={traceId} />
+        <CardLabel left={`Live State Machine · Cluster_${CLUSTER_LABEL}`} traceId={traceId} />
         <ul className="space-y-1.5 text-xs">
           {SAGA_EVENTS.map((name, i) => (
             <EventRow key={name} state={stateFor(i, step)} name={name} />

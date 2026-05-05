@@ -216,7 +216,7 @@ export function CircuitBreakerDemo() {
             <AnimatePresence initial={false}>
               {logs.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-muted/40 text-[11px] italic">
-                  Run a request to see events.
+                  Fire a request from the controls above — this log will populate in real-time.
                 </div>
               ) : (
                 logs.map((log) => (
