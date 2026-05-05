@@ -15,6 +15,42 @@ This doc is the master plan. It defines:
 
 ## Hard rules — read first
 
+0. **Each agent MUST run in its own git worktree.** Multiple agents
+   sharing the main working directory of either repo will silently
+   corrupt each other — shared HEAD pointer means `git checkout` in
+   one agent flips the working tree out from under another, shared
+   `node_modules` collides on `npm install` and on Vite's `.vite/`
+   cache, and untracked files cross-pollinate across "branches".
+
+   Operator setup BEFORE launching any agent (one line per branch):
+
+   ```bash
+   cd /Users/chidionyema/Documents/code/portfolio-site
+   git worktree add ../portfolio-site-checkout         feat/checkout-redesign 2>/dev/null || git worktree add ../portfolio-site-checkout
+   git worktree add ../portfolio-site-rate-limiter     feat/rate-limiter-bucket 2>/dev/null || git worktree add ../portfolio-site-rate-limiter
+   # …one per branch the agent might claim
+   ( cd ../portfolio-site-checkout && npm install )
+   ( cd ../portfolio-site-rate-limiter && npm install )
+   ```
+
+   For the backend branch:
+
+   ```bash
+   cd /Users/chidionyema/Documents/code/ritualworks-platform
+   git worktree add ../ritualworks-platform-payment-mock feat/checkout-payment-mock 2>/dev/null \
+     || git worktree add ../ritualworks-platform-payment-mock
+   ( cd ../ritualworks-platform-payment-mock && dotnet restore )
+   ```
+
+   Each agent's terminal must `cd` into its dedicated worktree before
+   the prompt is pasted. The agent's first action (PHASE 0 in
+   `SUPER_PROMPT.md`) verifies it's not in the main working directory
+   and halts with an ISOLATION FAILURE report if it is.
+
+   Worktrees share the `.git` directory (no extra disk for objects)
+   but have isolated HEAD, index, working tree, and `node_modules`.
+   That's exactly the isolation we need.
+
 1. **One file = one branch.** No demo file may be edited by two
    concurrent branches. The ownership table below is binding.
 

@@ -15,6 +15,7 @@ interface RequestLog {
 }
 export function RateLimiterDemo() {
   const [tokens, setTokens] = useState(12);
+  const [displayTokens, setDisplayTokens] = useState(12);
   const [limit, setLimit] = useState(12);
   const windowSeconds = 60;
   const [localRequests, setLocalRequests] = useState<RequestLog[]>([]);
@@ -30,6 +31,14 @@ export function RateLimiterDemo() {
         if (lastEvent.retryAfterSeconds) setRetryAfter(lastEvent.retryAfterSeconds);
      }
   }, [events]);
+
+  useEffect(() => {
+    if (displayTokens === tokens) return;
+    const timeout = setTimeout(() => {
+      setDisplayTokens(prev => prev > tokens ? prev - 1 : prev + 1);
+    }, 50);
+    return () => clearTimeout(timeout);
+  }, [tokens, displayTokens]);
 
   useEffect(() => {
     if (retryAfter <= 0) return;
@@ -69,7 +78,7 @@ export function RateLimiterDemo() {
   const sendBurst = async (count: number) => {
     for (let i = 0; i < count; i++) {
       sendRequest();
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise(r => setTimeout(r, 50));
     }
   };
 
@@ -104,10 +113,11 @@ export function RateLimiterDemo() {
                  <motion.div
                    key={i}
                    animate={{ 
-                     backgroundColor: i < tokens ? '#22c55e' : 'rgba(255,255,255,0.05)',
-                     scale: i < tokens ? 1 : 0.85,
-                     opacity: i < tokens ? 1 : 0.2
+                     backgroundColor: i < displayTokens ? '#22c55e' : 'rgba(255,255,255,0.05)',
+                     scale: i < displayTokens ? 1 : 0.7,
+                     opacity: i < displayTokens ? 1 : 0.15
                    }}
+                   transition={{ duration: 0.15 }}
                    className="w-6 h-6 rounded-full border border-white/10 shadow-lg"
                  />
               ))}
@@ -120,21 +130,21 @@ export function RateLimiterDemo() {
                    disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-all disabled:opacity-20"
                  >
-                    CMD_SINGLE
+                    Send 1
                  </button>
                  <button 
                    onClick={() => sendBurst(5)}
                    disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-warning transition-all disabled:opacity-20"
                  >
-                    CMD_BURST_5
+                    Send 5
                  </button>
                  <button 
                    onClick={() => sendBurst(12)}
                    disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-error transition-all disabled:opacity-20"
                  >
-                    CMD_FLOOD
+                    Send 12
                  </button>
               </div>
 
