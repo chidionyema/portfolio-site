@@ -194,23 +194,6 @@ export function RateLimiterDemo() {
               </AnimatePresence>
            </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-6">
-           <div className="surface p-5 flex items-center justify-between">
-              <TrendingUp className="w-6 h-6 text-success opacity-40" />
-              <div className="text-right">
-                 <div className="text-2xl font-black text-primary tabular-nums tracking-tighter leading-none">{localRequests.filter(r => r.status === 'allowed').length}</div>
-                 <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-1.5 opacity-60">Throughput OK</div>
-              </div>
-           </div>
-           <div className="surface p-5 flex items-center justify-between">
-              <Activity className="w-6 h-6 text-error opacity-40" />
-              <div className="text-right">
-                 <div className="text-2xl font-black text-primary tabular-nums tracking-tighter leading-none">{localRequests.filter(r => r.status === 'limited').length}</div>
-                 <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-1.5 opacity-60">Rejections_429</div>
-              </div>
-           </div>
-        </div>
       </div>
 
       <div className="space-y-6">
