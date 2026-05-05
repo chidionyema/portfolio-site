@@ -205,21 +205,41 @@ export function EventFlowDemo() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="glass-subtle p-5 border border-warning/20 flex items-center gap-4"
+                className="glass-subtle p-6 border border-warning/20 rounded-2xl shadow-xl space-y-5"
               >
-                <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
-                <div className="flex-1 space-y-1">
-                  <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
-                    Relay paused
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                     <div className="relative">
+                        <AlertTriangle className="w-5 h-5 text-warning" />
+                        <motion.div 
+                           animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                           transition={{ repeat: Infinity, duration: 2 }}
+                           className="absolute inset-0 bg-warning rounded-full -z-10"
+                        />
+                     </div>
+                     <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
+                        Relay Suspended
+                     </div>
                   </div>
-                  <div className="text-[10px] text-muted/80 leading-relaxed">
-                    The broker is unreachable. New events are buffered locally and
-                    will drain in FIFO order on resume.
+                  <div className="text-right flex flex-col items-end">
+                    <span className="font-mono text-xl font-black text-warning tabular-nums leading-none">{relay.queuedCount}</span>
+                    <span className="text-[8px] uppercase tracking-widest text-warning/60 font-bold mt-1">Events_Queued</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[9px] uppercase tracking-widest text-muted/60">Queued</div>
-                  <div className="text-2xl font-black text-warning tabular-nums">{relay.queuedCount}</div>
+
+                <div className="space-y-2">
+                   <div className="h-3 bg-warning/5 rounded-full overflow-hidden border border-warning/10 relative">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-warning to-warning/40 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                        initial={{ width: '0%' }}
+                        animate={{ width: `${Math.min((relay.queuedCount / 100) * 100, 100)}%` }}
+                        transition={{ type: 'spring', stiffness: 50, damping: 20 }}
+                      />
+                   </div>
+                   <div className="flex justify-between items-center text-[8px] font-mono text-warning/40 uppercase tracking-tighter">
+                      <span>Broker unreachable…</span>
+                      <span>Max_Cap: 100</span>
+                   </div>
                 </div>
               </motion.div>
             )}
