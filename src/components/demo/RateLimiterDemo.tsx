@@ -14,11 +14,13 @@ interface RequestLog {
   remaining: number;
 }
 export function RateLimiterDemo() {
-  const [tokens, setTokens] = useState(5);
-  const maxTokens = 5;
+  const [tokens, setTokens] = useState(12);
+  const [displayTokens, setDisplayTokens] = useState(12);
+  const [limit, setLimit] = useState(12);
   const windowSeconds = 60;
   const [localRequests, setLocalRequests] = useState<RequestLog[]>([]);
   const [retryAfter, setRetryAfter] = useState(0);
+  const [resetAt, setResetAt] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
   const { executeCommand, events } = useDemoSession('ratelimit');
@@ -30,6 +32,14 @@ export function RateLimiterDemo() {
         if (lastEvent.retryAfterSeconds) setRetryAfter(lastEvent.retryAfterSeconds);
      }
   }, [events]);
+
+  useEffect(() => {
+    if (displayTokens === tokens) return;
+    const timeout = setTimeout(() => {
+      setDisplayTokens(prev => prev > tokens ? prev - 1 : prev + 1);
+    }, 50);
+    return () => clearTimeout(timeout);
+  }, [tokens, displayTokens]);
 
   useEffect(() => {
     if (retryAfter <= 0) return;
@@ -51,7 +61,9 @@ export function RateLimiterDemo() {
       }, ...prev.slice(0, 15)]);
       
       setTokens(result.bucket.remaining);
+      setLimit(result.bucket.limit);
       if (result.bucket.retryAfterSeconds) setRetryAfter(result.bucket.retryAfterSeconds);
+      if (result.bucket.resetAt) setResetAt(result.bucket.resetAt);
     } catch (err: any) {
        if (err.status === 429) {
           setLocalRequests(prev => [{
@@ -68,7 +80,7 @@ export function RateLimiterDemo() {
   const sendBurst = async (count: number) => {
     for (let i = 0; i < count; i++) {
       sendRequest();
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise(r => setTimeout(r, 50));
     }
   };
 
@@ -90,23 +102,25 @@ export function RateLimiterDemo() {
                  <div className="text-lg font-bold text-primary">Token bucket</div>
                  <div className="text-xs text-muted font-medium opacity-60">Redis-backed Sliding Window Throttling</div>
               </div>
-              <div className="text-right">
-                 <div className={`text-4xl font-mono font-black ${tokens > 2 ? 'text-primary' : 'text-error animate-pulse'} tabular-nums leading-none mb-1`}>
-                    {tokens.toString().padStart(2, '0')}
+              <div className="text-right flex flex-col items-end">
+                 <div className="text-[10px] uppercase font-black text-muted tracking-[0.2em] mb-1">Bucket Status</div>
+                 <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${tokens > 0 ? 'bg-success/20 text-success' : 'bg-error/20 text-error animate-pulse'}`}>
+                    {tokens > 0 ? 'Available' : 'Exhausted'}
                  </div>
-                 <div className="text-[10px] uppercase font-bold text-muted tracking-widest">Tokens available</div>
               </div>
            </div>
 
-           <div className="flex gap-1.5 justify-center h-10">
-              {[...Array(maxTokens)].map((_, i) => (
+           <div className="flex flex-wrap gap-2.5 justify-center py-6 glass-subtle rounded-2xl border border-white/5">
+              {[...Array(limit)].map((_, i) => (
                  <motion.div
                    key={i}
                    animate={{ 
-                     backgroundColor: i < tokens ? '#22c55e' : 'rgba(255,255,255,0.05)',
-                     opacity: i < tokens ? 0.6 : 1
+                     backgroundColor: i < displayTokens ? '#22c55e' : 'rgba(255,255,255,0.05)',
+                     scale: i < displayTokens ? 1 : 0.7,
+                     opacity: i < displayTokens ? 1 : 0.15
                    }}
-                   className="flex-1 rounded-[4px] border border-white/5 shadow-inner"
+                   transition={{ duration: 0.15 }}
+                   className="w-6 h-6 rounded-full border border-white/10 shadow-lg"
                  />
               ))}
            </div>
@@ -118,21 +132,21 @@ export function RateLimiterDemo() {
                    disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-all disabled:opacity-20"
                  >
-                    CMD_SINGLE
+                    Send 1
                  </button>
                  <button 
                    onClick={() => sendBurst(5)}
                    disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-warning transition-all disabled:opacity-20"
                  >
-                    CMD_BURST_5
+                    Send 5
                  </button>
                  <button 
                    onClick={() => sendBurst(12)}
                    disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-error transition-all disabled:opacity-20"
                  >
-                    CMD_FLOOD
+                    Send 12
                  </button>
               </div>
 
@@ -141,44 +155,43 @@ export function RateLimiterDemo() {
               <AnimatePresence>
                 {retryAfter > 0 && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    className="p-5 bg-error/10 border border-error/20 rounded-2xl space-y-4"
+                    initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-6 bg-error/10 border border-error/20 rounded-2xl shadow-xl space-y-5"
                   >
                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-error text-[11px] font-black uppercase tracking-widest">
-                           <AlertCircle className="w-4 h-4" />
-                           HTTP 429 — rate limit exceeded
+                        <div className="flex items-center gap-3 text-error text-[11px] font-black uppercase tracking-[0.2em]">
+                           <div className="relative">
+                              <AlertCircle className="w-5 h-5" />
+                              <motion.div 
+                                 animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                                 transition={{ repeat: Infinity, duration: 2 }}
+                                 className="absolute inset-0 bg-error rounded-full -z-10"
+                              />
+                           </div>
+                           HTTP 429 — Rate Limit Exceeded
                         </div>
-                        <span className="font-mono text-sm font-black text-error tabular-nums">{retryAfter}s</span>
+                        <div className="flex flex-col items-end">
+                           <span className="font-mono text-xl font-black text-error tabular-nums leading-none">{retryAfter}s</span>
+                           <span className="text-[9px] uppercase font-bold text-error/60 tracking-widest mt-1">Retry after</span>
+                        </div>
                      </div>
-                     <div className="h-1 bg-error/20 rounded-full overflow-hidden">
-                        <motion.div 
-                          className="h-full bg-error shadow-[0_0_10px_rgba(239,68,68,0.5)]"
-                          initial={{ width: '100%' }}
-                          animate={{ width: `${(retryAfter / windowSeconds) * 100}%` }}
-                          transition={{ duration: 1, ease: 'linear' }}
-                        />
+                     <div className="space-y-2">
+                        <div className="h-2 bg-error/10 rounded-full overflow-hidden border border-error/5">
+                           <motion.div 
+                             className="h-full bg-gradient-to-r from-error to-error/60 shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                             initial={{ width: '0%' }}
+                             animate={{ width: `${(1 - retryAfter / windowSeconds) * 100}%` }}
+                             transition={{ duration: 1, ease: 'linear' }}
+                           />
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] font-mono text-error/40 uppercase tracking-tighter">
+                           <span>Bucket refilling…</span>
+                           <span>{resetAt ? new Date(resetAt).toLocaleTimeString() : '—'}</span>
+                        </div>
                      </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-           <div className="surface p-5 flex items-center justify-between">
-              <TrendingUp className="w-6 h-6 text-success opacity-40" />
-              <div className="text-right">
-                 <div className="text-2xl font-black text-primary tabular-nums tracking-tighter leading-none">{localRequests.filter(r => r.status === 'allowed').length}</div>
-                 <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-1.5 opacity-60">Throughput OK</div>
-              </div>
-           </div>
-           <div className="surface p-5 flex items-center justify-between">
-              <Activity className="w-6 h-6 text-error opacity-40" />
-              <div className="text-right">
-                 <div className="text-2xl font-black text-primary tabular-nums tracking-tighter leading-none">{localRequests.filter(r => r.status === 'limited').length}</div>
-                 <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-1.5 opacity-60">Rejections_429</div>
-              </div>
            </div>
         </div>
       </div>
