@@ -145,276 +145,234 @@ export function CheckoutDemo() {
 
   return (
     <div className="space-y-8 relative">
-      {lanes ? (
-        <div className="grid lg:grid-cols-2 gap-6">
-          {lanes.map((lane) => (
-            <RaceLaneCard key={lane.sagaId} lane={lane} formatTime={formatTime} />
-          ))}
+      <div className="grid lg:grid-cols-[45fr_55fr] gap-8 items-start">
+        {/* Left Pane - Customer context */}
+        <div className="space-y-6">
+          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em]">
+            {CHECKOUT_COPY.ORDER_HEADER}
+          </h3>
+
+          <div className="relative">
+            <AnimatePresence mode="wait">
+              {lanes ? (
+                <RaceModeCustomerPane key="race" lanes={lanes} onReset={resetSimulation} isProcessing={isProcessing} />
+              ) : sagaState === 'completed' || sagaState === 'finalized' ? (
+                <ConfirmationCard key="receipt" orderId={orderId} onReset={resetSimulation} />
+              ) : (
+                <motion.div
+                  key="cart"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="surface p-6 shadow-2xl space-y-8"
+                >
+                  {/* Scenario picker inside cart context */}
+                  <div
+                    role="radiogroup"
+                    aria-label="Saga scenario"
+                    className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
+                  >
+                    {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setScenario(s)}
+                        disabled={isProcessing}
+                        role="radio"
+                        aria-checked={scenario === s}
+                        className={`focus-ring py-2 px-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
+                          scenario === s
+                            ? 'bg-white/10 text-white shadow-sm'
+                            : 'text-muted hover:text-secondary hover:bg-white/5'
+                        } disabled:opacity-30`}
+                      >
+                        {CHECKOUT_COPY.SCENARIO_LABELS[s]}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Cart Item */}
+                  <div className="flex gap-4">
+                    <div className="w-[44px] h-[44px] bg-white/5 rounded flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h4 className="text-sm font-bold text-primary">Demo Widget</h4>
+                        <span className="text-sm font-black tabular-nums">£39.99</span>
+                      </div>
+                      <p className="text-[10px] text-muted uppercase tracking-widest mt-1">Qty 1</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 border-t border-white/5 pt-6">
+                    <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
+                      <span>Subtotal</span>
+                      <span className="tabular-nums">£39.99</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
+                      <span>Tax</span>
+                      <span className="tabular-nums">£0.00</span>
+                    </div>
+                    <div className="flex justify-between items-baseline pt-4">
+                      <span className="text-xs font-bold text-primary uppercase tracking-widest">Total</span>
+                      <span className="text-3xl font-black tabular-nums text-primary">£39.99</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={runSimulation}
+                    disabled={isProcessing}
+                    className={`w-full py-5 font-black text-sm uppercase rounded-xl transition-all shadow-xl disabled:opacity-20 flex items-center justify-center gap-3 ${getButtonTone(
+                      sagaState,
+                    )}`}
+                  >
+                    {getButtonContent(sagaState, isProcessing, orderId)}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      ) : (
-        <SingleSagaView
-          sagaState={sagaState}
-          localEvents={localEvents}
-          isProcessing={isProcessing}
-          formatTime={formatTime}
-          scenario={scenario}
-          setScenario={setScenario}
-          runSimulation={runSimulation}
-          resetSimulation={resetSimulation}
-          orderId={orderId}
-        />
-      )}
+
+        {/* Right Pane - Engineering context */}
+        <div className="space-y-6">
+          <h3 className="text-sm font-mono text-muted uppercase tracking-widest">
+            {CHECKOUT_COPY.ENGINEERING_HEADER}
+          </h3>
+
+          {lanes ? (
+            <div className="grid grid-cols-1 gap-6">
+              {lanes.map((lane) => (
+                <RaceLaneCard key={lane.sagaId} lane={lane} formatTime={formatTime} />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="surface p-8 shadow-2xl">
+                <VerticalSagaLadder sagaState={sagaState} />
+              </div>
+
+              <CompensationDrawer sagaState={sagaState} localEvents={localEvents} />
+
+              <div className="surface shadow-2xl h-[400px] flex flex-col overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
+                  <span className="text-muted font-bold uppercase italic opacity-40">Bridge Events Log</span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto font-mono text-[11px]">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10">
+                      <tr className="text-muted/60 uppercase text-[10px] font-black tracking-widest">
+                        <th className="px-6 py-3">Time</th>
+                        <th className="px-6 py-3">Event</th>
+                        <th className="px-6 py-3 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence initial={false}>
+                        {localEvents.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} className="py-24 text-center text-muted/40 italic">
+                              Awaiting saga initiation...
+                            </td>
+                          </tr>
+                        ) : (
+                          localEvents.map((e, i) => (
+                            <motion.tr
+                              key={`${e.sessionId}-${e.step}-${i}`}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
+                            >
+                              <td className="px-6 py-4 text-muted/50 text-[10px] whitespace-nowrap align-top">
+                                [{formatTime(new Date(e.timestamp))}]
+                              </td>
+                              <td className="px-6 py-4 align-top">
+                                <div className="text-secondary font-bold">{describeSagaStep(e.step)}</div>
+                                <div className="text-[9px] text-muted/50 mt-0.5 font-mono uppercase tracking-widest">
+                                  {e.step}
+                                </div>
+                                {e.description && (
+                                  <div className="text-[10px] text-muted/70 mt-1.5 font-sans italic max-w-md leading-relaxed">
+                                    {e.description}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-right align-top">
+                                <StatusBadge status={e.status} />
+                              </td>
+                            </motion.tr>
+                          ))
+                        )}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-white/5">
+                <h4 className="text-[10px] font-mono text-muted uppercase tracking-[0.3em] mb-4">Inject failure</h4>
+                <ChaosButton scenario="inventory-kill" label="Kill Inventory Mid-Saga" durationSeconds={10} />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       <RequestReceiptHistory receipts={receipts} />
     </div>
   );
 }
 
-interface SingleSagaViewProps {
-  sagaState: string;
-  localEvents: SagaStepEvent[];
-  isProcessing: boolean;
-  formatTime: (d: Date) => string;
-  scenario: Scenario;
-  setScenario: (s: Scenario) => void;
-  runSimulation: () => void;
-  resetSimulation: () => void;
-  orderId: string | null;
+function getButtonContent(sagaState: string, isProcessing: boolean, orderId: string | null) {
+  if (!isProcessing && sagaState === 'Initial') {
+    return CHECKOUT_COPY.PAY_IDLE;
+  }
+
+  switch (sagaState) {
+    case 'initiated':
+      return (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          {CHECKOUT_COPY.PAY_RESERVING}
+        </>
+      );
+    case 'stock_reserved':
+      return (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          {CHECKOUT_COPY.PAY_CONFIRMING}
+        </>
+      );
+    case 'payment_ready':
+      return (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          {CHECKOUT_COPY.PAY_COMPLETING}
+        </>
+      );
+    case 'completed':
+    case 'finalized':
+      return `✓ ${CHECKOUT_COPY.PAY_DONE_PREFIX} #${formatOrderId(orderId)} confirmed`;
+    case 'stock_failed':
+      return `✕ ${CHECKOUT_COPY.FAIL_SOLD_OUT}`;
+    case 'payment_failed':
+      return `✕ ${CHECKOUT_COPY.FAIL_CARD_DECLINED}`;
+    case 'compensated':
+      return `✕ Order abandoned`;
+    default:
+      return isProcessing ? (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          Processing...
+        </>
+      ) : CHECKOUT_COPY.PAY_IDLE;
+  }
 }
 
-const formatOrderId = (id: string | null) => {
-  if (!id) return '---';
-  const clean = id.replace(/-/g, '').toUpperCase();
-  return `${clean.slice(0, 6)}-${clean.slice(6, 9)}`;
-};
-
-function SingleSagaView({
-  sagaState,
-  localEvents,
-  isProcessing,
-  formatTime,
-  scenario,
-  setScenario,
-  runSimulation,
-  resetSimulation,
-  orderId,
-}: SingleSagaViewProps) {
-  const isCompleted = sagaState === 'completed' || sagaState === 'finalized';
-
-  const getButtonContent = () => {
-    if (!isProcessing && sagaState === 'Initial') {
-      return CHECKOUT_COPY.PAY_IDLE;
-    }
-
-    switch (sagaState) {
-      case 'initiated':
-        return (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            {CHECKOUT_COPY.PAY_RESERVING}
-          </>
-        );
-      case 'stock_reserved':
-        return (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            {CHECKOUT_COPY.PAY_CONFIRMING}
-          </>
-        );
-      case 'payment_ready':
-        return (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            {CHECKOUT_COPY.PAY_COMPLETING}
-          </>
-        );
-      case 'completed':
-      case 'finalized':
-        return `✓ ${CHECKOUT_COPY.PAY_DONE_PREFIX} #${formatOrderId(orderId)} confirmed`;
-      case 'stock_failed':
-        return `✕ ${CHECKOUT_COPY.FAIL_SOLD_OUT}`;
-      case 'payment_failed':
-        return `✕ ${CHECKOUT_COPY.FAIL_CARD_DECLINED}`;
-      case 'compensated':
-        return `✕ Order abandoned`;
-      default:
-        return isProcessing ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processing...
-          </>
-        ) : CHECKOUT_COPY.PAY_IDLE;
-    }
-  };
-
-  const getButtonTone = () => {
-    if (sagaState === 'completed' || sagaState === 'finalized') return 'bg-success text-white';
-    if (sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated')
-      return 'bg-error text-white';
-    return 'bg-white text-black hover:bg-slate-100';
-  };
-
-  return (
-    <div className="grid lg:grid-cols-[45fr_55fr] gap-8 items-start">
-      {/* Left Pane - "Your order" */}
-      <div className="space-y-6">
-        <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em]">
-          {CHECKOUT_COPY.ORDER_HEADER}
-        </h3>
-
-        <div className="relative">
-          <AnimatePresence mode="wait">
-            {isCompleted ? (
-              <ConfirmationCard key="receipt" orderId={orderId} onReset={resetSimulation} />
-            ) : (
-              <motion.div
-                key="cart"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="surface p-6 shadow-2xl space-y-8"
-              >
-                {/* Scenario picker inside cart context */}
-                <div
-                  role="radiogroup"
-                  aria-label="Saga scenario"
-                  className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
-                >
-                  {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setScenario(s)}
-                      disabled={isProcessing}
-                      role="radio"
-                      aria-checked={scenario === s}
-                      className={`focus-ring py-2 px-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
-                        scenario === s
-                          ? 'bg-white/10 text-white shadow-sm'
-                          : 'text-muted hover:text-secondary hover:bg-white/5'
-                      } disabled:opacity-30`}
-                    >
-                      {CHECKOUT_COPY.SCENARIO_LABELS[s]}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Cart Item */}
-                <div className="flex gap-4">
-                  <div className="w-[44px] h-[44px] bg-white/5 rounded flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-bold text-primary">Demo Widget</h4>
-                      <span className="text-sm font-black tabular-nums">£39.99</span>
-                    </div>
-                    <p className="text-[10px] text-muted uppercase tracking-widest mt-1">Qty 1</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 border-t border-white/5 pt-6">
-                  <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
-                    <span>Subtotal</span>
-                    <span className="tabular-nums">£39.99</span>
-                  </div>
-                  <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
-                    <span>Tax</span>
-                    <span className="tabular-nums">£0.00</span>
-                  </div>
-                  <div className="flex justify-between items-baseline pt-4">
-                    <span className="text-xs font-bold text-primary uppercase tracking-widest">Total</span>
-                    <span className="text-3xl font-black tabular-nums text-primary">£39.99</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={runSimulation}
-                  disabled={isProcessing}
-                  className={`w-full py-5 font-black text-sm uppercase rounded-xl transition-all shadow-xl disabled:opacity-20 flex items-center justify-center gap-3 ${getButtonTone()}`}
-                >
-                  {getButtonContent()}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Right Pane - "Behind the scenes" */}
-      <div className="space-y-6">
-        <h3 className="text-sm font-mono text-muted uppercase tracking-widest">
-          {CHECKOUT_COPY.ENGINEERING_HEADER}
-        </h3>
-
-        <div className="surface p-8 shadow-2xl">
-          <VerticalSagaLadder sagaState={sagaState} />
-        </div>
-
-        {/* Compensation Drawer */}
-        <CompensationDrawer sagaState={sagaState} localEvents={localEvents} />
-
-        <div className="surface shadow-2xl h-[400px] flex flex-col overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-            <span className="text-muted font-bold uppercase italic opacity-40">Bridge Events Log</span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto font-mono text-[11px]">
-            <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10">
-                <tr className="text-muted/60 uppercase text-[10px] font-black tracking-widest">
-                  <th className="px-6 py-3">Time</th>
-                  <th className="px-6 py-3">Event</th>
-                  <th className="px-6 py-3 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence initial={false}>
-                  {localEvents.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="py-24 text-center text-muted/40 italic">
-                        Awaiting saga initiation...
-                      </td>
-                    </tr>
-                  ) : (
-                    localEvents.map((e, i) => (
-                      <motion.tr
-                        key={`${e.sessionId}-${e.step}-${i}`}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
-                      >
-                        <td className="px-6 py-4 text-muted/50 text-[10px] whitespace-nowrap align-top">
-                          [{formatTime(new Date(e.timestamp))}]
-                        </td>
-                        <td className="px-6 py-4 align-top">
-                          <div className="text-secondary font-bold">{describeSagaStep(e.step)}</div>
-                          <div className="text-[9px] text-muted/50 mt-0.5 font-mono uppercase tracking-widest">
-                            {e.step}
-                          </div>
-                          {e.description && (
-                            <div className="text-[10px] text-muted/70 mt-1.5 font-sans italic max-w-md leading-relaxed">
-                              {e.description}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right align-top">
-                          <StatusBadge status={e.status} />
-                        </td>
-                      </motion.tr>
-                    ))
-                  )}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Chaos controls */}
-        <div className="pt-6 border-t border-white/5">
-          <h4 className="text-[10px] font-mono text-muted uppercase tracking-[0.3em] mb-4">Inject failure</h4>
-          <ChaosButton scenario="inventory-kill" label="Kill Inventory Mid-Saga" durationSeconds={10} />
-        </div>
-      </div>
-    </div>
-  );
+function getButtonTone(sagaState: string) {
+  if (sagaState === 'completed' || sagaState === 'finalized') return 'bg-success text-white';
+  if (sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated')
+    return 'bg-error text-white';
+  return 'bg-white text-black hover:bg-slate-100';
 }
 
 function ConfirmationCard({ orderId, onReset }: { orderId: string | null; onReset: () => void }) {
@@ -456,6 +414,77 @@ function ConfirmationCard({ orderId, onReset }: { orderId: string | null; onRese
           {CHECKOUT_COPY.RUN_ANOTHER}
         </button>
       </div>
+    </motion.div>
+  );
+}
+
+function RaceModeCustomerPane({
+  lanes,
+  onReset,
+  isProcessing,
+}: {
+  lanes: LaneState[];
+  onReset: () => void;
+  isProcessing: boolean;
+}) {
+  const allFinished = lanes.every((l) =>
+    ['completed', 'payment_ready', 'finalized', 'stock_failed', 'payment_failed', 'compensated'].includes(l.step),
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="space-y-4"
+    >
+      {lanes.map((lane) => {
+        const isWon = lane.step === 'completed' || lane.step === 'finalized' || lane.step === 'payment_ready';
+        const isLost = lane.step === 'stock_failed' || lane.step === 'payment_failed' || lane.step === 'compensated';
+        const tone = isWon ? 'border-success bg-success/5' : isLost ? 'border-error bg-error/5' : 'border-white/5';
+
+        return (
+          <div key={lane.sagaId} className={`surface p-4 border ${tone} transition-colors shadow-lg`}>
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">{lane.label}</h4>
+              <span className="text-[9px] font-mono text-muted/50">#{lane.sagaId.slice(0, 4)}</span>
+            </div>
+
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs text-primary">1 unit · £39.99</span>
+              {lane.status && <StatusBadge status={lane.status} />}
+            </div>
+
+            <div
+              className={`w-full py-2.5 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest text-center flex items-center justify-center gap-2 ${
+                isWon ? 'bg-success text-white' : isLost ? 'bg-error text-white' : 'bg-white/5 text-muted'
+              }`}
+            >
+              {isWon ? (
+                '✓ Confirmed'
+              ) : isLost ? (
+                '✕ Failed'
+              ) : lane.step === 'Initial' || lane.step === 'Pending' ? (
+                'Idle'
+              ) : (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Processing…
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {allFinished && !isProcessing && (
+        <button
+          onClick={onReset}
+          className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-colors border border-dashed border-white/10 rounded-xl mt-2"
+        >
+          {CHECKOUT_COPY.RUN_ANOTHER}
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -634,6 +663,12 @@ function VerticalSagaLadder({ sagaState }: { sagaState: string }) {
     </div>
   );
 }
+
+const formatOrderId = (id: string | null) => {
+  if (!id) return '---';
+  const clean = id.replace(/-/g, '').toUpperCase();
+  return `${clean.slice(0, 6)}-${clean.slice(6, 9)}`;
+};
 
 // Maps the wire-format saga step name to a human-readable summary that fits
 // alongside it in the audit log. The raw step is still displayed underneath
