@@ -97,7 +97,13 @@ export function ConcurrencyDemo() {
   const renderUser = (user: UserState, id: 'A' | 'B') => {
     const isActive = user.status !== 'idle';
     return (
-      <div className={`surface p-8 shadow-xl transition-all border-2 ${user.status === 'conflict' ? 'border-error/50 shadow-error/10' : 'border-transparent'}`}>
+      <motion.div 
+        animate={user.status === 'success' ? { 
+           backgroundColor: ['rgba(34,197,94,0)', 'rgba(34,197,94,0.1)', 'rgba(34,197,94,0)'],
+           scale: [1, 1.02, 1]
+        } : {}}
+        className={`surface p-8 shadow-xl transition-all border-2 ${user.status === 'conflict' ? 'border-error/50 shadow-error/10' : user.status === 'success' ? 'border-success/50 shadow-success/10' : 'border-transparent'}`}
+      >
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
@@ -152,16 +158,23 @@ export function ConcurrencyDemo() {
                   
                   <div className="space-y-2">
                      <label className="text-[10px] text-muted font-black uppercase tracking-[0.3em] ml-1">New value</label>
-                     <div className="relative">
+                     <motion.div 
+                        animate={user.status === 'conflict' ? { 
+                           x: [0, -10, 10, -10, 10, 0],
+                           backgroundColor: ['rgba(255,255,255,0.05)', 'rgba(239,68,68,0.2)', 'rgba(255,255,255,0.05)']
+                        } : {}}
+                        transition={{ duration: 0.4 }}
+                        className="relative rounded-2xl overflow-hidden"
+                     >
                         <input
                            type="number"
                            value={user.newQuantity}
                            onChange={e => id === 'A' ? setUserA(prev => ({ ...prev, newQuantity: e.target.value })) : setUserB(prev => ({ ...prev, newQuantity: e.target.value }))}
                            disabled={isRacing || isActive}
-                           className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-primary outline-none font-mono text-base focus:border-accent/40 transition-colors"
+                           className={`w-full px-5 py-4 bg-white/5 border rounded-2xl text-primary outline-none font-mono text-base transition-colors ${user.status === 'conflict' ? 'border-error' : 'border-white/10 focus:border-accent/40'}`}
                         />
-                        <Save className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 opacity-20" />
-                     </div>
+                        <Save className={`absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${user.status === 'conflict' ? 'text-error' : 'opacity-20'}`} />
+                     </motion.div>
                   </div>
                </motion.div>
             )}
@@ -173,12 +186,12 @@ export function ConcurrencyDemo() {
             </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-4">
       <div className="surface p-10 shadow-2xl relative overflow-hidden font-mono">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none grayscale">
            <Database className="w-64 h-64 text-white" />
@@ -191,7 +204,13 @@ export function ConcurrencyDemo() {
                <h3 className="text-xs font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Live inventory</h3>
             </div>
             <div className="flex items-baseline justify-center lg:justify-start gap-8">
-              <div className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none">{inventory.quantity}</div>
+              <motion.div 
+                 animate={isRacing ? { scale: [1, 1.05, 1] } : (userA.status === 'success' || userB.status === 'success' ? { scale: [1, 1.2, 1], color: ['#fff', '#22c55e', '#fff'] } : {})}
+                 transition={{ repeat: isRacing ? Infinity : 0, duration: isRacing ? 0.5 : 0.8 }}
+                 className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none"
+              >
+                 {inventory.quantity}
+              </motion.div>
               <div className="px-5 py-2 bg-white/5 border border-white/10 rounded-full text-accent-light font-black text-xs tracking-[0.2em] uppercase">
                  ETag_v{inventory.version}
               </div>
@@ -218,6 +237,34 @@ export function ConcurrencyDemo() {
         </div>
 
         <RequestReceiptHistory receipts={receipts} />
+      </div>
+
+      {/* Visual Ladder + Clash */}
+      <div className="relative h-24 flex justify-center">
+         <div className="absolute inset-y-0 w-px bg-white/10 left-1/4 lg:left-1/3" />
+         <div className="absolute inset-y-0 w-px bg-white/10 right-1/4 lg:right-1/3" />
+         
+         <AnimatePresence>
+            {isRacing && (
+               <motion.div 
+                 initial={{ opacity: 0, scale: 0 }}
+                 animate={{ opacity: 1, scale: [1, 1.5, 1], rotate: [0, 90, 180, 270, 360] }}
+                 exit={{ opacity: 0, scale: 0 }}
+                 className="absolute top-1/2 -translate-y-1/2 z-20"
+               >
+                  <div className="relative">
+                     <Zap className="w-10 h-10 text-warning fill-warning" />
+                     <motion.div 
+                       animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+                       transition={{ repeat: Infinity, duration: 0.4 }}
+                       className="absolute inset-0 bg-warning rounded-full blur-xl"
+                     />
+                  </div>
+               </motion.div>
+            )}
+         </AnimatePresence>
+
+         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">

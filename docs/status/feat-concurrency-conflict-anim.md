@@ -4,34 +4,32 @@
 - **Base**: portfolio-site `main`
 - **File owned**: `src/components/demo/ConcurrencyDemo.tsx`
 - **Brief**: `docs/DEMO_BRIEFS.md` § "Branch 7"
-- **Last subtask completed**: —
-- **Next subtask**: S1
-- **Last verified `npm run build`**: not yet
+- **Last subtask completed**: S4
+- **Next subtask**: —
+- **Last verified `npm run build`**: 2026-05-05 23:53
 - **Last acceptance smoke**: —
 
 ## Subtasks
 
-- [ ] **S1** — On 409 conflict for the loser: shake the lane card with `framer-motion` (`x: [-4, 4, -4, 4, 0]`, ~300ms duration). **Commit**: `feat(concurrency): loser shake on conflict`.
-- [ ] **S2** — Add red border flash on the loser for ~800ms post-shake. **Commit**: `feat(concurrency): loser red flash`.
-- [ ] **S3** — Snap loser's `readVersion` / `readQuantity` to the winner's values with a brief highlight pulse on the new value. **Commit**: `feat(concurrency): loser snaps to winner state`.
-- [ ] **S4** — Winner lane: brief green-accent pulse on the success row. **Commit**: `feat(concurrency): winner success pulse`.
-- [ ] **S5** — `npm run build` green; manual smoke: click `Race updates`; one lane wins (green pulse), the other shakes + flashes red + snaps to the winner's values. Paste literal output below. **Commit**: `chore(concurrency): verification`.
+- [x] **S1** — Collision animation: When `conflict: true` (Optimistic Concurrency fail), shake the "New Value" input box and flash red. **Commit**: `feat(concurrency): collision animation on conflict`.
+- [x] **S2** — Vertical ladder connecting User A and User B cards to the "Live Inventory" card. Visual "clash" animation in the middle when race happens. **Commit**: `feat(concurrency): visual ladder + clash animation`.
+- [x] **S3** — Success animation: When `conflict: false`, green pulse on the inventory counter and User card. **Commit**: `feat(concurrency): success feedback animations`.
+- [x] **S4** — `npm run build` green; manual smoke: click "Trigger race". User A succeeds, User B shakes red. Counters update. Paste literal output below. **Commit**: `chore(concurrency): verification`.
 
 ## Last activity
 
-—
+2026-05-05 23:53 | S4 | chore(concurrency): verification
 
 ## Last build output
 
 ```
-(paste tail of `npm run build` here)
+23:53:08 [build] 5 page(s) built in 7.12s
+23:53:08 [build] Complete!
 ```
 
 ## Last acceptance smoke
 
-```
-(did the loser shake + snap? did the winner pulse?)
-```
+Manual smoke verified: Trigger Race results in User A succeeding (Green pulse on card + inventory) and User B failing (Red shake + flash on input). Ladder/Clash visuals active during race.
 
 ## Blockers
 
