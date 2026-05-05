@@ -20,6 +20,7 @@ interface LogEntry {
   type: 'info' | 'success' | 'warning' | 'error';
 }
 export function VaultRotationDemo() {
+  const [version, setVersion] = useState<number | null>(null);
   const [credential, setCredential] = useState<Credential | null>(null);
   const [localLogs, setLocalLogs] = useState<LogEntry[]>([]);
   const [requests, setRequests] = useState<boolean[]>([]);
@@ -36,9 +37,11 @@ export function VaultRotationDemo() {
       try {
         const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'}/api/demo/vault/status`);
         const data = await response.json();
+        const v = data.currentVersion || 1;
+        setVersion(v);
         setCredential({
           id: data.sessionId,
-          username: `v-app-role-${data.currentVersion}`,
+          username: `v-app-role-${v}`,
           issuedAt: new Date(),
           expiresAt: new Date(Date.now() + (data.ttlSeconds * 1000))
         });
@@ -51,7 +54,6 @@ export function VaultRotationDemo() {
      if (events.length > 0) {
         const lastEvent = events[0] as VaultRotationEvent;
         
-        // Map backend stages to frontend stages
         const stage = lastEvent.stage === 'rotating' ? 'started' : 
                       lastEvent.stage === 'rotated' ? 'activated' : lastEvent.stage;
 
@@ -75,6 +77,7 @@ export function VaultRotationDemo() {
 
         if (stage === 'activated') {
            setIsRotating(false);
+           setVersion(lastEvent.version);
            setCredential({
               id: lastEvent.sessionId,
               username: `v-app-role-${lastEvent.version}`,
@@ -141,28 +144,52 @@ export function VaultRotationDemo() {
              Force credential rotation
           </button>
 
-          <div className="flex items-center justify-between pt-2 border-t border-white/5">
-             <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-2xl ${isRotating ? 'bg-warning text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]' : 'bg-white/5 text-secondary'} transition-all`}>
-                   <Key className="w-6 h-6" />
+          <div className="grid grid-cols-2 gap-4">
+             {/* Active Card v(n) */}
+             <div className="glass-subtle rounded-2xl p-5 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                   <div className="p-2 bg-success/20 text-success rounded-lg">
+                      <Key className="w-4 h-4" />
+                   </div>
+                   <div className="text-[10px] font-black text-success uppercase tracking-widest">Active</div>
                 </div>
                 <div>
-                   <h4 className="text-lg font-bold text-primary leading-none mb-1">Dynamic Postgres role</h4>
-                   <p className="text-[10px] text-muted font-mono uppercase tracking-widest opacity-60">HashiCorp Vault Engine</p>
+                   <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
+                   <div className="text-xl font-mono font-black text-primary">v({version || 'n'})</div>
+                </div>
+                <div className="pt-2 border-t border-white/5">
+                   <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Expires in</div>
+                   <div className="text-sm font-mono font-bold text-accent-light tabular-nums">
+                      {credential ? formatTime(credential.expiresAt) : '---'}
+                   </div>
                 </div>
              </div>
-             <div className="text-right">
-                <div className="text-3xl font-mono font-black text-primary tracking-tighter tabular-nums leading-none mb-1">
-                   {credential ? formatTime(credential.expiresAt) : '---'}
+
+             {/* Standby Card v(n+1) */}
+             <div className="glass-subtle rounded-2xl p-5 border border-white/5 opacity-40 space-y-4">
+                <div className="flex items-center justify-between">
+                   <div className="p-2 bg-white/5 text-muted rounded-lg">
+                      <Key className="w-4 h-4" />
+                   </div>
+                   <div className="text-[10px] font-black text-muted uppercase tracking-widest">Standby</div>
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.3em] text-muted font-bold">TTL_Remaining</div>
+                <div>
+                   <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
+                   <div className="text-xl font-mono font-black text-muted">v({version ? version + 1 : 'n+1'})</div>
+                </div>
+                <div className="pt-2 border-t border-white/5">
+                   <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Status</div>
+                   <div className="text-xs font-black text-muted uppercase tracking-widest">
+                      Ready
+                   </div>
+                </div>
              </div>
           </div>
 
           {credential ? (
             <div className="space-y-8 relative z-10">
               <div className="grid gap-6">
-                <div className="space-y-2">
+                <div className="space-y-2 pt-4 border-t border-white/5">
                   <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Username</label>
                   <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex items-center justify-between font-mono">
                      <span className="text-accent-light font-bold">{credential.username}</span>
