@@ -8,6 +8,7 @@ import {
   RefreshCcw,
   Trophy,
   XCircle,
+  Check,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { signalRClient } from '../../lib/api/signalr';
@@ -316,8 +317,7 @@ function SingleSagaView({
         </h3>
 
         <div className="surface p-8 shadow-2xl">
-          {/* Vertical ladder will go here in P1.5 */}
-          <div className="text-[10px] font-mono text-muted italic">Saga status visualization pending...</div>
+          <VerticalSagaLadder sagaState={sagaState} />
         </div>
 
         {/* Compensation Drawer */}
@@ -453,6 +453,72 @@ function RaceLaneCard({ lane, formatTime }: RaceLaneCardProps) {
           )}
         </ul>
       </div>
+    </div>
+  );
+}
+
+const SAGA_STEPS = [
+  { id: 'initiated', label: 'Checkout started' },
+  { id: 'stock_reserved', label: 'Stock reserved' },
+  { id: 'payment_ready', label: 'Payment session created' },
+  { id: 'completed', label: 'Order completed' },
+] as const;
+
+function VerticalSagaLadder({ sagaState }: { sagaState: string }) {
+  const steps = [...SAGA_STEPS] as Array<{ id: string; label: string }>;
+  if (sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated') {
+    steps.push({ id: 'compensated', label: 'Compensation in flight' });
+  }
+
+  const getStepIndex = (state: string) => {
+    if (state === 'Initial') return -1;
+    if (state === 'stock_failed' || state === 'payment_failed') return 4; // Map failures to the Abandoned/Compensated slot
+    return steps.findIndex((s) => s.id === state);
+  };
+
+  const currentIndex = getStepIndex(sagaState);
+
+  return (
+    <div className="space-y-6">
+      {steps.map((step, i) => {
+        const isFinished =
+          i < currentIndex || (i === currentIndex && (sagaState === 'completed' || sagaState === 'finalized'));
+        const isActive = i === currentIndex && !isFinished;
+        const isPending = i > currentIndex;
+
+        return (
+          <motion.div
+            key={step.id}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: isPending ? 0.3 : 1, x: 0 }}
+            className="flex items-center gap-4"
+          >
+            <div
+              className={`w-8 h-8 rounded-none border flex items-center justify-center transition-all duration-500 ${
+                isFinished
+                  ? 'border-success bg-success/10 text-success'
+                  : isActive
+                  ? 'border-accent bg-accent/10 text-accent ring-4 ring-accent/20'
+                  : 'border-white/10 text-muted/40'
+              }`}
+            >
+              {isFinished ? (
+                <Check className="w-4 h-4" />
+              ) : isActive ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <span className="text-[10px] font-black">{i + 1}</span>
+              )}
+            </div>
+            <div>
+              <div className="text-[9px] font-mono text-muted/50 uppercase tracking-widest">{step.id}</div>
+              <div className={`text-sm font-bold transition-colors ${isActive ? 'text-accent' : 'text-primary'}`}>
+                {step.label}
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
