@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Zap, ShieldAlert, Code2, Cpu, BookOpen } from 'lucide-react';
 import { DEMO_FOOTER, CLUSTER_LABEL } from '../../lib/copy';
