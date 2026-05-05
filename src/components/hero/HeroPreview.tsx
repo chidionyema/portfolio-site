@@ -31,10 +31,14 @@ function makeTraceId() {
 
 export function HeroPreview({ firstDive, demoCount, diveCount }: HeroPreviewData) {
   const [step, setStep] = useState(0);
-  const [traceId, setTraceId] = useState(() => makeTraceId());
+  // Initialize traceId empty so SSR and client agree; populate on mount.
+  // Math.random() in the initializer produces different values server-side
+  // vs client-side and tears down the entire hydrated tree.
+  const [traceId, setTraceId] = useState<string>('');
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
+    setTraceId(makeTraceId());
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
 
