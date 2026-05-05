@@ -16,9 +16,9 @@ state.
 - **Phase**: P2 — Frontend acceptance (portfolio-site)
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
 - **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
-- **Last subtask completed**: P1.8
-- **Next subtask**: P2.1 (see plan below)
-- **Last verified `npm run build` (frontend)**: 2026-05-05 23:41
+- **Last subtask completed**: P2.1
+- **Next subtask**: P2.2 (Manual smoke)
+- **Last verified `npm run build` (frontend)**: 2026-05-05 23:42
 - **Last verified `dotnet build` (backend)**: not yet run
 - **Last acceptance test run (paste literal output)**: —
 
@@ -79,7 +79,7 @@ build is green.
 
 ### P2 — Frontend acceptance (still portfolio-site)
 
-- [ ] **P2.1** — `npm run build` green; paste tail of the build output
+- [x] **P2.1** — `npm run build` green; paste tail of the build output
   literally below in **Last verified `npm run build`**.
 
 - [ ] **P2.2** — Manual smoke (browser): hard-refresh `http://localhost:4321/`,
@@ -136,15 +136,31 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 
 ## Last activity
 
-2026-05-05 23:41 | P1.8 | Implemented race-mode customer pane with stacked mini-carts. Refactored shell to handle both modes. Verified build green.
+2026-05-05 23:42 | P2.1 | Verified build green for acceptance. Frontend layout complete.
 
 ---
 
 ## Last verified `npm run build` (frontend)
 
 ```
-23:41:12 [build] 5 page(s) built in 12.25s
-23:41:12 [build] Complete!
+23:42:19 [vite] dist/_astro/index.CiZ3Y5e0.js                   133.95 kB │ gzip: 43.14 kB
+23:42:19 ✓ built in 3.64s
+
+ generating static routes 
+23:42:19 ▶ src/pages/404.astro
+23:42:19   └─ /404.html (+127ms)
+23:42:19 ▶ src/pages/deep-dives/[slug].astro
+23:42:19   ├─ /deep-dives/saga-vs-2pc/index.html (+66ms)
+23:42:19   ├─ /deep-dives/transactional-outbox/index.html (+44ms)
+23:42:19   └─ /deep-dives/vault-rotation/index.html (+70ms)
+23:42:19 λ src/pages/sitemap.xml.ts
+23:42:19   └─ /sitemap.xml (+2ms)
+23:42:19 ▶ src/pages/index.astro
+23:42:19   └─ /index.html (+85ms)
+23:42:19 ✓ Completed in 883ms.
+
+23:42:20 [build] 5 page(s) built in 8.86s
+23:42:20 [build] Complete!
 ```
 
 ## Last verified `dotnet build` (backend)
