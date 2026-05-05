@@ -42,9 +42,11 @@ export function useDemoSession(moduleName?: string) {
     let mounted = true;
 
     const connect = async () => {
+      const tag = `[demo-session ${moduleName ?? 'shared'}]`;
       try {
+        console.info(`${tag} getConnection()`);
         const connection = signalRClient.getConnection();
-        
+
         connection.on('OnSagaStep', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
         connection.on('OnVaultRotation', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
         connection.on('OnCacheEvent', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
@@ -53,11 +55,15 @@ export function useDemoSession(moduleName?: string) {
         connection.on('OnRateLimit', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
         connection.on('OnConcurrency', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
 
+        console.info(`${tag} subscribing sid=${sid}`);
         await signalRClient.subscribe(sid!);
-        
+        console.info(`${tag} connected`);
+
         if (mounted) setState(prev => ({ ...prev, isConnected: true }));
       } catch (err) {
-        if (mounted) setState(prev => ({ ...prev, error: 'Failed to connect to cluster stream' }));
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`${tag} connect failed:`, message, err);
+        if (mounted) setState(prev => ({ ...prev, error: `SignalR: ${message}` }));
       }
     };
 

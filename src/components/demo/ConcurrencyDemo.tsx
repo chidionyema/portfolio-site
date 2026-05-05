@@ -42,7 +42,12 @@ export function ConcurrencyDemo() {
     const setUser = user === 'A' ? setUserA : user === 'B' ? setUserB : null;
     if (setUser) setUser(prev => ({ ...prev, status: 'reading', message: 'Fetching_State...' }));
     try {
-      const result = await executeCommand('/inventory/demo-stock');
+      // Backend route is GET /api/demo/inventory/{id}; executeCommand always
+      // POSTs (built for the saga endpoints) so we hit fetch directly here.
+      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
+      const resp = await fetch(`${apiUrl}/api/demo/inventory/demo-stock`);
+      if (!resp.ok) throw new Error(`Cluster Error: ${resp.status}`);
+      const result = await resp.json();
       setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
       if (setUser) {
          setUser(prev => ({
