@@ -16,6 +16,8 @@ import { ChaosButton } from './ChaosButton';
 import { RequestReceiptHistory } from './RequestReceipt';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 
+import { CHECKOUT_COPY } from '../../lib/copy';
+
 type Scenario = 'success' | 'stockFailure' | 'paymentFailure' | 'stockRace';
 
 interface RaceLane {
@@ -32,13 +34,6 @@ interface LaneState {
   events: SagaStepEvent[];
 }
 
-const SCENARIO_LABEL: Record<Scenario, string> = {
-  success: 'Happy path',
-  stockFailure: 'Stock failure',
-  paymentFailure: 'Payment failure',
-  stockRace: 'Stock race',
-};
-
 export function CheckoutDemo() {
   const [localEvents, setLocalEvents] = useState<SagaStepEvent[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,17 +41,9 @@ export function CheckoutDemo() {
   const [sagaState, setSagaState] = useState<string>('Initial');
   const [activeSagaId, setActiveSagaId] = useState<string | null>(null);
   const [raceLanes, setRaceLanes] = useState<RaceLane[] | null>(null);
-  const [showTooltip, setShowTooltip] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
   const { executeCommand, events: remoteEvents } = useDemoSession('checkout');
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isProcessing && localEvents.length === 0) setShowTooltip(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [isProcessing, localEvents]);
 
   // Single-saga state derivation
   useEffect(() => {
@@ -104,7 +91,6 @@ export function CheckoutDemo() {
   }, [lanes]);
 
   const runSimulation = async () => {
-    setShowTooltip(false);
     setIsProcessing(true);
     setLocalEvents([]);
     setSagaState('Initial');
@@ -153,7 +139,7 @@ export function CheckoutDemo() {
           aria-label="Saga scenario"
           className="grid grid-cols-2 sm:grid-cols-4 gap-1 mt-3 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
         >
-          {(Object.keys(SCENARIO_LABEL) as Scenario[]).map((s) => (
+          {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
             <button
               key={s}
               onClick={() => setScenario(s)}
@@ -166,7 +152,7 @@ export function CheckoutDemo() {
                   : 'text-muted hover:text-secondary hover:bg-white/5'
               } disabled:opacity-30`}
             >
-              {SCENARIO_LABEL[s]}
+              {CHECKOUT_COPY.SCENARIO_LABELS[s]}
             </button>
           ))}
         </div>
@@ -179,26 +165,10 @@ export function CheckoutDemo() {
 
       {/* Action row */}
       <div className="grid grid-cols-1 gap-4 relative">
-        <AnimatePresence>
-          {showTooltip && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, x: '-50%' }}
-              animate={{ opacity: 1, y: 0, x: '-50%' }}
-              exit={{ opacity: 0 }}
-              className="absolute -top-12 left-1/2 z-20 bg-accent text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap shadow-xl border border-white/20"
-            >
-              Click to start your first saga
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-accent rotate-45 border-r border-b border-white/20" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <button
           onClick={runSimulation}
           disabled={isProcessing}
-          className={`focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-20 flex items-center justify-center gap-3 ${
-            showTooltip ? 'animate-pulse ring-4 ring-accent/30 scale-[1.02]' : 'hover:bg-slate-100'
-          }`}
+          className="focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-20 flex items-center justify-center gap-3 hover:bg-slate-100"
         >
           {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
           {isProcessing
@@ -209,8 +179,6 @@ export function CheckoutDemo() {
             ? 'Run race'
             : 'Dispatch order'}
         </button>
-
-        <ChaosButton scenario="inventory-kill" label="Kill Inventory Mid-Saga" durationSeconds={10} />
       </div>
 
       <RequestReceiptHistory receipts={receipts} />
@@ -253,30 +221,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
         </div>
 
         <div className="surface p-8 shadow-2xl">
-          <div className="glass-subtle p-6 relative overflow-hidden">
-            <div className="flex items-center justify-between relative z-10 text-[10px] font-bold uppercase tracking-widest text-muted/60">
-              <span className={sagaState === 'Initial' || sagaState === 'initiated' ? 'text-primary' : ''}>Initial</span>
-              <div className="h-px bg-white/10 flex-1 mx-4" />
-              <span className={sagaState === 'stock_reserved' ? 'text-info' : ''}>Stock</span>
-              <div className="h-px bg-white/10 flex-1 mx-4" />
-              <span className={sagaState === 'payment_ready' ? 'text-info' : ''}>Payment</span>
-              <div className="h-px bg-white/10 flex-1 mx-4" />
-              <span className={sagaState === 'completed' ? 'text-success' : ''}>Done</span>
-            </div>
-
-            <AnimatePresence>
-              {(sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated') && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 pt-6 border-t border-white/5 flex items-center justify-center gap-3 text-warning font-black tracking-widest uppercase text-xs"
-                >
-                  <RefreshCcw className="w-4 h-4 animate-spin-slow" />
-                  Rollback in progress
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Vertical ladder will go here in P1.5 */}
         </div>
       </div>
 
@@ -288,16 +233,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
 
         <div className="surface shadow-2xl h-[480px] flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-            <span className="text-muted font-bold uppercase">
-              Buffer:{' '}
-              <span className="text-accent-light">
-                {isProcessing || localEvents.length > 0 ? 'f4a9b21c' : '---'}
-              </span>
-            </span>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
-              <span className="text-success font-black">Connected</span>
-            </div>
+            {/* Header placeholder - fake badges removed */}
           </div>
 
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
