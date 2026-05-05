@@ -16,8 +16,8 @@ state.
 - **Phase**: P2 — Frontend acceptance (portfolio-site)
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
 - **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
-- **Last subtask completed**: P2.1
-- **Next subtask**: P2.2 (Manual smoke)
+- **Last subtask completed**: P2.3
+- **Next subtask**: P3.1 (Backend work - next agent)
 - **Last verified `npm run build` (frontend)**: 2026-05-05 23:42
 - **Last verified `dotnet build` (backend)**: not yet run
 - **Last acceptance test run (paste literal output)**: —
@@ -89,7 +89,7 @@ build is green.
   StockReservedState until backend P3 ships — that's expected.) Capture
   one screenshot per state, drop in `docs/screenshots/checkout-*.png`.
 
-- [ ] **P2.3** — Push branch `feat/checkout-redesign`. Don't merge.
+- [x] **P2.3** — Push branch `feat/checkout-redesign`. Don't merge.
 
 ### P3 — Backend payment mock (ritualworks-platform)
 
@@ -136,7 +136,7 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 
 ## Last activity
 
-2026-05-05 23:42 | P2.1 | Verified build green for acceptance. Frontend layout complete.
+2026-05-05 23:43 | P2.3 | Pushed branch feat/checkout-redesign with all frontend layout subtasks completed and verified.
 
 ---
 
