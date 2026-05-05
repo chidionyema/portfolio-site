@@ -129,61 +129,6 @@ export function CheckoutDemo() {
 
   return (
     <div className="space-y-8 relative">
-      {/* Scenario picker */}
-      <div className="surface p-6 shadow-2xl">
-        <label className="text-[10px] font-black text-muted uppercase tracking-[0.3em]">
-          Select Execution Path
-        </label>
-        <div
-          role="radiogroup"
-          aria-label="Saga scenario"
-          className="grid grid-cols-2 sm:grid-cols-4 gap-1 mt-3 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
-        >
-          {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setScenario(s)}
-              disabled={isProcessing}
-              role="radio"
-              aria-checked={scenario === s}
-              className={`focus-ring py-2.5 px-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
-                scenario === s
-                  ? 'bg-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]'
-                  : 'text-muted hover:text-secondary hover:bg-white/5'
-              } disabled:opacity-30`}
-            >
-              {CHECKOUT_COPY.SCENARIO_LABELS[s]}
-            </button>
-          ))}
-        </div>
-        <p className="text-[10px] text-muted/60 leading-relaxed mt-4 font-mono max-w-2xl">
-          {scenario === 'stockRace'
-            ? 'Heads up: this scenario splits the panel below into two side-by-side lanes — one per cart. Both carts request 3 units of a product that has stock=5. Optimistic concurrency picks the winner; the loser compensates.'
-            : 'A single checkout saga runs end-to-end. Stock and payment failures simulate compensation paths.'}
-        </p>
-      </div>
-
-      {/* Action row */}
-      <div className="grid grid-cols-1 gap-4 relative">
-        <button
-          onClick={runSimulation}
-          disabled={isProcessing}
-          className="focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-20 flex items-center justify-center gap-3 hover:bg-slate-100"
-        >
-          {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
-          {isProcessing
-            ? scenario === 'stockRace'
-              ? 'Running race…'
-              : 'Running saga…'
-            : scenario === 'stockRace'
-            ? 'Run race'
-            : 'Dispatch order'}
-        </button>
-      </div>
-
-      <RequestReceiptHistory receipts={receipts} />
-
-      {/* Mode-specific view */}
       {lanes ? (
         <div className="grid lg:grid-cols-2 gap-6">
           {lanes.map((lane) => (
@@ -196,8 +141,13 @@ export function CheckoutDemo() {
           localEvents={localEvents}
           isProcessing={isProcessing}
           formatTime={formatTime}
+          scenario={scenario}
+          setScenario={setScenario}
+          runSimulation={runSimulation}
         />
       )}
+
+      <RequestReceiptHistory receipts={receipts} />
     </div>
   );
 }
@@ -207,33 +157,115 @@ interface SingleSagaViewProps {
   localEvents: SagaStepEvent[];
   isProcessing: boolean;
   formatTime: (d: Date) => string;
+  scenario: Scenario;
+  setScenario: (s: Scenario) => void;
+  runSimulation: () => void;
 }
 
-function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: SingleSagaViewProps) {
+function SingleSagaView({
+  sagaState,
+  localEvents,
+  isProcessing,
+  formatTime,
+  scenario,
+  setScenario,
+  runSimulation,
+}: SingleSagaViewProps) {
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
+    <div className="grid lg:grid-cols-[45fr_55fr] gap-8 items-start">
+      {/* Left Pane - "Your order" */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
-            <Activity className="w-4 h-4 text-accent" />
-            Saga state machine
-          </h3>
-        </div>
+        <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em]">
+          {CHECKOUT_COPY.ORDER_HEADER}
+        </h3>
 
-        <div className="surface p-8 shadow-2xl">
-          {/* Vertical ladder will go here in P1.5 */}
+        <div className="surface p-6 shadow-2xl space-y-8">
+          {/* Scenario picker inside cart context */}
+          <div
+            role="radiogroup"
+            aria-label="Saga scenario"
+            className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
+          >
+            {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setScenario(s)}
+                disabled={isProcessing}
+                role="radio"
+                aria-checked={scenario === s}
+                className={`focus-ring py-2 px-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
+                  scenario === s
+                    ? 'bg-white/10 text-white shadow-sm'
+                    : 'text-muted hover:text-secondary hover:bg-white/5'
+                } disabled:opacity-30`}
+              >
+                {CHECKOUT_COPY.SCENARIO_LABELS[s]}
+              </button>
+            ))}
+          </div>
+
+          {/* Cart Item */}
+          <div className="flex gap-4">
+            <div className="w-[44px] h-[44px] bg-white/5 rounded flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-start">
+                <h4 className="text-sm font-bold text-primary">Demo Widget</h4>
+                <span className="text-sm font-black tabular-nums">£39.99</span>
+              </div>
+              <p className="text-[10px] text-muted uppercase tracking-widest mt-1">Qty 1</p>
+            </div>
+          </div>
+
+          <div className="space-y-2 border-t border-white/5 pt-6">
+            <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
+              <span>Subtotal</span>
+              <span className="tabular-nums">£39.99</span>
+            </div>
+            <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
+              <span>Tax</span>
+              <span className="tabular-nums">£0.00</span>
+            </div>
+            <div className="flex justify-between items-baseline pt-4">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Total</span>
+              <span className="text-3xl font-black tabular-nums text-primary">£39.99</span>
+            </div>
+          </div>
+
+          <button
+            onClick={runSimulation}
+            disabled={isProcessing}
+            className="w-full py-5 bg-white text-black font-black text-sm uppercase rounded-xl transition-all shadow-xl hover:bg-slate-100 disabled:opacity-20 flex items-center justify-center gap-3"
+          >
+            {isProcessing && <Loader2 className="w-5 h-5 animate-spin" />}
+            {CHECKOUT_COPY.PAY_IDLE}
+          </button>
         </div>
       </div>
 
+      {/* Right Pane - "Behind the scenes" */}
       <div className="space-y-6">
-        <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
-          <Database className="w-4 h-4 text-muted" />
-          Live event stream
+        <h3 className="text-sm font-mono text-muted uppercase tracking-widest">
+          {CHECKOUT_COPY.ENGINEERING_HEADER}
         </h3>
 
-        <div className="surface shadow-2xl h-[480px] flex flex-col overflow-hidden">
+        <div className="surface p-8 shadow-2xl">
+          {/* Vertical ladder will go here in P1.5 */}
+          <div className="text-[10px] font-mono text-muted italic">Saga status visualization pending...</div>
+        </div>
+
+        {/* Compensation Drawer */}
+        <div className="space-y-4">
+          <h4 className="text-[10px] font-mono text-muted uppercase tracking-[0.3em]">
+            {CHECKOUT_COPY.COMPENSATION_HEADER}
+          </h4>
+          <div className="surface p-4 border-dashed border-white/10 text-[10px] font-mono text-muted/40">
+            Compensation inactive
+          </div>
+        </div>
+
+        <div className="surface shadow-2xl h-[400px] flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-            {/* Header placeholder - fake badges removed */}
+            <span className="text-muted font-bold uppercase italic opacity-40">Bridge Events Log</span>
           </div>
 
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
@@ -249,11 +281,8 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
                 <AnimatePresence initial={false}>
                   {localEvents.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={3}
-                        className="py-24 text-center text-muted/40 italic"
-                      >
-                        Fire a request from the controls above — this log will populate in real-time.
+                      <td colSpan={3} className="py-24 text-center text-muted/40 italic">
+                        Awaiting saga initiation...
                       </td>
                     </tr>
                   ) : (
@@ -269,9 +298,13 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
                         </td>
                         <td className="px-6 py-4 align-top">
                           <div className="text-secondary font-bold">{describeSagaStep(e.step)}</div>
-                          <div className="text-[9px] text-muted/50 mt-0.5 font-mono uppercase tracking-widest">{e.step}</div>
+                          <div className="text-[9px] text-muted/50 mt-0.5 font-mono uppercase tracking-widest">
+                            {e.step}
+                          </div>
                           {e.description && (
-                            <div className="text-[10px] text-muted/70 mt-1.5 font-sans italic max-w-md leading-relaxed">{e.description}</div>
+                            <div className="text-[10px] text-muted/70 mt-1.5 font-sans italic max-w-md leading-relaxed">
+                              {e.description}
+                            </div>
                           )}
                         </td>
                         <td className="px-6 py-4 text-right align-top">
@@ -284,6 +317,12 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Chaos controls */}
+        <div className="pt-6 border-t border-white/5">
+          <h4 className="text-[10px] font-mono text-muted uppercase tracking-[0.3em] mb-4">Inject failure</h4>
+          <ChaosButton scenario="inventory-kill" label="Kill Inventory Mid-Saga" durationSeconds={10} />
         </div>
       </div>
     </div>
