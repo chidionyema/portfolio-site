@@ -16,9 +16,9 @@ state.
 - **Phase**: P1 — Frontend layout (portfolio-site)
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
 - **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
-- **Last subtask completed**: P1.6
-- **Next subtask**: P1.7 (see plan below)
-- **Last verified `npm run build` (frontend)**: 2026-05-05 23:33
+- **Last subtask completed**: P1.7
+- **Next subtask**: P1.8 (see plan below)
+- **Last verified `npm run build` (frontend)**: 2026-05-05 23:39
 - **Last verified `dotnet build` (backend)**: not yet run
 - **Last acceptance test run (paste literal output)**: —
 
@@ -68,7 +68,7 @@ build is green.
   drawer". Trace-id receipt strip uses the existing `RequestReceipt`
   component. **Commit:** `feat(checkout): compensation drawer`.
 
-- [ ] **P1.7** — Receipt state. Customer pane swaps to confirmation
+- [x] **P1.7** — Receipt state. Customer pane swaps to confirmation
   card on `Completed` per § "Receipt / completion state". Copy verbatim
   from the strings table. Run-another button returns to idle. **Commit:**
   `feat(checkout): order-confirmed receipt state`.
@@ -136,15 +136,15 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 
 ## Last activity
 
-2026-05-05 23:33 | P1.6 | Implemented auto-expanding compensation drawer with event bullets and RequestReceipt. Verified build green.
+2026-05-05 23:39 | P1.7 | Implemented order confirmation receipt state with ConfirmationCard and reset logic. Verified build green.
 
 ---
 
 ## Last verified `npm run build` (frontend)
 
 ```
-23:33:38 [build] 5 page(s) built in 220.19s
-23:33:38 [build] Complete!
+23:39:39 [build] 5 page(s) built in 34.67s
+23:39:39 [build] Complete!
 ```
 
 ## Last verified `dotnet build` (backend)
