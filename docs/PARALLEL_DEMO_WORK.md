@@ -83,9 +83,14 @@ Each branch has its own design doc in `docs/`:
   end-to-end. P1 phases = branch 1, P3 phases = branch 9.
 - **Branches 2–8**: see `DEMO_BRIEFS.md` (one short section per demo
   with the design recommendation, the file:line cuts, and the
-  acceptance criterion). If that file doesn't exist yet, it's the next
-  thing to write — agents on branches 2–8 should NOT start until
-  `DEMO_BRIEFS.md` is in place.
+  acceptance criterion).
+
+**Every branch must also read `DEMO_DESIGN_PRINCIPLES.md` end-to-end
+before its first edit.** That doc encodes the cross-cutting
+"intuitive + engaging" rules that distinguish a demo that *functions*
+from one that *lands*. The per-branch briefs are necessary but not
+sufficient — the principles doc is what makes the work feel like one
+coherent product, not 9 disconnected components.
 
 ## Per-branch status protocol
 
