@@ -19,9 +19,38 @@ of coordination.
 Do every phase in order. Don't skip. Don't reorder.
 
 ================================================================
-PHASE 0 — Stagger
+PHASE 0 — Isolation check + stagger
 ================================================================
-Sleep a random 5–25 seconds before doing anything else. This avoids
+You MUST be running in an isolated git worktree, NOT the main
+working directory. If you are in the main directory, multiple
+agents will silently corrupt each other (shared HEAD pointer,
+shared node_modules, shared working tree). Verify FIRST:
+
+  pwd
+  git worktree list
+
+Your `pwd` output MUST NOT match either of these main working dirs:
+  - /Users/chidionyema/Documents/code/portfolio-site
+  - /Users/chidionyema/Documents/code/ritualworks-platform
+
+Worktree paths typically look like:
+  - /Users/chidionyema/Documents/code/portfolio-site-<branch-suffix>
+  - /Users/chidionyema/Documents/code/ritualworks-platform-<branch-suffix>
+
+If you ARE in one of the main directories, STOP IMMEDIATELY and
+report:
+
+  ISOLATION FAILURE — I am in the main repo working directory at <pwd>.
+  Operator: create a worktree and redirect me to it:
+    cd /Users/chidionyema/Documents/code/portfolio-site
+    git worktree add ../portfolio-site-<short-name>
+    ( cd ../portfolio-site-<short-name> && npm install )
+  Then in this terminal: cd ../portfolio-site-<short-name> and re-run
+  this prompt.
+
+If you are in a worktree, proceed.
+
+Then sleep a random 5–25 seconds before continuing. This avoids
 race conditions when multiple agents start within the same minute.
 
 ================================================================
