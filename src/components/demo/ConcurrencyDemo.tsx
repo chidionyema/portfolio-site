@@ -185,7 +185,7 @@ export function ConcurrencyDemo() {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-4">
       <div className="surface p-10 shadow-2xl relative overflow-hidden font-mono">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none grayscale">
            <Database className="w-64 h-64 text-white" />
@@ -198,7 +198,13 @@ export function ConcurrencyDemo() {
                <h3 className="text-xs font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Live inventory</h3>
             </div>
             <div className="flex items-baseline justify-center lg:justify-start gap-8">
-              <div className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none">{inventory.quantity}</div>
+              <motion.div 
+                 animate={isRacing ? { scale: [1, 1.05, 1] } : {}}
+                 transition={{ repeat: Infinity, duration: 0.5 }}
+                 className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none"
+              >
+                 {inventory.quantity}
+              </motion.div>
               <div className="px-5 py-2 bg-white/5 border border-white/10 rounded-full text-accent-light font-black text-xs tracking-[0.2em] uppercase">
                  ETag_v{inventory.version}
               </div>
@@ -225,6 +231,34 @@ export function ConcurrencyDemo() {
         </div>
 
         <RequestReceiptHistory receipts={receipts} />
+      </div>
+
+      {/* Visual Ladder + Clash */}
+      <div className="relative h-24 flex justify-center">
+         <div className="absolute inset-y-0 w-px bg-white/10 left-1/4 lg:left-1/3" />
+         <div className="absolute inset-y-0 w-px bg-white/10 right-1/4 lg:right-1/3" />
+         
+         <AnimatePresence>
+            {isRacing && (
+               <motion.div 
+                 initial={{ opacity: 0, scale: 0 }}
+                 animate={{ opacity: 1, scale: [1, 1.5, 1], rotate: [0, 90, 180, 270, 360] }}
+                 exit={{ opacity: 0, scale: 0 }}
+                 className="absolute top-1/2 -translate-y-1/2 z-20"
+               >
+                  <div className="relative">
+                     <Zap className="w-10 h-10 text-warning fill-warning" />
+                     <motion.div 
+                       animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+                       transition={{ repeat: Infinity, duration: 0.4 }}
+                       className="absolute inset-0 bg-warning rounded-full blur-xl"
+                     />
+                  </div>
+               </motion.div>
+            )}
+         </AnimatePresence>
+
+         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
