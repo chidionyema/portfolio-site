@@ -11,7 +11,7 @@
 
 ## Subtasks
 
-- [ ] **S1** — Move `Force credential rotation` button to the top of the demo card; accent colour, prominent label. **Commit**: `refactor(vault): foreground rotate button`.
+- [x] **S1** — Move `Force credential rotation` button to the top of the demo card; accent colour, prominent label. **Commit**: `refactor(vault): foreground rotate button`.
 - [ ] **S2** — Two cred cards side-by-side under the button: `v(n) active · expires in <ttl>s` (left) and `v(n+1) standby` (right, dimmed until rotation). **Commit**: `feat(vault): twin credential cards`.
 - [ ] **S3** — On rotation: animate `v(n)` sliding out left, `v(n+1)` taking active position, a new `v(n+2)` sliding into standby. Drive from existing `OnVaultRotation` SignalR events (`stage: 'rotating' | 'rotated'`). **Commit**: `feat(vault): rotation slide animation`.
 - [ ] **S4** — Drop the giant central TTL countdown. TTL is now small text on the active card. **Commit**: `refactor(vault): TTL becomes secondary detail`.
@@ -20,12 +20,13 @@
 
 ## Last activity
 
-—
+2026-05-05 23:33 | S1 | refactor(vault): foreground rotate button
 
 ## Last build output
 
 ```
-(paste tail of `npm run build` here)
+23:33:37 [build] 5 page(s) built in 126.32s
+23:33:37 [build] Complete!
 ```
 
 ## Last acceptance smoke
