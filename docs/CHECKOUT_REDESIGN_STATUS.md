@@ -16,9 +16,9 @@ state.
 - **Phase**: P1 — Frontend layout (portfolio-site)
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
 - **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
-- **Last subtask completed**: P1.4
-- **Next subtask**: P1.5 (see plan below)
-- **Last verified `npm run build` (frontend)**: 2026-05-05 23:24
+- **Last subtask completed**: P1.5
+- **Next subtask**: P1.6 (see plan below)
+- **Last verified `npm run build` (frontend)**: 2026-05-05 23:27
 - **Last verified `dotnet build` (backend)**: not yet run
 - **Last acceptance test run (paste literal output)**: —
 
@@ -57,7 +57,7 @@ build is green.
   That's expected; just confirm the Pay button label flips correctly
   for the states the saga DOES reach. **Commit:** `feat(checkout): state-driven Pay button copy`.
 
-- [ ] **P1.5** — Vertical saga ladder. Replace the horizontal step bar
+- [x] **P1.5** — Vertical saga ladder. Replace the horizontal step bar
   with the vertical ladder described in § "Right pane (55%) — 'Behind
   the scenes'". Five rows, both engineering name and customer label per
   row. Use `framer-motion` for active/finished transitions. **Commit:**
@@ -136,15 +136,15 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 
 ## Last activity
 
-2026-05-05 23:25 | P1.4 | Wired Pay button content and tone to saga state. Capture and format orderId. Verified build green.
+2026-05-05 23:28 | P1.5 | Implemented vertical saga ladder with engineering names and customer labels. Use framer-motion for transitions. Verified build green.
 
 ---
 
 ## Last verified `npm run build` (frontend)
 
 ```
-23:24:22 [build] 5 page(s) built in 97.78s
-23:24:22 [build] Complete!
+23:27:49 [build] 5 page(s) built in 74.20s
+23:27:49 [build] Complete!
 ```
 
 ## Last verified `dotnet build` (backend)
