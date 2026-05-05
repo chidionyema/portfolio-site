@@ -131,8 +131,17 @@ export function VaultRotationDemo() {
           </h3>
         </div>
 
-        <div className="surface p-8 shadow-2xl relative overflow-hidden space-y-10">
-          <div className="flex items-center justify-between">
+        <div className="surface p-8 shadow-2xl relative overflow-hidden space-y-8">
+          <button 
+            onClick={triggerRotation}
+            disabled={isRotating}
+            className="w-full py-4 bg-accent text-white font-black text-xs uppercase tracking-[0.3em] rounded-xl shadow-[0_10px_30px_-5px_rgba(99,102,241,0.5)] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-20 flex items-center justify-center gap-3"
+          >
+             {isRotating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowRightLeft className="w-4 h-4" />}
+             Force credential rotation
+          </button>
+
+          <div className="flex items-center justify-between pt-2 border-t border-white/5">
              <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-2xl ${isRotating ? 'bg-warning text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]' : 'bg-white/5 text-secondary'} transition-all`}>
                    <Key className="w-6 h-6" />
@@ -190,14 +199,6 @@ export function VaultRotationDemo() {
                     />
                  </div>
               </div>
-
-              <button 
-                onClick={triggerRotation}
-                disabled={isRotating}
-                className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] text-muted hover:text-primary hover:bg-white/10 transition-all disabled:opacity-20"
-              >
-                 Force rotation
-              </button>
 
               <RequestReceiptHistory receipts={receipts} />
             </div>
