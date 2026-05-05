@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck,
@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   ArrowRight,
   Radar,
+  Waves,
+  Play,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { CircuitBreakerEvent } from '../../lib/api/signalr';
@@ -143,6 +145,7 @@ export function CircuitBreakerDemo() {
   };
 
   return (
+    <div className="space-y-8">
     <div className="grid lg:grid-cols-2 gap-8">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -241,6 +244,9 @@ export function CircuitBreakerDemo() {
           </div>
         </div>
       </div>
+    </div>
+
+    <JitterStorm />
     </div>
   );
 }
@@ -397,4 +403,208 @@ function formatTime(d: Date): string {
     second: '2-digit',
     fractionalSecondDigits: 1,
   });
+}
+
+// ===========================================================================
+// Jitter Storm — purely client-side simulation of N retrying clients.
+// Demonstrates the difference between synchronized exponential backoff
+// (everyone hits the server in lockstep waves) and AWS-style "full jitter"
+// (random delay drawn uniformly from [0, base * 2^attempt]). This is a
+// client-side concern: jitter is something each caller chooses on its own,
+// so the visualization is honest as a frontend simulation.
+// ===========================================================================
+
+const STORM_CLIENT_COUNT = 12;
+const STORM_MAX_RETRIES = 4;
+const STORM_BASE_DELAY_MS = 200;
+const STORM_TIMELINE_MS = 4000;
+const STORM_BUCKET_COUNT = 32;
+
+interface RetryAttempt {
+  clientId: number;
+  attemptNumber: number;
+  timestampMs: number;
+}
+
+interface StormResult {
+  attempts: RetryAttempt[];
+  jitterEnabled: boolean;
+  generatedAt: number;
+}
+
+function generateStorm(jitterEnabled: boolean): StormResult {
+  const attempts: RetryAttempt[] = [];
+  for (let clientId = 0; clientId < STORM_CLIENT_COUNT; clientId++) {
+    let cumulative = 0;
+    // Initial attempt — every client fires at t=0 (this is the trigger event).
+    attempts.push({ clientId, attemptNumber: 0, timestampMs: 0 });
+    for (let attempt = 1; attempt <= STORM_MAX_RETRIES; attempt++) {
+      const ceiling = STORM_BASE_DELAY_MS * Math.pow(2, attempt);
+      const delay = jitterEnabled ? Math.random() * ceiling : ceiling;
+      cumulative += delay;
+      if (cumulative > STORM_TIMELINE_MS) break;
+      attempts.push({ clientId, attemptNumber: attempt, timestampMs: cumulative });
+    }
+  }
+  return { attempts, jitterEnabled, generatedAt: Date.now() };
+}
+
+function bucketize(attempts: RetryAttempt[]): number[] {
+  const buckets = new Array<number>(STORM_BUCKET_COUNT).fill(0);
+  const bucketWidth = STORM_TIMELINE_MS / STORM_BUCKET_COUNT;
+  for (const a of attempts) {
+    if (a.attemptNumber === 0) continue; // ignore the initial sync event; only retries are interesting
+    const idx = Math.min(STORM_BUCKET_COUNT - 1, Math.floor(a.timestampMs / bucketWidth));
+    buckets[idx]++;
+  }
+  return buckets;
+}
+
+function JitterStorm() {
+  const [storm, setStorm] = useState<StormResult | null>(null);
+  const [jitterEnabled, setJitterEnabled] = useState(true);
+
+  const run = () => setStorm(generateStorm(jitterEnabled));
+
+  // Auto-run a fresh sample whenever the toggle flips so the comparison is
+  // immediate without an extra click.
+  useEffect(() => {
+    setStorm(generateStorm(jitterEnabled));
+  }, [jitterEnabled]);
+
+  const buckets = useMemo(() => (storm ? bucketize(storm.attempts) : []), [storm]);
+  const peakBucket = useMemo(() => Math.max(1, ...buckets), [buckets]);
+  const totalRetries = useMemo(() => buckets.reduce((s, b) => s + b, 0), [buckets]);
+
+  return (
+    <div className="surface p-8 shadow-2xl space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Waves className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em]">
+            Retry_Storm_Simulator
+          </h3>
+        </div>
+        <div className="flex items-center gap-3 font-mono">
+          <div
+            role="radiogroup"
+            aria-label="Jitter strategy"
+            className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
+          >
+            <button
+              onClick={() => setJitterEnabled(false)}
+              role="radio"
+              aria-checked={!jitterEnabled}
+              className={`focus-ring py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                !jitterEnabled
+                  ? 'bg-error/20 text-error shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                  : 'text-muted hover:text-secondary hover:bg-white/5'
+              }`}
+            >
+              No_Jitter
+            </button>
+            <button
+              onClick={() => setJitterEnabled(true)}
+              role="radio"
+              aria-checked={jitterEnabled}
+              className={`focus-ring py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                jitterEnabled
+                  ? 'bg-success/20 text-success shadow-[0_0_20px_rgba(34,197,94,0.2)]'
+                  : 'text-muted hover:text-secondary hover:bg-white/5'
+              }`}
+            >
+              Full_Jitter
+            </button>
+          </div>
+          <button
+            onClick={run}
+            className="focus-ring flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/5 text-secondary"
+            title="Generate a fresh sample with the current jitter setting."
+          >
+            <Play className="w-3 h-3" /> Resample
+          </button>
+        </div>
+      </div>
+
+      <p className="text-[11px] text-muted/80 leading-relaxed font-mono max-w-3xl">
+        {STORM_CLIENT_COUNT} clients hit a failing service at t=0 and back off
+        exponentially (200, 400, 800, 1600ms). Without jitter every client retries
+        at the same instant — synchronized waves of load that re-saturate the
+        recovering service. With <em>full jitter</em> each client picks a random
+        delay in [0, ceiling], spreading the load smoothly.
+      </p>
+
+      {storm && (
+        <>
+          {/* Density histogram across the timeline */}
+          <div>
+            <div className="flex items-end h-20 gap-px font-mono">
+              {buckets.map((count, idx) => (
+                <div
+                  key={idx}
+                  className="flex-1 relative group"
+                  title={`${count} retr${count === 1 ? 'y' : 'ies'} in this 125ms window`}
+                >
+                  <motion.div
+                    layout
+                    className={`w-full rounded-t-sm transition-colors ${
+                      jitterEnabled ? 'bg-success/40' : 'bg-error/40'
+                    }`}
+                    style={{ height: `${(count / peakBucket) * 100}%` }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between text-[9px] font-mono text-muted/60 mt-1 tabular-nums">
+              <span>0ms</span>
+              <span>{STORM_TIMELINE_MS / 2}ms</span>
+              <span>{STORM_TIMELINE_MS}ms</span>
+            </div>
+            <div className="flex items-center gap-2 mt-2 text-[10px] font-mono text-muted/80">
+              <span className="font-black uppercase tracking-widest">
+                Peak: <span className={jitterEnabled ? 'text-success' : 'text-error'}>{peakBucket}</span>
+              </span>
+              <span className="opacity-50">retries hit the service in a single 125ms window</span>
+              <span className="ml-auto opacity-50 tabular-nums">{totalRetries} retries total</span>
+            </div>
+          </div>
+
+          {/* Per-client retry lanes */}
+          <div className="space-y-1 font-mono">
+            {Array.from({ length: STORM_CLIENT_COUNT }).map((_, clientId) => {
+              const clientAttempts = storm.attempts.filter((a) => a.clientId === clientId);
+              return (
+                <div key={clientId} className="flex items-center gap-3">
+                  <span className="text-[9px] text-muted/40 w-8 tabular-nums">c{clientId.toString().padStart(2, '0')}</span>
+                  <div className="relative flex-1 h-3 bg-white/[0.02] rounded-full">
+                    {clientAttempts.map((a) => (
+                      <div
+                        key={a.attemptNumber}
+                        className={`absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${
+                          a.attemptNumber === 0
+                            ? 'bg-muted/40'
+                            : jitterEnabled
+                            ? 'bg-success shadow-[0_0_6px_rgba(34,197,94,0.6)]'
+                            : 'bg-error shadow-[0_0_6px_rgba(239,68,68,0.6)]'
+                        }`}
+                        style={{
+                          left: `${Math.min(99.5, (a.timestampMs / STORM_TIMELINE_MS) * 100)}%`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-[10px] text-muted/60 leading-relaxed font-mono italic">
+            The trigger event (grey dot at t=0) is shared by every client. After
+            that, each colored dot is a retry attempt. Look at the histogram bars
+            above to compare the load shape: spikes vs. spread.
+          </p>
+        </>
+      )}
+    </div>
+  );
 }

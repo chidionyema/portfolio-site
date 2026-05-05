@@ -245,7 +245,7 @@ The three small wins identified by the design review. *All landing in this sessi
 ### Tier 3 — Bucket 2 leftovers (deepen existing demos)
 
 - **T3.1 — Saga `webhookFirst` scenario** (5–7h). Crosses webhooks + payment session + saga state machine. Backend needs a synthetic Stripe webhook injection and a saga branch that handles the early-settled state.
-- **T3.2 — Circuit Breaker jitter visualization** (3–4h). Mostly frontend — render N concurrent simulated clients with their own retry-with-jitter timing so the staggered backoff is visible.
+- ~~**T3.2 — Circuit Breaker jitter visualization**~~ — *shipped 2026-05-05.* `JitterStorm` sub-component appended to `CircuitBreakerDemo`: 12 simulated clients each retry up to 4× with exponential backoff (200/400/800/1600ms ceilings), toggle between "No_Jitter" (synchronous waves) and "Full_Jitter" (random delay in `[0, ceiling]`). Density histogram across 32 buckets shows the load shape difference (peak retries-per-window) plus per-client lanes show individual retry timing. Pure client-side simulation; jitter is a caller-side concern so the visualization is honestly frontend.
 
 ### Tier 4 — Bucket 3 demos (new captures of backend capabilities)
 
