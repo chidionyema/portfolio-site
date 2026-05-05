@@ -21,3 +21,27 @@ export const DEMO_SECTION_HEADING = 'Live Infrastructure Modules';
 export const DEMO_SECTION_SUBHEAD = 'This is not a simulation. Every interaction triggers a real command in our .NET 9 microservices cluster. Monitor the system\'s reaction in real-time via SignalR telemetry.';
 
 export const DEMO_FOOTER = `All commands target endpoints on the ${CLUSTER_LABEL} cluster.`;
+
+export const CHECKOUT_COPY = {
+  ORDER_HEADER: 'Your order',
+  PAY_IDLE: 'Pay £39.99',
+  PAY_RESERVING: 'Reserving your items…',
+  PAY_CONFIRMING: 'Confirming payment…',
+  PAY_COMPLETING: 'Completing order…',
+  PAY_DONE_PREFIX: 'Order', // followed by '#ABC-123 confirmed'
+  FAIL_SOLD_OUT: 'Sorry — Demo Widget just sold out',
+  FAIL_CARD_DECLINED: 'Card declined — your items are released',
+  RECEIPT_HEADER: 'Order confirmed',
+  RECEIPT_EMAIL_LINE: "We'll email you a receipt at demo@haworks.dev",
+  RECEIPT_VIEW_LINK: 'View order details',
+  RECEIPT_VIEW_TOOLTIP: 'Demo only — there is no real order page',
+  RUN_ANOTHER: 'Run another',
+  ENGINEERING_HEADER: 'Behind the scenes · CheckoutSaga.cs',
+  COMPENSATION_HEADER: 'Compensation',
+  SCENARIO_LABELS: {
+    success: 'Pay',
+    stockFailure: 'Sold out',
+    paymentFailure: 'Card declined',
+    stockRace: 'Two browsers, one item',
+  },
+} as const;
