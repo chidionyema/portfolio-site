@@ -14,7 +14,7 @@ import { useDemoSession } from '../../hooks/useDemoSession';
 import { signalRClient } from '../../lib/api/signalr';
 import type { SagaStepEvent } from '../../lib/api/signalr';
 import { ChaosButton } from './ChaosButton';
-import { RequestReceiptHistory } from './RequestReceipt';
+import { RequestReceipt, RequestReceiptHistory } from './RequestReceipt';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 
 import { CHECKOUT_COPY } from '../../lib/copy';
@@ -321,14 +321,7 @@ function SingleSagaView({
         </div>
 
         {/* Compensation Drawer */}
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-mono text-muted uppercase tracking-[0.3em]">
-            {CHECKOUT_COPY.COMPENSATION_HEADER}
-          </h4>
-          <div className="surface p-4 border-dashed border-white/10 text-[10px] font-mono text-muted/40">
-            Compensation inactive
-          </div>
-        </div>
+        <CompensationDrawer sagaState={sagaState} localEvents={localEvents} />
 
         <div className="surface shadow-2xl h-[400px] flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
@@ -393,6 +386,54 @@ function SingleSagaView({
         </div>
       </div>
     </div>
+  );
+}
+
+function CompensationDrawer({ sagaState, localEvents }: { sagaState: string; localEvents: SagaStepEvent[] }) {
+  const isAbandoned = sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated';
+  const compensationEvent = localEvents.find((e) => e.step === 'compensated');
+
+  return (
+    <AnimatePresence>
+      {isAbandoned && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="overflow-hidden"
+        >
+          <div className="space-y-4 pt-4">
+            <h4 className="text-[10px] font-mono text-muted uppercase tracking-[0.3em]">
+              {CHECKOUT_COPY.COMPENSATION_HEADER}
+            </h4>
+            <div className="surface p-6 border border-warning/30 bg-warning/5 space-y-4">
+              <ul className="space-y-2 list-none">
+                <li className="text-xs text-primary flex items-center gap-2">
+                  <Check className="w-3 h-3 text-success" />
+                  Stock release: ✓ 1 unit returned to inventory
+                </li>
+                <li className="text-xs text-primary flex items-center gap-2">
+                  <Activity className="w-3 h-3 text-accent" />
+                  Published{' '}
+                  <span className="font-mono text-[10px] bg-white/5 px-1">StockReleaseRequestedEvent</span> to RabbitMQ
+                </li>
+              </ul>
+
+              {compensationEvent?.traceId && (
+                <div className="pt-2 border-t border-white/5">
+                  <RequestReceipt
+                    service={compensationEvent.service}
+                    latencyMs={compensationEvent.latencyMs ?? 0}
+                    statusCode={200}
+                    traceId={compensationEvent.traceId}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
