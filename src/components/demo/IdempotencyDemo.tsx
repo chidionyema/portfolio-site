@@ -54,9 +54,10 @@ const TTL_PRESETS = [10, 30, 120] as const;
 type TtlPreset = (typeof TTL_PRESETS)[number];
 
 export function IdempotencyDemo() {
-  const [idempotencyKey, setIdempotencyKey] = useState(() =>
-    crypto.randomUUID().split('-')[0].toUpperCase(),
-  );
+  // Empty during SSR; populated on mount. crypto.randomUUID() produces
+  // different values on the server and client, which would mismatch the
+  // hydrated HTML and tear down the demo's React subtree.
+  const [idempotencyKey, setIdempotencyKey] = useState<string>('');
   const [logs, setLogs] = useState<RequestLog[]>([]);
   const [winnerOrderId, setWinnerOrderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +68,11 @@ export function IdempotencyDemo() {
 
   const { sessionId } = useDemoSession('idempotency');
   const expiryDeadline = useRef<number>(0);
+
+  // Generate the first key on mount only (paired with empty SSR initial).
+  useEffect(() => {
+    setIdempotencyKey(crypto.randomUUID().split('-')[0].toUpperCase());
+  }, []);
 
   const generateKey = () => {
     setIdempotencyKey(crypto.randomUUID().split('-')[0].toUpperCase());
