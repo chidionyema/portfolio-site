@@ -46,6 +46,8 @@ export function CacheInvalidationDemo() {
     DB: { hasData: true, ttl: -1 }
   });
   const [servingTier, setServingTier] = useState<'L1' | 'L2' | 'DB' | null>(null);
+  const [invalidatingTier, setInvalidatingTier] = useState<'L1' | 'L2' | 'DB' | null>(null);
+  const [pubsubPulsing, setPubsubPulsing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<'hit' | 'miss' | 'stale'>('hit');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [newPrice, setNewPrice] = useState('59.99');
@@ -79,7 +81,11 @@ export function CacheInvalidationDemo() {
   useEffect(() => {
     if (events.length > 0) {
       const lastEvent = events[0];
-      if (lastEvent.action === 'remove' || lastEvent.action === 'remove_by_prefix') {
+      if (lastEvent.action === 'remove' || lastEvent.action === 'remove_by_prefix' || lastEvent.action === 'publish_invalidation') {
+        if (lastEvent.action === 'publish_invalidation') {
+           setPubsubPulsing(true);
+           setTimeout(() => setPubsubPulsing(false), 2000);
+        }
         addLog('invalidate', `L2 Invalidation Triggered`);
         setTiers(prev => ({
            ...prev,
@@ -147,6 +153,16 @@ export function CacheInvalidationDemo() {
     }
   };
 
+  const runInvalidationWave = async () => {
+     setInvalidatingTier('L1');
+     await new Promise(r => setTimeout(r, 300));
+     setInvalidatingTier('L2');
+     await new Promise(r => setTimeout(r, 300));
+     setInvalidatingTier('DB');
+     await new Promise(r => setTimeout(r, 300));
+     setInvalidatingTier(null);
+  };
+
   const updateProduct = async () => {
     if (!demoProductId) return;
     setIsUpdating(true);
@@ -161,6 +177,7 @@ export function CacheInvalidationDemo() {
       addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
       setCacheStatus('stale');
       setServingTier(null);
+      await runInvalidationWave();
       setTiers(prev => ({
          ...prev,
          L1: { ...prev.L1, hasData: false },
@@ -182,6 +199,7 @@ export function CacheInvalidationDemo() {
       setReceipts(prev => [res, ...prev].slice(0, 10));
       addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
       setServingTier(null);
+      await runInvalidationWave();
       setTiers(prev => ({
          ...prev,
          L1: { ...prev.L1, hasData: false },
@@ -218,7 +236,20 @@ export function CacheInvalidationDemo() {
       <div className="space-y-6">
         <div className="surface rounded-xl p-8 shadow-2xl space-y-8">
            <div className="space-y-4">
-              <div className="text-[10px] font-black text-muted uppercase tracking-[0.2em] mb-4">Infrastructure tiers</div>
+              <div className="flex items-center justify-between">
+                 <div className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Infrastructure tiers</div>
+                 <AnimatePresence>
+                    {pubsubPulsing && (
+                       <motion.div 
+                         initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                         className="flex items-center gap-2 text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded-full border border-purple-400/20"
+                       >
+                          <Radio className="w-3 h-3 animate-pulse" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">PubSub Ripple</span>
+                       </motion.div>
+                    )}
+                 </AnimatePresence>
+              </div>
               
               <div className="space-y-3">
                  {[
@@ -238,24 +269,21 @@ export function CacheInvalidationDemo() {
                              <span className="text-[10px] font-mono text-accent tabular-nums">TTL: {tier.ttl}s</span>
                           )}
                        </div>
-                       <div className={`h-4 rounded-full overflow-hidden border transition-all relative ${servingTier === tier.id ? 'border-success/50 ring-2 ring-success/20' : 'border-white/5'}`}>
+                       <div className={`h-4 rounded-full overflow-hidden border transition-all relative ${servingTier === tier.id ? 'border-success/50 ring-2 ring-success/20' : (invalidatingTier === tier.id ? 'border-error/50 ring-2 ring-error/20' : 'border-white/5')}`}>
                           <motion.div
                             animate={{ 
-                               width: tier.hasData ? (tier.ttl === -1 ? '100%' : `${(tier.ttl / (tier.id === 'L1' ? 60 : 300)) * 100}%`) : '0%',
-                               backgroundColor: servingTier === tier.id ? '#22c55e' : (tier.hasData ? (tier.ttl === -1 ? '#3b82f6' : '#6366f1') : 'rgba(255,255,255,0.05)')
+                               width: tier.hasData && invalidatingTier !== tier.id ? (tier.ttl === -1 ? '100%' : `${(tier.ttl / (tier.id === 'L1' ? 60 : 300)) * 100}%`) : '0%',
+                               backgroundColor: invalidatingTier === tier.id ? '#ef4444' : (servingTier === tier.id ? '#22c55e' : (tier.hasData ? (tier.ttl === -1 ? '#3b82f6' : '#6366f1') : 'rgba(255,255,255,0.05)'))
                             }}
+                            transition={{ duration: invalidatingTier === tier.id ? 0.3 : 1 }}
                             className="h-full shadow-[0_0_15px_rgba(99,102,241,0.3)]"
                           />
-                          {!tier.hasData && (
+                          {(!tier.hasData || invalidatingTier === tier.id) && (
                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[8px] font-black text-muted/30 uppercase tracking-widest italic">Invalidated</span>
+                                <span className={`text-[8px] font-black uppercase tracking-widest italic ${invalidatingTier === tier.id ? 'text-white' : 'text-muted/30'}`}>
+                                   {invalidatingTier === tier.id ? 'Evicting...' : 'Invalidated'}
+                                </span>
                              </div>
-                          )}
-                          {servingTier === tier.id && (
-                             <motion.div 
-                               initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0] }}
-                               className="absolute inset-0 bg-white/20"
-                             />
                           )}
                        </div>
                     </div>
