@@ -14,8 +14,8 @@ interface RequestLog {
   remaining: number;
 }
 export function RateLimiterDemo() {
-  const [tokens, setTokens] = useState(5);
-  const maxTokens = 5;
+  const [tokens, setTokens] = useState(12);
+  const [limit, setLimit] = useState(12);
   const windowSeconds = 60;
   const [localRequests, setLocalRequests] = useState<RequestLog[]>([]);
   const [retryAfter, setRetryAfter] = useState(0);
@@ -51,6 +51,7 @@ export function RateLimiterDemo() {
       }, ...prev.slice(0, 15)]);
       
       setTokens(result.bucket.remaining);
+      setLimit(result.bucket.limit);
       if (result.bucket.retryAfterSeconds) setRetryAfter(result.bucket.retryAfterSeconds);
     } catch (err: any) {
        if (err.status === 429) {
@@ -90,23 +91,24 @@ export function RateLimiterDemo() {
                  <div className="text-lg font-bold text-primary">Token bucket</div>
                  <div className="text-xs text-muted font-medium opacity-60">Redis-backed Sliding Window Throttling</div>
               </div>
-              <div className="text-right">
-                 <div className={`text-4xl font-mono font-black ${tokens > 2 ? 'text-primary' : 'text-error animate-pulse'} tabular-nums leading-none mb-1`}>
-                    {tokens.toString().padStart(2, '0')}
+              <div className="text-right flex flex-col items-end">
+                 <div className="text-[10px] uppercase font-black text-muted tracking-[0.2em] mb-1">Bucket Status</div>
+                 <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${tokens > 0 ? 'bg-success/20 text-success' : 'bg-error/20 text-error animate-pulse'}`}>
+                    {tokens > 0 ? 'Available' : 'Exhausted'}
                  </div>
-                 <div className="text-[10px] uppercase font-bold text-muted tracking-widest">Tokens available</div>
               </div>
            </div>
 
-           <div className="flex gap-1.5 justify-center h-10">
-              {[...Array(maxTokens)].map((_, i) => (
+           <div className="flex flex-wrap gap-2.5 justify-center py-6 glass-subtle rounded-2xl border border-white/5">
+              {[...Array(limit)].map((_, i) => (
                  <motion.div
                    key={i}
                    animate={{ 
                      backgroundColor: i < tokens ? '#22c55e' : 'rgba(255,255,255,0.05)',
-                     opacity: i < tokens ? 0.6 : 1
+                     scale: i < tokens ? 1 : 0.85,
+                     opacity: i < tokens ? 1 : 0.2
                    }}
-                   className="flex-1 rounded-[4px] border border-white/5 shadow-inner"
+                   className="w-6 h-6 rounded-full border border-white/10 shadow-lg"
                  />
               ))}
            </div>
