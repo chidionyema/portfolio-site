@@ -258,50 +258,57 @@ export function EventFlowDemo() {
           </AnimatePresence>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
-              Outbox table
-            </label>
-            <div className="glass-subtle overflow-hidden min-h-[220px]">
-              <table className="w-full text-[10px] border-collapse">
-                <thead className="bg-white/5 border-b border-white/5 text-muted/60 uppercase tracking-widest">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-black">Event ID</th>
-                    <th className="px-4 py-3 text-left font-black">Status</th>
-                    <th className="px-4 py-3 text-right font-black">TS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.02]">
-                  <AnimatePresence initial={false}>
-                    {outbox.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="py-16 text-center text-muted/20 italic uppercase tracking-[0.4em]"
-                        >
-                          Fire a request from the controls above — this log will populate in real-time.
-                        </td>
-                      </tr>
-                    ) : (
-                      outbox.map((m) => (
-                        <motion.tr
-                          key={m.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="group hover:bg-white/[0.02] transition-colors"
-                        >
-                          <td className="px-4 py-3.5 text-secondary font-bold">{m.id.split('-')[0]}</td>
-                          <td className="px-4 py-3.5">
-                            <StatusPill status={m.status} />
-                          </td>
-                          <td className="px-4 py-3.5 text-right text-muted/60 tabular-nums">
-                            [{formatTime(m.timestamp)}]
-                          </td>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </tbody>
-              </table>
+            <div className="flex items-center justify-between">
+               <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
+                 Event Lifecycle
+               </label>
+               <span className="text-[9px] font-mono text-muted/40 uppercase">Recent_5_Cycles</span>
+            </div>
+            <div className="space-y-3 min-h-[300px]">
+               <AnimatePresence initial={false}>
+                 {outbox.length === 0 ? (
+                   <div className="py-20 text-center glass-subtle rounded-2xl border border-dashed border-white/5">
+                      <p className="text-[10px] font-mono text-muted/20 italic uppercase tracking-[0.4em]">Awaiting_First_Commit…</p>
+                   </div>
+                 ) : (
+                   outbox.slice(0, 5).map((m) => (
+                     <motion.div
+                       key={m.id}
+                       initial={{ opacity: 0, x: -20 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       className="glass-subtle p-4 rounded-2xl border border-white/5 space-y-4 group"
+                     >
+                       <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                             <span className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_5px_rgba(99,102,241,0.5)]" />
+                             <span className="text-[10px] font-mono font-bold text-secondary">ID: {m.id.split('-')[0]}</span>
+                          </div>
+                          <span className="text-[9px] text-muted/40 tabular-nums">{formatTime(m.timestamp)}</span>
+                       </div>
+
+                       <div className="flex items-center gap-2">
+                          {[
+                             { id: 'persisted', label: 'Persisted', active: true },
+                             { id: 'relayed', label: 'Relayed', active: m.status === 'published' || m.status === 'dispatched' },
+                             { id: 'consumed', label: 'Consumed', active: m.status === 'dispatched' }
+                          ].map((stage, idx, arr) => (
+                             <div key={stage.id} className="flex-1 flex items-center gap-2">
+                                <div className="flex-1 space-y-1.5">
+                                   <div className={`h-1 rounded-full transition-all duration-500 ${stage.active ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-white/5'}`} />
+                                   <div className={`text-[8px] font-black uppercase tracking-tighter transition-colors ${stage.active ? 'text-success' : 'text-muted/20'}`}>
+                                      {stage.label}
+                                   </div>
+                                </div>
+                                {idx < arr.length - 1 && (
+                                   <div className={`text-muted/10 font-bold mb-3 ${stage.active && !arr[idx+1].active ? 'animate-pulse text-accent/20' : ''}`}>→</div>
+                                )}
+                             </div>
+                          ))}
+                       </div>
+                     </motion.div>
+                   ))
+                 )}
+               </AnimatePresence>
             </div>
           </div>
         </div>
