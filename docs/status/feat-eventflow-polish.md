@@ -4,14 +4,14 @@
 - **Base**: portfolio-site `main`
 - **File owned**: `src/components/demo/EventFlowDemo.tsx`
 - **Brief**: `docs/DEMO_BRIEFS.md` § "Branch 8"
-- **Last subtask completed**: —
-- **Next subtask**: S1
-- **Last verified `npm run build`**: not yet
+- **Last subtask completed**: S1
+- **Next subtask**: S2
+- **Last verified `npm run build`**: 2026-05-05 23:54
 - **Last acceptance smoke**: —
 
 ## Subtasks
 
-- [ ] **S1** — Replace the existing `queuedCount` numeric tile with a literal horizontal queue bar that fills proportionally to queue depth (driven by `relay.queuedCount` from `OnEventFlow` events / `/api/demo/events/relay-status`). **Commit**: `feat(eventflow): visible queue depth bar`.
+- [x] **S1** — Replace the existing `queuedCount` numeric tile with a literal horizontal queue bar that fills proportionally to queue depth (driven by `relay.queuedCount` from `OnEventFlow` events / `/api/demo/events/relay-status`). **Commit**: `feat(eventflow): visible queue depth bar`.
 - [ ] **S2** — Add threshold lines at 10 / 50 / 100 on the queue bar so the viewer has a sense of scale. **Commit**: `feat(eventflow): queue depth scale markers`.
 - [ ] **S3** — Pause/resume button is the primary action: when paused, the bar visibly fills as new events arrive; when resumed, the bar drains at observable speed. **Commit**: `feat(eventflow): pause/resume drives queue`.
 - [ ] **S4** — Show the most recent ~5 events as horizontal rows with stage progress (`persisted → relayed → consumed`). On chaos-pause, events stop progressing past `persisted`. **Commit**: `feat(eventflow): per-event stage progress rows`.
@@ -20,12 +20,13 @@
 
 ## Last activity
 
-—
+2026-05-05 23:54 | S1 | feat(eventflow): visible queue depth bar
 
 ## Last build output
 
 ```
-(paste tail of `npm run build` here)
+23:54:58 [build] 5 page(s) built in 6.84s
+23:54:58 [build] Complete!
 ```
 
 ## Last acceptance smoke
