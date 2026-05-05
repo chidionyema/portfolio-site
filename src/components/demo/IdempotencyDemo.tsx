@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 
-const API_URL = import.meta.env.PUBLIC_API_URL || 'https://api.chidionyema.dev';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 
 type LogStatus = 'created' | 'replay-cached' | 'replay-after-expiry' | 'race-winner' | 'race-loser' | 'error';
 

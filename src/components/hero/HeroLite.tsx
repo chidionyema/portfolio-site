@@ -50,7 +50,7 @@ export function Hero({ preview, initialMetrics }: HeroProps) {
     const start = Date.now();
 
     try {
-      await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5000'}/api/health/snapshot`);
+      await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'}/api/health/snapshot`);
       setPing(Date.now() - start);
     } catch (e) {
       setPing(999);

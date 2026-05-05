@@ -1,6 +1,7 @@
 import * as signalR from '@microsoft/signalr';
 
-const SIGNALR_URL = import.meta.env.PUBLIC_SIGNALR_URL || 'https://api.chidionyema.dev/hubs/demo';
+// Local-dev fallback. PUBLIC_SIGNALR_URL is the source of truth (.env.local).
+const SIGNALR_URL = import.meta.env.PUBLIC_SIGNALR_URL || 'http://localhost:5050/hubs/demo';
 
 export interface SagaStepEvent {
   sessionId: string;

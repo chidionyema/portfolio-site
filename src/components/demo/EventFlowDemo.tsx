@@ -15,7 +15,7 @@ import { useDemoSession } from '../../hooks/useDemoSession';
 import type { EventFlowEvent } from '../../lib/api/signalr';
 import { CLUSTER_LABEL } from '../../lib/copy';
 
-const API_URL = import.meta.env.PUBLIC_API_URL || 'https://api.chidionyema.dev';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 
 type OutboxStatus = 'pending' | 'published' | 'dispatched';
 

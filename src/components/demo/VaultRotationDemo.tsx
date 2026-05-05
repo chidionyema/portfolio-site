@@ -32,7 +32,7 @@ export function VaultRotationDemo() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5000'}/api/demo/vault/status`);
+        const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'}/api/demo/vault/status`);
         const data = await response.json();
         setCredential({
           id: data.sessionId,

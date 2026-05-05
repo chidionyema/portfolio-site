@@ -5,7 +5,10 @@
  * Each demo component uses this to interface with real infrastructure.
  */
 
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5000';
+// Local-dev fallback. PUBLIC_API_URL is the source of truth (.env.local).
+// Was http://localhost:5000 — that port is squatted by macOS Control
+// Center (AirPlay Receiver) so it silently 404'd in dev.
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 
 // ============================================================================
 // Types

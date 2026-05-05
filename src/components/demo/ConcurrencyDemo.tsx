@@ -66,7 +66,7 @@ export function ConcurrencyDemo() {
     setUser(prev => ({ ...prev, status: 'saving', message: 'Committing...' }));
     try {
       // The backend expects If-Match header for optimistic concurrency.
-      const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5000'}/api/demo/inventory/demo-stock`, {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'}/api/demo/inventory/demo-stock`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
