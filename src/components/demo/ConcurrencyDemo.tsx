@@ -152,16 +152,23 @@ export function ConcurrencyDemo() {
                   
                   <div className="space-y-2">
                      <label className="text-[10px] text-muted font-black uppercase tracking-[0.3em] ml-1">New value</label>
-                     <div className="relative">
+                     <motion.div 
+                        animate={user.status === 'conflict' ? { 
+                           x: [0, -10, 10, -10, 10, 0],
+                           backgroundColor: ['rgba(255,255,255,0.05)', 'rgba(239,68,68,0.2)', 'rgba(255,255,255,0.05)']
+                        } : {}}
+                        transition={{ duration: 0.4 }}
+                        className="relative rounded-2xl overflow-hidden"
+                     >
                         <input
                            type="number"
                            value={user.newQuantity}
                            onChange={e => id === 'A' ? setUserA(prev => ({ ...prev, newQuantity: e.target.value })) : setUserB(prev => ({ ...prev, newQuantity: e.target.value }))}
                            disabled={isRacing || isActive}
-                           className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-primary outline-none font-mono text-base focus:border-accent/40 transition-colors"
+                           className={`w-full px-5 py-4 bg-white/5 border rounded-2xl text-primary outline-none font-mono text-base transition-colors ${user.status === 'conflict' ? 'border-error' : 'border-white/10 focus:border-accent/40'}`}
                         />
-                        <Save className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 opacity-20" />
-                     </div>
+                        <Save className={`absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${user.status === 'conflict' ? 'text-error' : 'opacity-20'}`} />
+                     </motion.div>
                   </div>
                </motion.div>
             )}
