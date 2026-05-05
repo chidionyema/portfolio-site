@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Zap, Database, User, ShieldCheck, Save, ArrowRightLeft } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 interface InventoryState {
   quantity: number;
@@ -16,7 +18,6 @@ interface UserState {
   status: 'idle' | 'reading' | 'saving' | 'success' | 'conflict';
   message: string;
 }
-
 export function ConcurrencyDemo() {
   const [inventory, setInventory] = useState<InventoryState>({ quantity: 50, version: 1 });
   const [userA, setUserA] = useState<UserState>({
@@ -26,6 +27,7 @@ export function ConcurrencyDemo() {
     name: 'User_B', readQuantity: null, readVersion: null, newQuantity: '', status: 'idle', message: ''
   });
   const [isRacing, setIsRacing] = useState(false);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
   const { executeCommand, events, isConnected } = useDemoSession('concurrency');
 
@@ -42,12 +44,8 @@ export function ConcurrencyDemo() {
     const setUser = user === 'A' ? setUserA : user === 'B' ? setUserB : null;
     if (setUser) setUser(prev => ({ ...prev, status: 'reading', message: 'Fetching_State...' }));
     try {
-      // Backend route is GET /api/demo/inventory/{id}; executeCommand always
-      // POSTs (built for the saga endpoints) so we hit fetch directly here.
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
-      const resp = await fetch(`${apiUrl}/api/demo/inventory/demo-stock`);
-      if (!resp.ok) throw new Error(`Cluster Error: ${resp.status}`);
-      const result = await resp.json();
+      const result = await executeCommand('/inventory/demo-stock', {}, { method: 'GET' });
+      setReceipts(prev => [result, ...prev].slice(0, 10));
       setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
       if (setUser) {
          setUser(prev => ({
@@ -70,25 +68,17 @@ export function ConcurrencyDemo() {
     if (userState.readVersion === null) return;
     setUser(prev => ({ ...prev, status: 'saving', message: 'Committing...' }));
     try {
-      // The backend expects If-Match header for optimistic concurrency.
-      const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'}/api/demo/inventory/demo-stock`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'If-Match': `"${userState.readVersion}"`
-        },
-        body: JSON.stringify({ quantity: parseInt(userState.newQuantity) }),
-      });
+      const result = await executeCommand('/inventory/demo-stock', 
+        { quantity: parseInt(userState.newQuantity) },
+        { 
+          method: 'PUT',
+          headers: { 'If-Match': `"${userState.readVersion}"` }
+        }
+      );
+      setReceipts(prev => [result, ...prev].slice(0, 10));
 
-      const result = await response.json();
-
-      if (response.ok) {
-         setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
-         setUser(prev => ({ ...prev, status: 'success', message: `Committed: v${result.inventory.version}` }));
-      } else if (response.status === 409) {
-         setUser(prev => ({ ...prev, status: 'conflict', message: `Conflict: v${result.currentVersion} Found` }));
-         setInventory(prev => ({ ...prev, version: result.currentVersion }));
-      }
+      setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
+      setUser(prev => ({ ...prev, status: 'success', message: `Committed: v${result.inventory.version}` }));
     } catch (err: any) {
        setUser(prev => ({ ...prev, status: 'conflict', message: 'Update Failed' }));
     }
@@ -132,14 +122,14 @@ export function ConcurrencyDemo() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => fetchInventory(id)}
-              disabled={isRacing || isActive || !isConnected}
+              disabled={isRacing || isActive}
               className="py-3 px-4 glass-subtle text-[10px] font-black uppercase tracking-[0.2em] text-muted hover:text-primary transition-all disabled:opacity-20"
             >
               Get_Snapshot
             </button>
             <button
               onClick={() => saveInventory(id)}
-              disabled={isRacing || user.readVersion === null || isActive || !isConnected}
+              disabled={isRacing || user.readVersion === null || isActive}
               className="py-3 px-4 glass-subtle text-[10px] font-black uppercase tracking-[0.2em] text-muted hover:text-success transition-all disabled:opacity-20"
             >
               Commit
@@ -211,7 +201,7 @@ export function ConcurrencyDemo() {
           <div className="flex flex-col gap-5 w-full md:w-auto min-w-[320px]">
             <button
                onClick={raceUpdates}
-               disabled={isRacing || !isConnected}
+               disabled={isRacing}
                className="py-5 px-8 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_50px_rgba(255,255,255,0.1)] flex items-center justify-center gap-4 disabled:opacity-20"
             >
                {isRacing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
@@ -226,6 +216,8 @@ export function ConcurrencyDemo() {
             </div>
           </div>
         </div>
+
+        <RequestReceiptHistory receipts={receipts} />
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Eye, Check, X, Pencil, Trash2, Radio, ClipboardList, type LucideIcon } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { getCachedProduct, updateProduct as apiUpdateProduct, invalidateCache as apiInvalidateCache, getDemoProduct } from '../../lib/api/demo-client';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 interface CacheEntry {
   name: string;
@@ -19,7 +21,6 @@ interface LogEntry {
   action: 'read' | 'hit' | 'miss' | 'update' | 'invalidate' | 'publish';
   message: string;
 }
-
 export function CacheInvalidationDemo() {
   const [product, setProduct] = useState<CacheEntry>({
     name: 'Widget Pro',
@@ -33,8 +34,9 @@ export function CacheInvalidationDemo() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [newPrice, setNewPrice] = useState('59.99');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
-  const { events, isConnected } = useDemoSession('cache-invalidation');
+  const { events } = useDemoSession('cache-invalidation');
 
   // Initial load
   useEffect(() => {
@@ -88,6 +90,7 @@ export function CacheInvalidationDemo() {
     
     try {
       const res = await getCachedProduct(demoProductId);
+      setReceipts(prev => [res, ...prev].slice(0, 10));
       setCacheStatus(res.cacheInfo?.isHit ? 'hit' : 'miss');
       setProduct({
         name: res.product.name,
@@ -110,7 +113,8 @@ export function CacheInvalidationDemo() {
     addLog('update', `PUT /product/${demoProductId.split('-')[0]} - Price: £${price}`);
     
     try {
-      await apiUpdateProduct(demoProductId, { price });
+      const res = await apiUpdateProduct(demoProductId, { price });
+      setReceipts(prev => [res, ...prev].slice(0, 10));
       addLog('update', `Database updated`);
       addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
       setCacheStatus('stale');
@@ -126,7 +130,8 @@ export function CacheInvalidationDemo() {
     if (!demoProductId) return;
     addLog('invalidate', `Manual invalidation triggered`);
     try {
-      await apiInvalidateCache(demoProductId);
+      const res = await apiInvalidateCache(demoProductId);
+      setReceipts(prev => [res, ...prev].slice(0, 10));
       addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
       setProduct(prev => ({ ...prev, ttl: 0 }));
       setCacheStatus('stale');
@@ -244,6 +249,8 @@ export function CacheInvalidationDemo() {
               </button>
             </div>
           </div>
+
+          <RequestReceiptHistory receipts={receipts} />
         </div>
       </div>
 

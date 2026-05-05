@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Lock, Zap, Database, Server, Timer, Layers, ChevronRight, Gauge, AlertCircle } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 interface StampedeResult {
   id: string;
@@ -17,14 +19,14 @@ interface RequestParticle {
   status: 'pending' | 'l1' | 'l2' | 'db';
   delay: number;
 }
-
 export function CacheStampedeDemo() {
   const [localResults, setLocalResults] = useState<StampedeResult[]>([]);
   const [isRunning, setIsRunning] = useState<string | null>(null);
   const [requests, setRequests] = useState<RequestParticle[]>([]);
   const [activeTier, setActiveTier] = useState<'l1' | 'l2' | 'db' | null>(null);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
-  const { executeCommand, events, isConnected } = useDemoSession('stampede');
+  const { executeCommand, events } = useDemoSession('stampede');
 
   useEffect(() => {
      if (events.length > 0) {
@@ -52,6 +54,8 @@ export function CacheStampedeDemo() {
         protectionMode: protection,
         simulatedDbLatencyMs: 150
       });
+
+      setReceipts(prev => [result, ...prev].slice(0, 10));
 
       const finalResult: StampedeResult = {
         id: crypto.randomUUID(),
@@ -93,7 +97,7 @@ export function CacheStampedeDemo() {
                  <button
                    key={type}
                    onClick={() => runStampede(type)}
-                   disabled={isRunning !== null || !isConnected}
+                   disabled={isRunning !== null}
                    className={`flex flex-col items-center gap-2.5 p-4 rounded-xl transition-all border ${
                      isRunning === type ? 'bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]' :
                      'bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10'
@@ -109,6 +113,8 @@ export function CacheStampedeDemo() {
                ))}
              </div>
           </div>
+
+          <RequestReceiptHistory receipts={receipts} />
 
           <div className="glass-subtle p-8 space-y-6">
              <div className="flex items-end gap-8 h-40">

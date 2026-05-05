@@ -180,7 +180,19 @@ export class DemoApiError extends Error {
   }
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+export interface RequestMetadata {
+  traceId: string | null;
+  latencyMs: number;
+  statusCode: number;
+  service: string;
+}
+
+async function handleResponse<T>(response: Response, start: number, path: string): Promise<T & RequestMetadata> {
+  const latencyMs = Math.round(performance.now() - start);
+  const statusCode = response.status;
+  const traceId = response.headers.get('X-Trace-Id');
+  const service = response.headers.get('X-Service-Id') || inferService(path);
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new DemoApiError(
@@ -190,7 +202,22 @@ async function handleResponse<T>(response: Response): Promise<T> {
       error.details
     );
   }
-  return response.json();
+  const data = await response.json();
+  return { ...data, traceId, latencyMs, statusCode, service };
+}
+
+function inferService(path: string): string {
+  if (path.includes('circuit')) return 'catalog-svc-demo';
+  if (path.includes('idempotency')) return 'bff-web-cache';
+  if (path.includes('ratelimit')) return 'gateway-limiter';
+  if (path.includes('vault')) return 'vault-manager';
+  if (path.includes('cache')) return 'inventory-cache';
+  if (path.includes('inventory')) return 'inventory-db';
+  if (path.includes('saga')) return 'order-orchestrator';
+  if (path.includes('events')) return 'event-bus';
+  if (path.includes('health')) return 'bff-web-health';
+  if (path.includes('metrics')) return 'bff-web-metrics';
+  return 'bff-web';
 }
 
 // ============================================================================
@@ -214,28 +241,32 @@ export type SagaScenario =
 export async function startSagaDemo(
   scenarioType: SagaScenario = 'success',
   simulatedDelayMs = 500
-): Promise<SagaStartResponse> {
-  const response = await fetch(`${API_URL}/api/demo/saga/start`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/saga/start';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ scenarioType, simulatedDelayMs }),
   });
-  return handleResponse(response);
+  return handleResponse<SagaStartResponse>(response, start, path);
 }
 
 /**
  * Get current saga status (polling fallback)
  */
-export async function getSagaStatus(sessionId: string): Promise<{
-  sessionId: string;
-  orderId: string;
-  currentStep: string;
-  steps: SagaStep[];
-  isComplete: boolean;
-  isFailed: boolean;
-}> {
-  const response = await fetch(`${API_URL}/api/demo/saga/${sessionId}`);
-  return handleResponse(response);
+export async function getSagaStatus(sessionId: string) {
+  const start = performance.now();
+  const path = `/api/demo/saga/${sessionId}`;
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<{
+    sessionId: string;
+    orderId: string;
+    currentStep: string;
+    steps: SagaStep[];
+    isComplete: boolean;
+    isFailed: boolean;
+  }>(response, start, path);
 }
 
 /**
@@ -244,13 +275,15 @@ export async function getSagaStatus(sessionId: string): Promise<{
 export async function triggerEventFlow(
   eventType: 'OrderCreated' | 'PaymentReceived' | 'InventoryUpdated',
   payload: Record<string, unknown> = {}
-): Promise<DemoSession & { eventId: string; status: string }> {
-  const response = await fetch(`${API_URL}/api/demo/events/trigger`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/events/trigger';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventType, payload }),
   });
-  return handleResponse(response);
+  return handleResponse<DemoSession & { eventId: string; status: string }>(response, start, path);
 }
 
 /**
@@ -259,13 +292,15 @@ export async function triggerEventFlow(
 export async function circuitBreakerRequest(
   sessionId?: string,
   shouldFail = false
-): Promise<CircuitBreakerResponse> {
-  const response = await fetch(`${API_URL}/api/demo/circuit/request`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/circuit/request';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sessionId, shouldFail }),
   });
-  return handleResponse(response);
+  return handleResponse<CircuitBreakerResponse>(response, start, path);
 }
 
 /**
@@ -274,47 +309,55 @@ export async function circuitBreakerRequest(
 export async function toggleCircuitFailure(
   sessionId: string,
   failureMode: boolean
-): Promise<DemoSession> {
-  const response = await fetch(`${API_URL}/api/demo/circuit/toggle-failure`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/circuit/toggle-failure';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sessionId, failureMode }),
   });
-  return handleResponse(response);
+  return handleResponse<DemoSession>(response, start, path);
 }
 
 /**
  * Reset circuit breaker
  */
-export async function resetCircuit(sessionId: string): Promise<DemoSession> {
-  const response = await fetch(`${API_URL}/api/demo/circuit/reset`, {
+export async function resetCircuit(sessionId: string) {
+  const start = performance.now();
+  const path = '/api/demo/circuit/reset';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sessionId }),
   });
-  return handleResponse(response);
+  return handleResponse<DemoSession>(response, start, path);
 }
 
 /**
  * Get vault status
  */
-export async function getVaultStatus(): Promise<VaultStatusResponse> {
-  const response = await fetch(`${API_URL}/api/demo/vault/status`);
-  return handleResponse(response);
+export async function getVaultStatus() {
+  const start = performance.now();
+  const path = '/api/demo/vault/status';
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<VaultStatusResponse>(response, start, path);
 }
 
 /**
  * Trigger vault rotation demo
  */
-export async function triggerVaultRotation(): Promise<DemoSession & {
-  previousVersion: number;
-  newVersion: number;
-  status: string;
-}> {
-  const response = await fetch(`${API_URL}/api/demo/vault/rotate`, {
+export async function triggerVaultRotation() {
+  const start = performance.now();
+  const path = '/api/demo/vault/rotate';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
   });
-  return handleResponse(response);
+  return handleResponse<DemoSession & {
+    previousVersion: number;
+    newVersion: number;
+    status: string;
+  }>(response, start, path);
 }
 
 /**
@@ -324,8 +367,10 @@ export async function processIdempotentRequest(
   idempotencyKey: string,
   action: string,
   payload: Record<string, unknown>
-): Promise<IdempotencyResponse> {
-  const response = await fetch(`${API_URL}/api/demo/idempotency/process`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/idempotency/process';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -333,21 +378,23 @@ export async function processIdempotentRequest(
     },
     body: JSON.stringify({ action, payload }),
   });
-  return handleResponse(response);
+  return handleResponse<IdempotencyResponse>(response, start, path);
 }
 
 /**
  * Get idempotency key status
  */
-export async function getIdempotencyKeyStatus(key: string): Promise<{
-  key: string;
-  exists: boolean;
-  createdAt?: string;
-  ttlSeconds?: number;
-  hitCount?: number;
-}> {
-  const response = await fetch(`${API_URL}/api/demo/idempotency/key/${encodeURIComponent(key)}`);
-  return handleResponse(response);
+export async function getIdempotencyKeyStatus(key: string) {
+  const start = performance.now();
+  const path = `/api/demo/idempotency/key/${encodeURIComponent(key)}`;
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<{
+    key: string;
+    exists: boolean;
+    createdAt?: string;
+    ttlSeconds?: number;
+    hitCount?: number;
+  }>(response, start, path);
 }
 
 /**
@@ -357,8 +404,10 @@ export async function simulateStampede(
   concurrentRequests: number,
   protectionMode: 'none' | 'lock' | 'probabilistic',
   simulatedDbLatencyMs = 100
-): Promise<StampedeResponse> {
-  const response = await fetch(`${API_URL}/api/demo/cache/stampede`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/cache/stampede';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -368,23 +417,27 @@ export async function simulateStampede(
       simulatedDbLatencyMs,
     }),
   });
-  return handleResponse(response);
+  return handleResponse<StampedeResponse>(response, start, path);
 }
 
 /**
  * Get demo product ID
  */
-export async function getDemoProduct(): Promise<{ id: string }> {
-  const response = await fetch(`${API_URL}/api/demo/cache/product/demo`);
-  return handleResponse(response);
+export async function getDemoProduct() {
+  const start = performance.now();
+  const path = '/api/demo/cache/product/demo';
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<{ id: string }>(response, start, path);
 }
 
 /**
  * Get cached product
  */
-export async function getCachedProduct(productId: string): Promise<CachedProductResponse> {
-  const response = await fetch(`${API_URL}/api/demo/cache/product/${productId}`);
-  return handleResponse(response);
+export async function getCachedProduct(productId: string) {
+  const start = performance.now();
+  const path = `/api/demo/cache/product/${productId}`;
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<CachedProductResponse>(response, start, path);
 }
 
 /**
@@ -393,41 +446,47 @@ export async function getCachedProduct(productId: string): Promise<CachedProduct
 export async function updateProduct(
   productId: string,
   updates: { price?: number; name?: string }
-): Promise<CachedProductResponse & {
-  invalidation: {
-    cacheKeysInvalidated: string[];
-    pubsubMessageSent: boolean;
-    instancesNotified: number;
-  };
-}> {
-  const response = await fetch(`${API_URL}/api/demo/cache/product/${productId}`, {
+) {
+  const start = performance.now();
+  const path = `/api/demo/cache/product/${productId}`;
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates),
   });
-  return handleResponse(response);
+  return handleResponse<CachedProductResponse & {
+    invalidation: {
+      cacheKeysInvalidated: string[];
+      pubsubMessageSent: boolean;
+      instancesNotified: number;
+    };
+  }>(response, start, path);
 }
 
 /**
  * Invalidate cache manually
  */
-export async function invalidateCache(productId: string): Promise<DemoSession & {
-  invalidated: boolean;
-  cacheKey: string;
-  pubsubMessageSent: boolean;
-}> {
-  const response = await fetch(`${API_URL}/api/demo/cache/product/${productId}`, {
+export async function invalidateCache(productId: string) {
+  const start = performance.now();
+  const path = `/api/demo/cache/product/${productId}`;
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'DELETE',
   });
-  return handleResponse(response);
+  return handleResponse<DemoSession & {
+    invalidated: boolean;
+    cacheKey: string;
+    pubsubMessageSent: boolean;
+  }>(response, start, path);
 }
 
 /**
  * Get inventory with version
  */
-export async function getInventory(inventoryId: string): Promise<InventoryResponse> {
-  const response = await fetch(`${API_URL}/api/demo/inventory/${inventoryId}`);
-  return handleResponse(response);
+export async function getInventory(inventoryId: string) {
+  const start = performance.now();
+  const path = `/api/demo/inventory/${inventoryId}`;
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<InventoryResponse>(response, start, path);
 }
 
 /**
@@ -437,8 +496,10 @@ export async function updateInventory(
   inventoryId: string,
   quantity: number,
   expectedVersion: number
-): Promise<InventoryResponse & { previousVersion: number }> {
-  const response = await fetch(`${API_URL}/api/demo/inventory/${inventoryId}`, {
+) {
+  const start = performance.now();
+  const path = `/api/demo/inventory/${inventoryId}`;
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -446,7 +507,7 @@ export async function updateInventory(
     },
     body: JSON.stringify({ quantity }),
   });
-  return handleResponse(response);
+  return handleResponse<InventoryResponse & { previousVersion: number }>(response, start, path);
 }
 
 /**
@@ -456,25 +517,29 @@ export async function configureRateLimit(
   permitLimit = 10,
   windowSeconds = 10,
   sessionId?: string
-): Promise<RateLimitResponse> {
-  const response = await fetch(`${API_URL}/api/demo/ratelimit/configure`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/ratelimit/configure';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sessionId, permitLimit, windowSeconds }),
   });
-  return handleResponse(response);
+  return handleResponse<RateLimitResponse>(response, start, path);
 }
 
 /**
  * Make rate-limited request
  */
-export async function rateLimitedRequest(sessionId?: string): Promise<RateLimitResponse> {
-  const response = await fetch(`${API_URL}/api/demo/ratelimit/request`, {
+export async function rateLimitedRequest(sessionId?: string) {
+  const start = performance.now();
+  const path = '/api/demo/ratelimit/request';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sessionId }),
   });
-  return handleResponse(response);
+  return handleResponse<RateLimitResponse>(response, start, path);
 }
 
 /**
@@ -483,25 +548,29 @@ export async function rateLimitedRequest(sessionId?: string): Promise<RateLimitR
 export async function sendRateLimitBurst(
   count: number,
   delayMs = 50
-): Promise<{
-  sessionId: string;
-  results: Array<{ requestNumber: number; allowed: boolean; remaining: number; retryAfter?: number }>;
-  summary: { total: number; allowed: number; rejected: number };
-}> {
-  const response = await fetch(`${API_URL}/api/demo/ratelimit/burst`, {
+) {
+  const start = performance.now();
+  const path = '/api/demo/ratelimit/burst';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ count, delayMs }),
   });
-  return handleResponse(response);
+  return handleResponse<{
+    sessionId: string;
+    results: Array<{ requestNumber: number; allowed: boolean; remaining: number; retryAfter?: number }>;
+    summary: { total: number; allowed: number; rejected: number };
+  }>(response, start, path);
 }
 
 /**
  * Get system health snapshot
  */
-export async function getHealthSnapshot(): Promise<HealthSnapshot> {
-  const response = await fetch(`${API_URL}/api/health/snapshot`);
-  return handleResponse(response);
+export async function getHealthSnapshot() {
+  const start = performance.now();
+  const path = '/api/health/snapshot';
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<HealthSnapshot>(response, start, path);
 }
 
 /**
@@ -514,9 +583,11 @@ export function getHealthStreamUrl(): string {
 /**
  * Get system metrics snapshot
  */
-export async function getMetricsSnapshot(): Promise<LiveMetrics> {
-  const response = await fetch(`${API_URL}/api/metrics/snapshot`);
-  return handleResponse(response);
+export async function getMetricsSnapshot() {
+  const start = performance.now();
+  const path = '/api/metrics/snapshot';
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<LiveMetrics>(response, start, path);
 }
 
 /**
@@ -529,20 +600,23 @@ export function getMetricsStreamUrl(): string {
 /**
  * Trigger Chaos Scenario
  */
-export async function triggerChaos(scenario: string, durationSeconds: number): Promise<{ trace_id: string }> {
-  const response = await fetch(`${API_URL}/api/demo/chaos/trigger`, {
+export async function triggerChaos(scenario: string, durationSeconds: number) {
+  const start = performance.now();
+  const path = '/api/demo/chaos/trigger';
+  const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ scenario, durationSeconds }),
   });
-  return handleResponse(response);
+  return handleResponse<{ trace_id: string }>(response, start, path);
 }
 
 /**
  * Get trace by ID from Grafana Tempo (via Backend)
  */
-export async function getTrace(traceId: string): Promise<Trace> {
-  const response = await fetch(`${API_URL}/api/traces/${traceId}`);
-  return handleResponse(response);
+export async function getTrace(traceId: string) {
+  const start = performance.now();
+  const path = `/api/traces/${traceId}`;
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<Trace>(response, start, path);
 }
-

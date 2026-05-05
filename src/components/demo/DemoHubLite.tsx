@@ -70,11 +70,30 @@ export function DemoHub() {
   const [activeId, setActiveId] = useState(DEFAULT_DEMO);
   const [isChaosOpen, setIsChaosOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'live' | 'source'>('live');
-  const { chaos, updateChaos, isConnected, error: connectionError } = useDemoSession();
+  const { chaos, updateChaos, isConnected, error: connectionError, lastSuccessAt } = useDemoSession();
+  const [isOffline, setIsOffline] = useState(false);
   const latestTraceId = useLatestTraceId();
   const traceRef = useRef<HTMLDivElement>(null);
 
   const isChaosActive = chaos.latencyMs > 0 || chaos.brokerDown || chaos.serviceFaulty;
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (lastSuccessAt) {
+        setIsOffline(Date.now() - lastSuccessAt > 30000);
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [lastSuccessAt]);
+
+  const handleRetry = async () => {
+    try {
+      await import('../../lib/api/demo-client').then(m => m.getHealthSnapshot());
+      window.location.reload(); // Hard reset on recovery
+    } catch (e) {
+      console.error('Retry failed', e);
+    }
+  };
 
   useEffect(() => {
     if (latestTraceId && !localStorage.getItem('ha_trace_scrolled')) {
@@ -92,8 +111,8 @@ export function DemoHub() {
   const handleSelect = (id: string) => {
     setActiveId(id);
     writeDemoToURL(id);
-    setViewMode('live'); // Reset to live view on switch
-    traceStore.set(null); // Clear trace from prior demo
+    setViewMode('live');
+    traceStore.set(null);
   };
 
   useEffect(() => {
@@ -108,11 +127,11 @@ export function DemoHub() {
   return (
     <div className="space-y-6 relative">
       <DemoMobileNav activeId={activeId} onSelect={handleSelect} />
-      
-      <ChaosEngine 
-        isOpen={isChaosOpen} 
-        onClose={() => setIsChaosOpen(false)} 
-        onStateChange={(s) => updateChaos(s)} 
+
+      <ChaosEngine
+        isOpen={isChaosOpen}
+        onClose={() => setIsChaosOpen(false)}
+        onStateChange={(s) => updateChaos(s)}
       />
 
       <div className="glass overflow-hidden shadow-2xl">
@@ -123,29 +142,34 @@ export function DemoHub() {
             <header className="mb-16 relative">
                <div className="flex flex-wrap items-center justify-between gap-4 mb-12 border-b border-white/5 pb-8 font-mono text-[10px] font-bold uppercase tracking-[0.2em]">
                   <div className="flex items-center gap-8">
-                     <div
-                       className={`flex items-center gap-2.5 ${
-                         isConnected ? 'text-success' : connectionError ? 'text-error' : 'text-warning'
-                       }`}
+                     <button
+                       onClick={isOffline ? handleRetry : undefined}
+                       className={`flex items-center gap-2.5 transition-colors ${
+                         isConnected && !isOffline ? 'text-success' : !isOffline && connectionError ? 'text-warning' : 'text-error'
+                       } ${isOffline ? 'cursor-pointer hover:bg-white/5 px-2 -ml-2 py-1 rounded' : 'cursor-default'}`}
                        title={
-                         isConnected
+                         isConnected && !isOffline
                            ? 'SignalR live — events streaming'
-                           : connectionError ?? 'Connecting to telemetry stream…'
+                           : !isOffline && connectionError
+                           ? 'Realtime stream unavailable; updates via REST polling.'
+                           : 'Cluster unreachable. Click to retry.'
                        }
                      >
                         <div
-                          className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-                            isConnected
-                              ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]'
-                              : connectionError
-                              ? 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.6)]'
-                              : 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.6)]'
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            isConnected && !isOffline
+                              ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse'
+                              : !isOffline && connectionError
+                              ? 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.6)]'
+                              : 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.6)]'
                           }`}
-                        />
+                        >
+                          {isOffline && <span className="absolute inset-0 flex items-center justify-center text-[8px] leading-none">✕</span>}
+                        </div>
                         <span className="tracking-normal font-black">
-                           {isConnected ? 'SignalR live' : connectionError ? 'SignalR offline' : 'SignalR connecting'}
+                           {isConnected && !isOffline ? 'live' : !isOffline && connectionError ? 'polling' : 'offline'}
                         </span>
-                     </div>
+                     </button>
                      <div className="flex items-center gap-2.5">
                         <span className="text-muted">Node:</span>
                         <span className="text-primary tracking-normal opacity-70">{CLUSTER_LABEL}</span>

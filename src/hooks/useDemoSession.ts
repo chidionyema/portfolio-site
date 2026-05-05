@@ -10,6 +10,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 export interface DemoSessionState {
   sessionId: string;
   isConnected: boolean;
+  lastSuccessAt: number | null;
   error: string | null;
   chaos: ChaosState;
 }
@@ -24,6 +25,7 @@ export function useDemoSession(moduleName?: string) {
   const [state, setState] = useState<DemoSessionState>({
     sessionId: '',
     isConnected: false,
+    lastSuccessAt: typeof window !== 'undefined' ? Date.now() : null,
     error: null,
     chaos: { latencyMs: 0, brokerDown: false, serviceFaulty: false }
   });
@@ -74,16 +76,28 @@ export function useDemoSession(moduleName?: string) {
     };
   }, [moduleName]);
 
-  const executeCommand = useCallback(async (endpoint: string, payload: any = {}) => {
+  const executeCommand = useCallback(async (endpoint: string, payload: any = {}, options: { method?: string, headers?: Record<string, string> } = {}) => {
+    const start = performance.now();
+    const method = options.method || 'POST';
     try {
-      const response = await fetch(`${API_URL}/api/demo${endpoint}`, {
-        method: 'POST',
+      const fetchOptions: RequestInit = {
+        method,
         headers: {
           'Content-Type': 'application/json',
-          'X-Demo-Session': state.sessionId
+          'X-Demo-Session': state.sessionId,
+          ...options.headers
         },
-        body: JSON.stringify(payload),
-      });
+      };
+
+      if (method !== 'GET' && method !== 'HEAD') {
+        fetchOptions.body = JSON.stringify(payload);
+      }
+
+      const response = await fetch(`${API_URL}/api/demo${endpoint}`, fetchOptions);
+
+      const latencyMs = Math.round(performance.now() - start);
+      const statusCode = response.status;
+      const service = response.headers.get('X-Service-Id') || inferService(endpoint);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -94,7 +108,9 @@ export function useDemoSession(moduleName?: string) {
       const traceId = response.headers.get('X-Trace-Id');
       if (traceId) traceStore.set(traceId);
 
-      return { ...data, traceId };
+      setState(prev => ({ ...prev, lastSuccessAt: Date.now() }));
+
+      return { ...data, traceId, latencyMs, statusCode, service };
     } catch (err: any) {
       console.error('Command Execution Failed:', err);
       throw err;
@@ -112,4 +128,16 @@ export function useDemoSession(moduleName?: string) {
     updateChaos,
     clearEvents: () => setEvents([]),
   };
+}
+
+function inferService(path: string): string {
+  if (path.includes('circuit')) return 'catalog-svc-demo';
+  if (path.includes('idempotency')) return 'bff-web-cache';
+  if (path.includes('ratelimit')) return 'gateway-limiter';
+  if (path.includes('vault')) return 'vault-manager';
+  if (path.includes('cache')) return 'inventory-cache';
+  if (path.includes('inventory')) return 'inventory-db';
+  if (path.includes('saga')) return 'order-orchestrator';
+  if (path.includes('events')) return 'event-bus';
+  return 'bff-web';
 }

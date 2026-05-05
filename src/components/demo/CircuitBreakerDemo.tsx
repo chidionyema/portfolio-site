@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { CircuitBreakerEvent } from '../../lib/api/signalr';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 type CircuitState = 'closed' | 'open' | 'half-open';
 
@@ -46,9 +48,29 @@ export function CircuitBreakerDemo() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [probeArmed, setProbeArmed] = useState(false); // next request will be the probe
   const [probeInFlight, setProbeInFlight] = useState(false);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
-  const { executeCommand, events, isConnected } = useDemoSession('circuit');
+  const { executeCommand, events } = useDemoSession('circuit');
   const lastEventIdRef = useRef<string>('');
+
+  const updateCircuitLocal = (state: CircuitState, timestamp?: string) => {
+    setCircuitState(state);
+    setTransitions((prev) => {
+      const ts = timestamp ? new Date(timestamp) : new Date();
+      if (prev.length > 0 && prev[0].state === state) return prev;
+      return [
+        { id: crypto.randomUUID(), state, timestamp: ts },
+        ...prev.slice(0, 4),
+      ];
+    });
+
+    if (state === 'half-open') {
+      setProbeArmed(true);
+    } else if (state === 'closed' || state === 'open') {
+      setProbeArmed(false);
+      setProbeInFlight(false);
+    }
+  };
 
   // Subscribe to backend state changes
   useEffect(() => {
@@ -60,18 +82,7 @@ export function CircuitBreakerDemo() {
     if (eventKey === lastEventIdRef.current) return;
     lastEventIdRef.current = eventKey;
 
-    setCircuitState(lastEvent.state);
-    setTransitions((prev) => [
-      { id: crypto.randomUUID(), state: lastEvent.state, timestamp: new Date(lastEvent.timestamp) },
-      ...prev.slice(0, 4),
-    ]);
-
-    if (lastEvent.state === 'half-open') {
-      setProbeArmed(true);
-    } else if (lastEvent.state === 'closed' || lastEvent.state === 'open') {
-      setProbeArmed(false);
-      setProbeInFlight(false);
-    }
+    updateCircuitLocal(lastEvent.state, lastEvent.timestamp);
   }, [events]);
 
   const issueRequest = async (shouldFail: boolean): Promise<void> => {
@@ -86,29 +97,36 @@ export function CircuitBreakerDemo() {
     try {
       const result = await executeCommand('/circuit/request', { shouldFail });
       const latency = Date.now() - start;
+
+      setReceipts(prev => [result, ...prev].slice(0, 10));
+
+      if (result.circuitState) {
+        updateCircuitLocal(result.circuitState);
+      }
+
       const status: ResilienceLog['status'] =
         wasProbe
           ? result.success ? 'probe-success' : 'probe-failure'
-          : result.success ? 'success' : result.isRejected ? 'rejected' : 'failure';
+          : result.success ? 'success' : result.rejectedCount > 0 ? 'rejected' : 'failure';
 
       const message =
         wasProbe
           ? result.success ? 'Probe succeeded — circuit closing' : 'Probe failed — circuit reopening'
           : result.success ? 'Request OK'
-          : result.isRejected ? 'Rejected — circuit open'
+          : result.rejectedCount > 0 ? 'Rejected — circuit open'
           : result.error || 'Request failed';
 
       setLogs((prev) => [
         { id: crypto.randomUUID(), timestamp: new Date(), status, message, latency },
         ...prev.slice(0, 14),
       ]);
-    } catch {
+    } catch (err: any) {
       setLogs((prev) => [
         {
           id: crypto.randomUUID(),
           timestamp: new Date(),
           status: 'failure',
-          message: 'Network Error / Timeout',
+          message: err.message || 'Network Error / Timeout',
           latency: Date.now() - start,
         },
         ...prev.slice(0, 14),
@@ -130,7 +148,9 @@ export function CircuitBreakerDemo() {
 
   const resetBreaker = async () => {
     try {
-      await executeCommand('/circuit/reset', {});
+      const result = await executeCommand('/circuit/reset', {});
+      setReceipts(prev => [result, ...prev].slice(0, 10));
+      updateCircuitLocal('closed');
       setLogs((prev) => [
         {
           id: crypto.randomUUID(),
@@ -168,7 +188,7 @@ export function CircuitBreakerDemo() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => issueRequest(false)}
-              disabled={!isConnected || isTripping || isRequesting}
+              disabled={isTripping || isRequesting}
               title={probeArmed ? 'Sends the half-open probe — outcome decides whether the breaker closes or reopens.' : 'Sends a single request through the breaker.'}
               aria-label={probeArmed ? 'Send half-open probe request' : 'Send single request through breaker'}
               className="focus-ring py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
@@ -178,7 +198,7 @@ export function CircuitBreakerDemo() {
             </button>
             <button
               onClick={tripBreaker}
-              disabled={!isConnected || isTripping || isRequesting}
+              disabled={isTripping || isRequesting}
               title="Fires 3 failing requests in sequence to trip the breaker. The breaker auto-recovers via the half-open probe after the 6s cooldown."
               aria-label="Trip the breaker by firing three failing requests"
               className="focus-ring py-4 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
@@ -190,7 +210,7 @@ export function CircuitBreakerDemo() {
 
           <button
             onClick={resetBreaker}
-            disabled={!isConnected}
+            disabled={isRequesting}
             title="Forces the breaker back to Closed without waiting for the cooldown. Discards the cached policy so the next call rebuilds with no failure history."
             aria-label="Manually reset the breaker to Closed"
             className="focus-ring w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-secondary font-bold text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"

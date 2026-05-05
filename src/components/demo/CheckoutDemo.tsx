@@ -13,6 +13,8 @@ import { useDemoSession } from '../../hooks/useDemoSession';
 import { signalRClient } from '../../lib/api/signalr';
 import type { SagaStepEvent } from '../../lib/api/signalr';
 import { ChaosButton } from './ChaosButton';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 type Scenario = 'success' | 'stockFailure' | 'paymentFailure' | 'stockRace';
 
@@ -45,8 +47,9 @@ export function CheckoutDemo() {
   const [activeSagaId, setActiveSagaId] = useState<string | null>(null);
   const [raceLanes, setRaceLanes] = useState<RaceLane[] | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
-  const { executeCommand, events: remoteEvents, isConnected } = useDemoSession('checkout');
+  const { executeCommand, events: remoteEvents } = useDemoSession('checkout');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -113,6 +116,8 @@ export function CheckoutDemo() {
         scenarioType: scenario,
         simulatedDelayMs: 500,
       });
+
+      setReceipts(prev => [result, ...prev].slice(0, 10));
 
       if (result?.races && Array.isArray(result.races)) {
         const lanes: RaceLane[] = result.races;
@@ -190,7 +195,7 @@ export function CheckoutDemo() {
 
         <button
           onClick={runSimulation}
-          disabled={isProcessing || !isConnected}
+          disabled={isProcessing}
           className={`focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-20 flex items-center justify-center gap-3 ${
             showTooltip ? 'animate-pulse ring-4 ring-accent/30 scale-[1.02]' : 'hover:bg-slate-100'
           }`}
@@ -207,6 +212,8 @@ export function CheckoutDemo() {
 
         <ChaosButton scenario="inventory-kill" label="Kill Inventory Mid-Saga" durationSeconds={10} />
       </div>
+
+      <RequestReceiptHistory receipts={receipts} />
 
       {/* Mode-specific view */}
       {lanes ? (

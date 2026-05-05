@@ -14,6 +14,8 @@ import {
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { EventFlowEvent } from '../../lib/api/signalr';
 import { CLUSTER_LABEL } from '../../lib/copy';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 
@@ -30,7 +32,6 @@ interface RelayStatus {
   isPaused: boolean;
   queuedCount: number;
 }
-
 export function EventFlowDemo() {
   const [outbox, setOutbox] = useState<OutboxMessage[]>([]);
   const [brokerQueue, setBrokerQueue] = useState<{ name: string; depth: number }[]>([
@@ -40,8 +41,9 @@ export function EventFlowDemo() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [relay, setRelay] = useState<RelayStatus>({ isPaused: false, queuedCount: 0 });
   const [isToggling, setIsToggling] = useState(false);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
-  const { executeCommand, events, isConnected } = useDemoSession('events');
+  const { executeCommand, events } = useDemoSession('events');
 
   // Initial relay status fetch — so a refresh while paused shows the right thing.
   useEffect(() => {
@@ -107,6 +109,7 @@ export function EventFlowDemo() {
         eventType: 'DemoOutboxEvent',
         payload: { message: 'Atomic Commit Test', triggeredAt: new Date().toISOString() },
       });
+      setReceipts(prev => [result, ...prev].slice(0, 10));
       if (result?.queuedCount !== undefined) {
         setRelay({ isPaused: true, queuedCount: result.queuedCount });
       }
@@ -123,6 +126,7 @@ export function EventFlowDemo() {
       const result = await executeCommand('/events/relay-pause', {
         paused: !relay.isPaused,
       });
+      setReceipts(prev => [result, ...prev].slice(0, 10));
       if (result) {
         setRelay({ isPaused: !!result.isPaused, queuedCount: result.queuedCount ?? 0 });
       }
@@ -161,7 +165,7 @@ export function EventFlowDemo() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={triggerEvent}
-              disabled={isProcessing || !isConnected}
+              disabled={isProcessing}
               className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 fill-current" />}
@@ -169,7 +173,7 @@ export function EventFlowDemo() {
             </button>
             <button
               onClick={toggleRelay}
-              disabled={isToggling || !isConnected}
+              disabled={isToggling}
               title={
                 relay.isPaused
                   ? 'Resumes the relay. Buffered events drain in FIFO order to the broker.'
@@ -192,6 +196,8 @@ export function EventFlowDemo() {
               {relay.isPaused ? 'Resume relay' : 'Pause relay'}
             </button>
           </div>
+
+          <RequestReceiptHistory receipts={receipts} />
 
           <AnimatePresence>
             {relay.isPaused && (

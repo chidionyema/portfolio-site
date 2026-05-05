@@ -128,7 +128,7 @@ export function DistributedTracingDemo() {
 
           <button
             onClick={startTrace}
-            disabled={isRunning || !isConnected}
+            disabled={isRunning}
             className="focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-30 flex items-center justify-center gap-3"
           >
             {isRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}

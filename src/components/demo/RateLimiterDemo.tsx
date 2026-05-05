@@ -4,6 +4,8 @@ import { Gauge, Timer, Activity, Database, AlertCircle, TrendingUp, BarChart3 } 
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { RateLimitEvent } from '../../lib/api/signalr';
 import { CLUSTER_LABEL } from '../../lib/copy';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 interface RequestLog {
   id: string;
@@ -11,15 +13,15 @@ interface RequestLog {
   status: 'allowed' | 'limited';
   remaining: number;
 }
-
 export function RateLimiterDemo() {
   const [tokens, setTokens] = useState(5);
   const maxTokens = 5;
   const windowSeconds = 60;
   const [localRequests, setLocalRequests] = useState<RequestLog[]>([]);
   const [retryAfter, setRetryAfter] = useState(0);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
-  const { executeCommand, events, isConnected } = useDemoSession('ratelimit');
+  const { executeCommand, events } = useDemoSession('ratelimit');
 
   useEffect(() => {
      if (events.length > 0) {
@@ -39,15 +41,17 @@ export function RateLimiterDemo() {
     const start = new Date();
     try {
       const result = await executeCommand('/ratelimit/request');
+      setReceipts(prev => [result, ...prev].slice(0, 10));
+
       setLocalRequests(prev => [{
         id: crypto.randomUUID(),
         timestamp: start,
         status: result.allowed ? 'allowed' : 'limited',
-        remaining: result.remaining
+        remaining: result.bucket.remaining
       }, ...prev.slice(0, 15)]);
       
-      setTokens(result.remaining);
-      if (result.retryAfter) setRetryAfter(result.retryAfter);
+      setTokens(result.bucket.remaining);
+      if (result.bucket.retryAfterSeconds) setRetryAfter(result.bucket.retryAfterSeconds);
     } catch (err: any) {
        if (err.status === 429) {
           setLocalRequests(prev => [{
@@ -111,26 +115,28 @@ export function RateLimiterDemo() {
               <div className="grid grid-cols-3 gap-2">
                  <button 
                    onClick={() => sendBurst(1)}
-                   disabled={retryAfter > 0 || !isConnected}
+                   disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-all disabled:opacity-20"
                  >
                     CMD_SINGLE
                  </button>
                  <button 
                    onClick={() => sendBurst(5)}
-                   disabled={retryAfter > 0 || !isConnected}
+                   disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-warning transition-all disabled:opacity-20"
                  >
                     CMD_BURST_5
                  </button>
                  <button 
                    onClick={() => sendBurst(12)}
-                   disabled={retryAfter > 0 || !isConnected}
+                   disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-error transition-all disabled:opacity-20"
                  >
                     CMD_FLOOD
                  </button>
               </div>
+
+              <RequestReceiptHistory receipts={receipts} />
 
               <AnimatePresence>
                 {retryAfter > 0 && (

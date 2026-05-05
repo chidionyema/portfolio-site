@@ -13,6 +13,8 @@ import {
   Swords,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 

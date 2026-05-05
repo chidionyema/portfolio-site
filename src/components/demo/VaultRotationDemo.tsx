@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Shield, Activity, RefreshCw, Key, Database, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { VaultRotationEvent } from '../../lib/api/signalr';
+import { RequestReceiptHistory } from './RequestReceipt';
+import type { RequestMetadata } from '../../lib/api/demo-client';
 
 interface Credential {
   id: string;
@@ -17,7 +19,6 @@ interface LogEntry {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
 }
-
 export function VaultRotationDemo() {
   const [credential, setCredential] = useState<Credential | null>(null);
   const [localLogs, setLocalLogs] = useState<LogEntry[]>([]);
@@ -25,8 +26,9 @@ export function VaultRotationDemo() {
   const [showPassword, setShowPassword] = useState(false);
   const [ttlProgress, setTtlProgress] = useState(100);
   const [isRotating, setIsRotating] = useState(false);
+  const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
-  const { executeCommand, events, isConnected } = useDemoSession('vault');
+  const { executeCommand, events } = useDemoSession('vault');
 
   // Initial load
   useEffect(() => {
@@ -85,7 +87,15 @@ export function VaultRotationDemo() {
 
   const triggerRotation = async () => {
      try {
-        await executeCommand('/vault/rotate');
+        const result = await executeCommand('/vault/rotate');
+        setReceipts(prev => [result, ...prev].slice(0, 10));
+        setIsRotating(true);
+        setLocalLogs(prev => [{
+           id: crypto.randomUUID(),
+           timestamp: new Date(),
+           message: `Manual rotation triggered.`,
+           type: 'warning'
+        }, ...prev.slice(0, 12)]);
      } catch (err) {}
   };
 
@@ -183,11 +193,13 @@ export function VaultRotationDemo() {
 
               <button 
                 onClick={triggerRotation}
-                disabled={isRotating || !isConnected}
+                disabled={isRotating}
                 className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] text-muted hover:text-primary hover:bg-white/10 transition-all disabled:opacity-20"
               >
                  Force rotation
               </button>
+
+              <RequestReceiptHistory receipts={receipts} />
             </div>
           ) : (
             <div className="py-24 text-center">
