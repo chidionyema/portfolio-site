@@ -13,12 +13,12 @@ state.
 
 ## Current state
 
-- **Phase**: not started
+- **Phase**: P1 — Frontend layout (portfolio-site)
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
 - **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
-- **Last subtask completed**: —
-- **Next subtask**: P1.1 (see plan below)
-- **Last verified `npm run build` (frontend)**: not yet run
+- **Last subtask completed**: P1.4
+- **Next subtask**: P1.5 (see plan below)
+- **Last verified `npm run build` (frontend)**: 2026-05-05 23:24
 - **Last verified `dotnet build` (backend)**: not yet run
 - **Last acceptance test run (paste literal output)**: —
 
@@ -29,26 +29,26 @@ build is green.
 
 ### P1 — Frontend layout (portfolio-site)
 
-- [ ] **P1.1** — Create copy constants. Add the strings table from
+- [x] **P1.1** — Create copy constants. Add the strings table from
   `CHECKOUT_REDESIGN.md` § "Customer-copy strings (use verbatim)" as a
   named export in either `src/lib/copy.ts` (preferred, if file exists)
   or at the top of `CheckoutDemo.tsx`. Don't reference these from the
   current code yet — just declare. **Commit:** `refactor(checkout): introduce copy constants`.
 
-- [ ] **P1.2** — Cut list. Apply every removal listed in
+- [x] **P1.2** — Cut list. Apply every removal listed in
   `CHECKOUT_REDESIGN.md` § "Cut list (literal removals)". Drop
   `timeout`/`networkTimeout`/`partialFailure` from the `Scenario` type.
   Rename scenario picker labels to the SCENARIO_LABELS table. Build must
   remain green. **Commit:** `refactor(checkout): apply cut list`.
 
-- [ ] **P1.3** — Two-pane shell. Replace today's single-column layout
+- [x] **P1.3** — Two-pane shell. Replace today's single-column layout
   with the 45/55 split described in § "Layout — 45/55 split". Left pane
   is just the cart card with idle "Pay £39.99" button (no state-driven
   copy yet). Right pane has the section headers ("Behind the scenes",
   "Compensation") but its contents stay as today's tabular log. Build
   green. **Commit:** `feat(checkout): two-pane customer/engineering layout`.
 
-- [ ] **P1.4** — Customer pane state-driven copy. Wire the Pay button's
+- [x] **P1.4** — Customer pane state-driven copy. Wire the Pay button's
   label and tone to `sagaState`/`localEvents`. Map the saga states to
   the customer copy from the table. Test by running the four scenarios
   manually (success / sold out / card declined / two browsers). For
@@ -136,14 +136,15 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 
 ## Last activity
 
-(Replace this line each subtask. Format: `YYYY-MM-DD HH:MM | <subtask id> | <one line>`)
+2026-05-05 23:25 | P1.4 | Wired Pay button content and tone to saga state. Capture and format orderId. Verified build green.
 
-—
+---
 
 ## Last verified `npm run build` (frontend)
 
 ```
-(paste the tail of the build output here after each P1 subtask)
+23:24:22 [build] 5 page(s) built in 97.78s
+23:24:22 [build] Complete!
 ```
 
 ## Last verified `dotnet build` (backend)
@@ -159,9 +160,6 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 ```
 
 ## Blockers
-
-(If you hit something the spec doesn't cover, write it here in one
-paragraph, commit, and stop. Don't improvise.)
 
 —
 
