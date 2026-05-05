@@ -97,7 +97,13 @@ export function ConcurrencyDemo() {
   const renderUser = (user: UserState, id: 'A' | 'B') => {
     const isActive = user.status !== 'idle';
     return (
-      <div className={`surface p-8 shadow-xl transition-all border-2 ${user.status === 'conflict' ? 'border-error/50 shadow-error/10' : 'border-transparent'}`}>
+      <motion.div 
+        animate={user.status === 'success' ? { 
+           backgroundColor: ['rgba(34,197,94,0)', 'rgba(34,197,94,0.1)', 'rgba(34,197,94,0)'],
+           scale: [1, 1.02, 1]
+        } : {}}
+        className={`surface p-8 shadow-xl transition-all border-2 ${user.status === 'conflict' ? 'border-error/50 shadow-error/10' : user.status === 'success' ? 'border-success/50 shadow-success/10' : 'border-transparent'}`}
+      >
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
@@ -180,7 +186,7 @@ export function ConcurrencyDemo() {
             </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -199,8 +205,8 @@ export function ConcurrencyDemo() {
             </div>
             <div className="flex items-baseline justify-center lg:justify-start gap-8">
               <motion.div 
-                 animate={isRacing ? { scale: [1, 1.05, 1] } : {}}
-                 transition={{ repeat: Infinity, duration: 0.5 }}
+                 animate={isRacing ? { scale: [1, 1.05, 1] } : (userA.status === 'success' || userB.status === 'success' ? { scale: [1, 1.2, 1], color: ['#fff', '#22c55e', '#fff'] } : {})}
+                 transition={{ repeat: isRacing ? Infinity : 0, duration: isRacing ? 0.5 : 0.8 }}
                  className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none"
               >
                  {inventory.quantity}
