@@ -7,7 +7,7 @@ import { allDemos } from '../components/demo/DemoSidebar';
 import DeepDivesGrid from '../components/architecture/DeepDivesGrid.astro';
 import { CommandPalette } from '../components/system/CommandPalette';
 import { GIT_SHA, BUILT_AT, sourceUrl } from '../lib/build-info';
-import { DEMO_SECTION_HEADING, DEMO_SECTION_SUBHEAD } from '../lib/copy';
+import { DEMO_SECTION_HEADING, DEMO_SECTION_SUBHEAD, CLUSTER_LABEL } from '../lib/copy';
 import { getMetricsSnapshot } from '../lib/api/demo-client';
 
 import { Scorecard } from '../components/quality/Scorecard';
@@ -60,7 +60,7 @@ const deepDives = dd.map((e) => ({
            </div>
            <div class="hidden md:flex items-center gap-2 text-[9px] text-muted uppercase font-bold tracking-widest">
               <div class="w-1 h-1 bg-success animate-pulse" />
-              Cluster_Healthy // LHR_01
+              Cluster_Healthy // {CLUSTER_LABEL}
            </div>
         </div>
         <DemoHub client:visible />

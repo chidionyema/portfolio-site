@@ -137,7 +137,10 @@ export interface Trace {
 
 export interface LiveMetrics {
   ingressEvents24h: number;
-  clusterAvailability: number;
+  // Server returns null for any metric we don't yet track honestly. The
+  // LiveMetricsRow renders an em-dash when a value is null instead of
+  // inventing a number.
+  clusterAvailability: number | null;
   p99LatencyMs: number;
   activeSessions: number;
   timestamp: string;

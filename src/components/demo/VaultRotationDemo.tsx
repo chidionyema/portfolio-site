@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Shield, Activity, RefreshCw, Key, Database, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
-import { ConnectionPoolMonitor } from '../system/ConnectionPoolMonitor';
 import type { VaultRotationEvent } from '../../lib/api/signalr';
 
 interface Credential {
@@ -26,8 +25,6 @@ export function VaultRotationDemo() {
   const [showPassword, setShowPassword] = useState(false);
   const [ttlProgress, setTtlProgress] = useState(100);
   const [isRotating, setIsRotating] = useState(false);
-  const [activeConnections, setActiveConnections] = useState(12);
-  const [previousVersion, setPreviousVersion] = useState<string | null>(null);
 
   const { executeCommand, events, isConnected } = useDemoSession('vault');
 
@@ -72,7 +69,6 @@ export function VaultRotationDemo() {
 
         if (stage === 'started') {
            setIsRotating(true);
-           setPreviousVersion(credential?.username.split('-').pop() || '1');
         }
 
         if (stage === 'activated') {
@@ -83,7 +79,6 @@ export function VaultRotationDemo() {
               issuedAt: new Date(lastEvent.timestamp),
               expiresAt: new Date(Date.now() + 60000)
            });
-           setActiveConnections(12);
         }
      }
   }, [events]);
@@ -202,12 +197,6 @@ export function VaultRotationDemo() {
           )}
         </div>
 
-        <ConnectionPoolMonitor 
-          activeVersion={credential?.username.split('-').pop() || '3'}
-          previousVersion={previousVersion}
-          isRotating={isRotating}
-          activeCount={activeConnections}
-        />
       </div>
 
       <div className="space-y-6">

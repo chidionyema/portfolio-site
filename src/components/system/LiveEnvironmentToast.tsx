@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, X, Zap } from 'lucide-react';
+import { CLUSTER_LABEL } from '../../lib/copy';
 
 /**
  * LiveEnvironmentToast
@@ -52,8 +53,8 @@ export const LiveEnvironmentToast: React.FC = () => {
                 </div>
                 
                 <p className="text-[11px] font-mono leading-relaxed text-secondary/80">
-                  <span className="text-success font-bold">Production Node LHR_01 Linked.</span><br />
-                  Every component is interactive. Every button triggers a real .NET 9 command.
+                  <span className="text-success font-bold">Demo Node {CLUSTER_LABEL} linked.</span><br />
+                  Every interaction below is a real round-trip to a live .NET 9 backend.
                 </p>
 
                 <div className="pt-2 flex items-center gap-2">

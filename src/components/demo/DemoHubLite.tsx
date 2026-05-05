@@ -1,7 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Zap, ShieldAlert, Code2, Cpu, BookOpen } from 'lucide-react';
-import { DEMO_FOOTER } from '../../lib/copy';
+import { DEMO_FOOTER, CLUSTER_LABEL } from '../../lib/copy';
 import { DemoSidebar, DemoMobileNav, findDemo, findGroupOf } from './DemoSidebar';
 import { ChaosEngine } from '../system/ChaosEngine';
 import { useDemoSession } from '../../hooks/useDemoSession';
@@ -136,7 +136,7 @@ export function DemoHub() {
                      </div>
                      <div className="flex items-center gap-2.5">
                         <span className="text-muted">Node:</span>
-                        <span className="text-primary tracking-normal opacity-70">lhr_cluster_01</span>
+                        <span className="text-primary tracking-normal opacity-70">{CLUSTER_LABEL}</span>
                      </div>
                   </div>
                   

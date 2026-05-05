@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Server, Database, Share2, Shield, Activity } from 'lucide-react';
 import { signalRClient } from '../../lib/api/signalr';
+import { CLUSTER_LABEL } from '../../lib/copy';
 
 /**
  * TopologyMap
@@ -114,7 +115,7 @@ export const TopologyMap: React.FC = () => {
           <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
           <span>Telemetric_Overlay_Active</span>
         </div>
-        <span>// Region: LHR_01</span>
+        <span>// Region: {CLUSTER_LABEL}</span>
       </div>
     </div>
   );

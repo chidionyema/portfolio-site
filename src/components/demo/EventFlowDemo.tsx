@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { EventFlowEvent } from '../../lib/api/signalr';
+import { CLUSTER_LABEL } from '../../lib/copy';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || 'https://api.chidionyema.dev';
 
@@ -358,13 +359,13 @@ export function EventFlowDemo() {
               >
                 {relay.isPaused
                   ? `Relay_Suspended // Buffered: ${relay.queuedCount}`
-                  : 'Relay_Active // ID: RL_8F2B // Lock: Node_LHR_01'}
+                  : `Relay_Active // ID: RL_8F2B // Lock: Node_${CLUSTER_LABEL}`}
               </p>
             </div>
           </div>
 
           <div className="p-5 bg-white/[0.02] border-t border-white/5 flex items-center justify-between font-mono text-[9px] font-black uppercase tracking-widest">
-            <span className="text-muted/60">Cluster: cloudamqp_lhr_stable</span>
+            <span className="text-muted/60">Cluster: cloudamqp_{CLUSTER_LABEL}</span>
             <div
               className={`flex items-center gap-2 ${relay.isPaused ? 'text-warning' : 'text-success'}`}
             >

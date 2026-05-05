@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Gauge, Timer, Activity, Database, AlertCircle, TrendingUp, BarChart3 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { RateLimitEvent } from '../../lib/api/signalr';
+import { CLUSTER_LABEL } from '../../lib/copy';
 
 interface RequestLog {
   id: string;
@@ -230,7 +231,7 @@ export function RateLimiterDemo() {
            
            <div className="p-4 glass-subtle border-t border-white/5">
               <p className="text-[10px] text-muted/60 leading-relaxed font-mono uppercase tracking-tighter text-center">
-                Kernel: Sliding_Window_L2 // Provider: Redis_Cluster // Region: LHR_01
+                Kernel: Sliding_Window_L2 // Provider: Redis_Cluster // Region: {CLUSTER_LABEL}
               </p>
            </div>
         </div>
