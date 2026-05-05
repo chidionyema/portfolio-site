@@ -40,6 +40,7 @@ export function CheckoutDemo() {
   const [scenario, setScenario] = useState<Scenario>('success');
   const [sagaState, setSagaState] = useState<string>('Initial');
   const [activeSagaId, setActiveSagaId] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [raceLanes, setRaceLanes] = useState<RaceLane[] | null>(null);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
@@ -95,6 +96,7 @@ export function CheckoutDemo() {
     setLocalEvents([]);
     setSagaState('Initial');
     setActiveSagaId(null);
+    setOrderId(null);
     setRaceLanes(null);
 
     try {
@@ -104,6 +106,10 @@ export function CheckoutDemo() {
       });
 
       setReceipts(prev => [result, ...prev].slice(0, 10));
+
+      if (result?.orderId) {
+        setOrderId(result.orderId);
+      }
 
       if (result?.races && Array.isArray(result.races)) {
         const lanes: RaceLane[] = result.races;
@@ -144,6 +150,7 @@ export function CheckoutDemo() {
           scenario={scenario}
           setScenario={setScenario}
           runSimulation={runSimulation}
+          orderId={orderId}
         />
       )}
 
@@ -160,7 +167,14 @@ interface SingleSagaViewProps {
   scenario: Scenario;
   setScenario: (s: Scenario) => void;
   runSimulation: () => void;
+  orderId: string | null;
 }
+
+const formatOrderId = (id: string | null) => {
+  if (!id) return '---';
+  const clean = id.replace(/-/g, '').toUpperCase();
+  return `${clean.slice(0, 6)}-${clean.slice(6, 9)}`;
+};
 
 function SingleSagaView({
   sagaState,
@@ -170,7 +184,61 @@ function SingleSagaView({
   scenario,
   setScenario,
   runSimulation,
+  orderId,
 }: SingleSagaViewProps) {
+  const getButtonContent = () => {
+    if (!isProcessing && sagaState === 'Initial') {
+      return CHECKOUT_COPY.PAY_IDLE;
+    }
+
+    switch (sagaState) {
+      case 'initiated':
+        return (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            {CHECKOUT_COPY.PAY_RESERVING}
+          </>
+        );
+      case 'stock_reserved':
+        return (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            {CHECKOUT_COPY.PAY_CONFIRMING}
+          </>
+        );
+      case 'payment_ready':
+        return (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            {CHECKOUT_COPY.PAY_COMPLETING}
+          </>
+        );
+      case 'completed':
+      case 'finalized':
+        return `✓ ${CHECKOUT_COPY.PAY_DONE_PREFIX} #${formatOrderId(orderId)} confirmed`;
+      case 'stock_failed':
+        return `✕ ${CHECKOUT_COPY.FAIL_SOLD_OUT}`;
+      case 'payment_failed':
+        return `✕ ${CHECKOUT_COPY.FAIL_CARD_DECLINED}`;
+      case 'compensated':
+        return `✕ Order abandoned`;
+      default:
+        return isProcessing ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processing...
+          </>
+        ) : CHECKOUT_COPY.PAY_IDLE;
+    }
+  };
+
+  const getButtonTone = () => {
+    if (sagaState === 'completed' || sagaState === 'finalized') return 'bg-success text-white';
+    if (sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated')
+      return 'bg-error text-white';
+    return 'bg-white text-black hover:bg-slate-100';
+  };
+
   return (
     <div className="grid lg:grid-cols-[45fr_55fr] gap-8 items-start">
       {/* Left Pane - "Your order" */}
@@ -234,10 +302,9 @@ function SingleSagaView({
           <button
             onClick={runSimulation}
             disabled={isProcessing}
-            className="w-full py-5 bg-white text-black font-black text-sm uppercase rounded-xl transition-all shadow-xl hover:bg-slate-100 disabled:opacity-20 flex items-center justify-center gap-3"
+            className={`w-full py-5 font-black text-sm uppercase rounded-xl transition-all shadow-xl disabled:opacity-20 flex items-center justify-center gap-3 ${getButtonTone()}`}
           >
-            {isProcessing && <Loader2 className="w-5 h-5 animate-spin" />}
-            {CHECKOUT_COPY.PAY_IDLE}
+            {getButtonContent()}
           </button>
         </div>
       </div>
