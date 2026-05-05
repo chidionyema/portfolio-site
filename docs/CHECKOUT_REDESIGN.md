@@ -86,6 +86,21 @@ Three stacked sections inside the right pane:
    Columns: time / step (engineering name + customer label inline) /
    status. Rows animate in.
 
+4. **Chaos controls** — small section under the events log, separated
+   by a hairline. Header in mono: `Inject failure`. Renders one or more
+   `ChaosButton` triggers (currently `inventory-kill`). The button stays
+   fully functional during a saga run — that's the whole point. When
+   chaos fires mid-saga, the saga should transition to `Abandoned` and
+   the compensation drawer auto-expands.
+
+   Chaos is the headline resilience demo: it's the difference between a
+   sequential pipeline and a real saga. A senior-eng visitor pressing
+   `inventory-kill` mid-flow and watching the compensation drawer
+   release stock + log `StockReleaseRequestedEvent` is the single most
+   convincing moment on the entire page. Don't remove it — just ensure
+   it sits under "Behind the scenes" so it reads as an *engineering*
+   control, not a customer action.
+
 ## Per-scenario verdict
 
 The current `Scenario` type at `CheckoutDemo.tsx:19` is `'success' |
@@ -139,7 +154,7 @@ After `Completed`:
 
 | File:line | What to cut | Why |
 |---|---|---|
-| `CheckoutDemo.tsx:213` | `<ChaosButton scenario="inventory-kill" …>` next to dispatch | Wrong altitude — admin action mixed with customer action. Move into right pane under "Behind the scenes" or remove entirely. |
+| `CheckoutDemo.tsx:213` | `<ChaosButton scenario="inventory-kill" …>` next to dispatch | **Move (don't remove)** to the right pane under "Behind the scenes" → "Inject failure" sub-section. Chaos is core to the resilience story (it's what proves this is a saga, not a pipeline); it just sits at the wrong altitude in today's layout — admin action next to customer action. |
 | `CheckoutDemo.tsx:294` | `Buffer: f4a9b21c` hardcoded fake badge | Actively erodes trust |
 | `CheckoutDemo.tsx:297-300` | Second "Connected" green dot | Duplicates the page-level chip in `DemoHubLite` |
 | `CheckoutDemo.tsx:256-280` | Horizontal step bar | Replaced by vertical ladder |
