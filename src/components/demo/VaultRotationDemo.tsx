@@ -238,6 +238,23 @@ export function VaultRotationDemo() {
                  </div>
               </div>
 
+              {/* App Connection Pane */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <div className="p-2 bg-success/10 text-success rounded-lg">
+                       <Database className="w-4 h-4" />
+                    </div>
+                    <div>
+                       <div className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none mb-1">App connection</div>
+                       <div className="text-[9px] text-muted font-mono uppercase tracking-tighter opacity-60">Session pooling active</div>
+                    </div>
+                 </div>
+                 <div className="flex items-center gap-2 px-3 py-1.5 bg-success/20 border border-success/30 rounded-full">
+                    <div className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                    <span className="text-[9px] font-black text-success uppercase tracking-widest">Connected</span>
+                 </div>
+              </div>
+
               <RequestReceiptHistory receipts={receipts} />
             </div>
           ) : (
