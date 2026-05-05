@@ -229,6 +229,18 @@ export function EventFlowDemo() {
 
                 <div className="space-y-2">
                    <div className="h-3 bg-warning/5 rounded-full overflow-hidden border border-warning/10 relative">
+                      {/* Threshold Markers */}
+                      <div className="absolute inset-0 px-1 pointer-events-none">
+                         {[10, 50].map(t => (
+                            <div key={t} className="absolute top-0 bottom-0 w-px bg-warning/20" style={{ left: `${t}%` }}>
+                               <span className="absolute top-full mt-1 -translate-x-1/2 text-[6px] font-black text-warning/30">{t}</span>
+                            </div>
+                         ))}
+                         <div className="absolute right-0 top-0 bottom-0 w-px bg-warning/40">
+                            <span className="absolute top-full mt-1 -translate-x-full pr-1 text-[6px] font-black text-warning/50">100</span>
+                         </div>
+                      </div>
+
                       <motion.div
                         className="h-full bg-gradient-to-r from-warning to-warning/40 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                         initial={{ width: '0%' }}
@@ -236,9 +248,9 @@ export function EventFlowDemo() {
                         transition={{ type: 'spring', stiffness: 50, damping: 20 }}
                       />
                    </div>
-                   <div className="flex justify-between items-center text-[8px] font-mono text-warning/40 uppercase tracking-tighter">
+                   <div className="flex justify-between items-center text-[8px] font-mono text-warning/40 uppercase tracking-tighter pt-3">
                       <span>Broker unreachable…</span>
-                      <span>Max_Cap: 100</span>
+                      <span>Backlog_Saturation</span>
                    </div>
                 </div>
               </motion.div>
