@@ -13,12 +13,12 @@ state.
 
 ## Current state
 
-- **Phase**: P1 — Frontend layout (portfolio-site)
+- **Phase**: P2 — Frontend acceptance (portfolio-site)
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
 - **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
-- **Last subtask completed**: P1.7
-- **Next subtask**: P1.8 (see plan below)
-- **Last verified `npm run build` (frontend)**: 2026-05-05 23:39
+- **Last subtask completed**: P1.8
+- **Next subtask**: P2.1 (see plan below)
+- **Last verified `npm run build` (frontend)**: 2026-05-05 23:41
 - **Last verified `dotnet build` (backend)**: not yet run
 - **Last acceptance test run (paste literal output)**: —
 
@@ -73,7 +73,7 @@ build is green.
   from the strings table. Run-another button returns to idle. **Commit:**
   `feat(checkout): order-confirmed receipt state`.
 
-- [ ] **P1.8** — Race-mode customer pane. Two stacked mini-cart cards
+- [x] **P1.8** — Race-mode customer pane. Two stacked mini-cart cards
   for `stockRace`. Engineering pane keeps existing `RaceLaneCard` twin
   layout. **Commit:** `feat(checkout): two-browser race scenario layout`.
 
@@ -136,15 +136,15 @@ work — `PaymentSessionRequestedConsumer` (demo mode)" for the spec.
 
 ## Last activity
 
-2026-05-05 23:39 | P1.7 | Implemented order confirmation receipt state with ConfirmationCard and reset logic. Verified build green.
+2026-05-05 23:41 | P1.8 | Implemented race-mode customer pane with stacked mini-carts. Refactored shell to handle both modes. Verified build green.
 
 ---
 
 ## Last verified `npm run build` (frontend)
 
 ```
-23:39:39 [build] 5 page(s) built in 34.67s
-23:39:39 [build] Complete!
+23:41:12 [build] 5 page(s) built in 12.25s
+23:41:12 [build] Complete!
 ```
 
 ## Last verified `dotnet build` (backend)
