@@ -45,6 +45,7 @@ export function CacheInvalidationDemo() {
     L2: { hasData: true, ttl: 300 },
     DB: { hasData: true, ttl: -1 }
   });
+  const [servingTier, setServingTier] = useState<'L1' | 'L2' | 'DB' | null>(null);
   const [cacheStatus, setCacheStatus] = useState<'hit' | 'miss' | 'stale'>('hit');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [newPrice, setNewPrice] = useState('59.99');
@@ -122,6 +123,12 @@ export function CacheInvalidationDemo() {
       const res = await getCachedProduct(demoProductId);
       setReceipts(prev => [res, ...prev].slice(0, 10));
       setCacheStatus(res.cacheInfo?.isHit ? 'hit' : 'miss');
+      
+      const source = res.cacheInfo?.source?.toUpperCase() || 'DB';
+      const tier: 'L1' | 'L2' | 'DB' = source === 'IN_MEMORY' ? 'L1' : source === 'REDIS' ? 'L2' : 'DB';
+      setServingTier(tier);
+      setTimeout(() => setServingTier(null), 1000);
+
       setProduct({
         name: res.product.name,
         price: res.product.price,
@@ -153,6 +160,7 @@ export function CacheInvalidationDemo() {
       addLog('update', `Database updated`);
       addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
       setCacheStatus('stale');
+      setServingTier(null);
       setTiers(prev => ({
          ...prev,
          L1: { ...prev.L1, hasData: false },
@@ -173,6 +181,7 @@ export function CacheInvalidationDemo() {
       const res = await apiInvalidateCache(demoProductId);
       setReceipts(prev => [res, ...prev].slice(0, 10));
       addLog('publish', `PUBLISH cache:invalidate:product:${demoProductId.split('-')[0]}`);
+      setServingTier(null);
       setTiers(prev => ({
          ...prev,
          L1: { ...prev.L1, hasData: false },
@@ -220,7 +229,7 @@ export function CacheInvalidationDemo() {
                     <div key={tier.id} className="relative group">
                        <div className="flex items-center justify-between mb-1.5 px-1">
                           <div className="flex items-center gap-3">
-                             <span className={`text-xs font-black font-mono px-2 py-0.5 rounded ${tier.hasData ? 'bg-accent/20 text-accent' : 'bg-white/5 text-muted'}`}>
+                             <span className={`text-xs font-black font-mono px-2 py-0.5 rounded transition-all ${tier.hasData ? (servingTier === tier.id ? 'bg-success text-white scale-110 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'bg-accent/20 text-accent') : 'bg-white/5 text-muted'}`}>
                                 {tier.label}
                              </span>
                              <span className="text-[10px] text-muted font-medium uppercase tracking-tighter opacity-60">{tier.sublabel}</span>
@@ -229,11 +238,11 @@ export function CacheInvalidationDemo() {
                              <span className="text-[10px] font-mono text-accent tabular-nums">TTL: {tier.ttl}s</span>
                           )}
                        </div>
-                       <div className="h-4 bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
+                       <div className={`h-4 rounded-full overflow-hidden border transition-all relative ${servingTier === tier.id ? 'border-success/50 ring-2 ring-success/20' : 'border-white/5'}`}>
                           <motion.div
                             animate={{ 
                                width: tier.hasData ? (tier.ttl === -1 ? '100%' : `${(tier.ttl / (tier.id === 'L1' ? 60 : 300)) * 100}%`) : '0%',
-                               backgroundColor: tier.hasData ? (tier.ttl === -1 ? '#3b82f6' : '#6366f1') : 'rgba(255,255,255,0.05)'
+                               backgroundColor: servingTier === tier.id ? '#22c55e' : (tier.hasData ? (tier.ttl === -1 ? '#3b82f6' : '#6366f1') : 'rgba(255,255,255,0.05)')
                             }}
                             className="h-full shadow-[0_0_15px_rgba(99,102,241,0.3)]"
                           />
@@ -241,6 +250,12 @@ export function CacheInvalidationDemo() {
                              <div className="absolute inset-0 flex items-center justify-center">
                                 <span className="text-[8px] font-black text-muted/30 uppercase tracking-widest italic">Invalidated</span>
                              </div>
+                          )}
+                          {servingTier === tier.id && (
+                             <motion.div 
+                               initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0] }}
+                               className="absolute inset-0 bg-white/20"
+                             />
                           )}
                        </div>
                     </div>
