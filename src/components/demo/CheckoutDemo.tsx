@@ -126,6 +126,15 @@ export function CheckoutDemo() {
     }
   };
 
+  const resetSimulation = () => {
+    setIsProcessing(false);
+    setLocalEvents([]);
+    setSagaState('Initial');
+    setActiveSagaId(null);
+    setOrderId(null);
+    setRaceLanes(null);
+  };
+
   const formatTime = (d: Date) =>
     d.toLocaleTimeString('en-GB', {
       hour: '2-digit',
@@ -151,6 +160,7 @@ export function CheckoutDemo() {
           scenario={scenario}
           setScenario={setScenario}
           runSimulation={runSimulation}
+          resetSimulation={resetSimulation}
           orderId={orderId}
         />
       )}
@@ -168,6 +178,7 @@ interface SingleSagaViewProps {
   scenario: Scenario;
   setScenario: (s: Scenario) => void;
   runSimulation: () => void;
+  resetSimulation: () => void;
   orderId: string | null;
 }
 
@@ -185,8 +196,11 @@ function SingleSagaView({
   scenario,
   setScenario,
   runSimulation,
+  resetSimulation,
   orderId,
 }: SingleSagaViewProps) {
+  const isCompleted = sagaState === 'completed' || sagaState === 'finalized';
+
   const getButtonContent = () => {
     if (!isProcessing && sagaState === 'Initial') {
       return CHECKOUT_COPY.PAY_IDLE;
@@ -248,65 +262,79 @@ function SingleSagaView({
           {CHECKOUT_COPY.ORDER_HEADER}
         </h3>
 
-        <div className="surface p-6 shadow-2xl space-y-8">
-          {/* Scenario picker inside cart context */}
-          <div
-            role="radiogroup"
-            aria-label="Saga scenario"
-            className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
-          >
-            {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
-              <button
-                key={s}
-                onClick={() => setScenario(s)}
-                disabled={isProcessing}
-                role="radio"
-                aria-checked={scenario === s}
-                className={`focus-ring py-2 px-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
-                  scenario === s
-                    ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-muted hover:text-secondary hover:bg-white/5'
-                } disabled:opacity-30`}
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            {isCompleted ? (
+              <ConfirmationCard key="receipt" orderId={orderId} onReset={resetSimulation} />
+            ) : (
+              <motion.div
+                key="cart"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="surface p-6 shadow-2xl space-y-8"
               >
-                {CHECKOUT_COPY.SCENARIO_LABELS[s]}
-              </button>
-            ))}
-          </div>
+                {/* Scenario picker inside cart context */}
+                <div
+                  role="radiogroup"
+                  aria-label="Saga scenario"
+                  className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
+                >
+                  {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setScenario(s)}
+                      disabled={isProcessing}
+                      role="radio"
+                      aria-checked={scenario === s}
+                      className={`focus-ring py-2 px-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
+                        scenario === s
+                          ? 'bg-white/10 text-white shadow-sm'
+                          : 'text-muted hover:text-secondary hover:bg-white/5'
+                      } disabled:opacity-30`}
+                    >
+                      {CHECKOUT_COPY.SCENARIO_LABELS[s]}
+                    </button>
+                  ))}
+                </div>
 
-          {/* Cart Item */}
-          <div className="flex gap-4">
-            <div className="w-[44px] h-[44px] bg-white/5 rounded flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start">
-                <h4 className="text-sm font-bold text-primary">Demo Widget</h4>
-                <span className="text-sm font-black tabular-nums">£39.99</span>
-              </div>
-              <p className="text-[10px] text-muted uppercase tracking-widest mt-1">Qty 1</p>
-            </div>
-          </div>
+                {/* Cart Item */}
+                <div className="flex gap-4">
+                  <div className="w-[44px] h-[44px] bg-white/5 rounded flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-sm font-bold text-primary">Demo Widget</h4>
+                      <span className="text-sm font-black tabular-nums">£39.99</span>
+                    </div>
+                    <p className="text-[10px] text-muted uppercase tracking-widest mt-1">Qty 1</p>
+                  </div>
+                </div>
 
-          <div className="space-y-2 border-t border-white/5 pt-6">
-            <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
-              <span>Subtotal</span>
-              <span className="tabular-nums">£39.99</span>
-            </div>
-            <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
-              <span>Tax</span>
-              <span className="tabular-nums">£0.00</span>
-            </div>
-            <div className="flex justify-between items-baseline pt-4">
-              <span className="text-xs font-bold text-primary uppercase tracking-widest">Total</span>
-              <span className="text-3xl font-black tabular-nums text-primary">£39.99</span>
-            </div>
-          </div>
+                <div className="space-y-2 border-t border-white/5 pt-6">
+                  <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
+                    <span>Subtotal</span>
+                    <span className="tabular-nums">£39.99</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-muted uppercase tracking-widest">
+                    <span>Tax</span>
+                    <span className="tabular-nums">£0.00</span>
+                  </div>
+                  <div className="flex justify-between items-baseline pt-4">
+                    <span className="text-xs font-bold text-primary uppercase tracking-widest">Total</span>
+                    <span className="text-3xl font-black tabular-nums text-primary">£39.99</span>
+                  </div>
+                </div>
 
-          <button
-            onClick={runSimulation}
-            disabled={isProcessing}
-            className={`w-full py-5 font-black text-sm uppercase rounded-xl transition-all shadow-xl disabled:opacity-20 flex items-center justify-center gap-3 ${getButtonTone()}`}
-          >
-            {getButtonContent()}
-          </button>
+                <button
+                  onClick={runSimulation}
+                  disabled={isProcessing}
+                  className={`w-full py-5 font-black text-sm uppercase rounded-xl transition-all shadow-xl disabled:opacity-20 flex items-center justify-center gap-3 ${getButtonTone()}`}
+                >
+                  {getButtonContent()}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -386,6 +414,49 @@ function SingleSagaView({
         </div>
       </div>
     </div>
+  );
+}
+
+function ConfirmationCard({ orderId, onReset }: { orderId: string | null; onReset: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="surface p-8 shadow-2xl text-center space-y-6 border border-success/20 bg-success/[0.02]"
+    >
+      <div className="flex justify-center">
+        <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center">
+          <Check className="w-8 h-8 text-success" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-xl font-black text-primary uppercase tracking-tight">{CHECKOUT_COPY.RECEIPT_HEADER}</h3>
+        <p className="text-sm font-black tabular-nums text-success">#{formatOrderId(orderId)}</p>
+      </div>
+
+      <p className="text-sm text-muted leading-relaxed">{CHECKOUT_COPY.RECEIPT_EMAIL_LINE}</p>
+
+      <div className="pt-4 space-y-6">
+        <a
+          href="#"
+          onClick={(e) => e.preventDefault()}
+          aria-disabled="true"
+          title={CHECKOUT_COPY.RECEIPT_VIEW_TOOLTIP}
+          className="block text-xs font-bold text-accent hover:underline decoration-accent/30 underline-offset-4 cursor-not-allowed"
+        >
+          {CHECKOUT_COPY.RECEIPT_VIEW_LINK}
+        </a>
+
+        <button
+          onClick={onReset}
+          className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-colors border-t border-white/5 pt-6 w-full"
+        >
+          {CHECKOUT_COPY.RUN_ANOTHER}
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
