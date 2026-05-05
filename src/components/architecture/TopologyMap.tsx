@@ -72,7 +72,7 @@ export const TopologyMap: React.FC = () => {
           <foreignObject x="350" y="180" width="100" height="100">
             <NodeUI 
               icon={<Share2 className="w-6 h-6" />} 
-              label="Message_Bus" 
+              label="Message bus" 
               color="purple-400" 
               isPulsing={pulsingNode === 'mq' || pulsingNode === 'bus'} 
             />
@@ -113,7 +113,7 @@ export const TopologyMap: React.FC = () => {
       <div className="absolute bottom-8 right-8 flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-muted/60 font-mono">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-          <span>Telemetric_Overlay_Active</span>
+          <span>Telemetry active</span>
         </div>
         <span>// Region: {CLUSTER_LABEL}</span>
       </div>

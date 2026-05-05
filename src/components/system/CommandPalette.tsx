@@ -5,8 +5,6 @@ import {
   ArrowRight,
   ExternalLink,
   Download,
-  Sun,
-  Moon,
   Sparkles,
   Layers,
 } from 'lucide-react';
@@ -34,21 +32,36 @@ interface PaletteItem {
   shortcut?: string;
   Icon: LucideIcon | typeof GithubIcon;
   run: Action;
-  group: 'Demos' | 'Deep-dives' | 'Navigate' | 'Theme' | 'Links';
+  group: 'Demos' | 'Deep-dives' | 'Navigate' | 'Links';
   keywords?: string;
 }
 
-function setTheme(next: 'light' | 'dark') {
-  const root = document.documentElement;
-  root.classList.toggle('light', next === 'light');
-  root.dataset.theme = next;
-  try { localStorage.setItem('theme', next); } catch {}
-}
+
+const PALETTE_HINT_KEY = 'ha_palette_hint_dismissed';
 
 export function CommandPalette({ deepDives }: Props) {
   const [open, setOpen] = useState(false);
+  // Show a one-time hint near the floating button so first-time visitors
+  // discover the ⌘K shortcut. Dismissed on first palette open or explicit X.
+  const [hintVisible, setHintVisible] = useState(false);
 
   const close = useCallback(() => setOpen(false), []);
+
+  const dismissHint = useCallback(() => {
+    setHintVisible(false);
+    try { localStorage.setItem(PALETTE_HINT_KEY, '1'); } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem(PALETTE_HINT_KEY) === '1';
+      if (!dismissed) {
+        // Delay so the hint appears after the page has settled, not at first paint.
+        const t = window.setTimeout(() => setHintVisible(true), 4000);
+        return () => window.clearTimeout(t);
+      }
+    } catch {}
+  }, []);
 
   // ⌘K / ctrl+K toggles. ESC closes (cmdk handles internally too).
   useEffect(() => {
@@ -56,11 +69,12 @@ export function CommandPalette({ deepDives }: Props) {
       if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((o) => !o);
+        dismissHint();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [dismissHint]);
 
   // Lock body scroll while open.
   useEffect(() => {
@@ -112,8 +126,9 @@ export function CommandPalette({ deepDives }: Props) {
     { id: 'nav:about',     label: 'About',       Icon: ArrowRight, run: go('#about'),      group: 'Navigate' },
     { id: 'nav:contact',   label: 'Get in touch (email)', Icon: ArrowRight, run: go('mailto:hello@chidionyema.dev'), group: 'Navigate' },
     // Theme
-    { id: 'theme:light', label: 'Switch to light mode', Icon: Sun,  run: () => { setTheme('light'); close(); }, group: 'Theme' },
-    { id: 'theme:dark',  label: 'Switch to dark mode',  Icon: Moon, run: () => { setTheme('dark');  close(); }, group: 'Theme' },
+    // Light mode is deprecated until the design system has full token parity
+    // (see UI_AND_DEMO_PLAN.md T5.1). The toggle was producing low-contrast
+    // text and invisible CTAs on the light theme — worse than no toggle.
     // Links
     { id: 'link:github',   label: 'View source on GitHub', Icon: GithubIcon, run: go('https://github.com/chidionyema/haworks'), group: 'Links' },
     { id: 'link:linkedin', label: 'LinkedIn',              Icon: ExternalLink, run: go('https://linkedin.com/in/chidionyema'), group: 'Links' },
@@ -131,7 +146,7 @@ export function CommandPalette({ deepDives }: Props) {
       {/* Floating launcher button — small, in the corner, keyboard-discoverable. */}
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => { setOpen(true); dismissHint(); }}
         aria-label="Open command palette (⌘K)"
         className="
           fixed bottom-5 right-5 z-40
@@ -146,6 +161,25 @@ export function CommandPalette({ deepDives }: Props) {
         <span>Search</span>
         <kbd className="px-1.5 py-0.5 rounded bg-base/70 text-muted text-[10px]">⌘K</kbd>
       </button>
+
+      {/* First-visit hint pointing at the search button. Auto-dismisses on
+          first palette open or explicit X. localStorage-gated so it never
+          re-appears for the same visitor. */}
+      {hintVisible && !open && (
+        <div className="fixed bottom-20 right-5 z-40 max-w-[260px] glass border border-accent/30 rounded-lg p-3 shadow-2xl text-xs flex items-start gap-3 animate-fade-in">
+          <Search className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+          <div className="flex-1 leading-relaxed text-secondary">
+            Jump to any demo or article fast — press <kbd className="px-1 py-0.5 rounded bg-base/70 text-muted text-[10px] font-mono">⌘K</kbd> from anywhere on the page.
+          </div>
+          <button
+            onClick={dismissHint}
+            aria-label="Dismiss hint"
+            className="text-muted hover:text-primary transition-colors -mr-1 -mt-1 p-1"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {open && (
         <div

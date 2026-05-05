@@ -76,21 +76,21 @@ export function RateLimiterDemo() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Gauge className="w-4 h-4 text-accent" />
-            Gateway_Traffic_Control
+            Rate limiter
           </h3>
         </div>
 
         <div className="surface p-8 shadow-2xl relative overflow-hidden space-y-10">
            <div className="flex items-center justify-between">
               <div className="space-y-1">
-                 <div className="text-lg font-bold text-primary">Token_Bucket_Reservoir</div>
+                 <div className="text-lg font-bold text-primary">Token bucket</div>
                  <div className="text-xs text-muted font-medium opacity-60">Redis-backed Sliding Window Throttling</div>
               </div>
               <div className="text-right">
                  <div className={`text-4xl font-mono font-black ${tokens > 2 ? 'text-primary' : 'text-error animate-pulse'} tabular-nums leading-none mb-1`}>
                     {tokens.toString().padStart(2, '0')}
                  </div>
-                 <div className="text-[10px] uppercase font-bold text-muted tracking-widest">Available_TKNS</div>
+                 <div className="text-[10px] uppercase font-bold text-muted tracking-widest">Tokens available</div>
               </div>
            </div>
 
@@ -141,7 +141,7 @@ export function RateLimiterDemo() {
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-error text-[11px] font-black uppercase tracking-widest">
                            <AlertCircle className="w-4 h-4" />
-                           HTTP_429_Rate_Limit_Exceeded
+                           HTTP 429 — rate limit exceeded
                         </div>
                         <span className="font-mono text-sm font-black text-error tabular-nums">{retryAfter}s</span>
                      </div>
@@ -164,7 +164,7 @@ export function RateLimiterDemo() {
               <TrendingUp className="w-6 h-6 text-success opacity-40" />
               <div className="text-right">
                  <div className="text-2xl font-black text-primary tabular-nums tracking-tighter leading-none">{localRequests.filter(r => r.status === 'allowed').length}</div>
-                 <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-1.5 opacity-60">Throughput_OK</div>
+                 <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-1.5 opacity-60">Throughput OK</div>
               </div>
            </div>
            <div className="surface p-5 flex items-center justify-between">
@@ -180,7 +180,7 @@ export function RateLimiterDemo() {
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <BarChart3 className="w-4 h-4 text-muted" />
-          Ingress_Audit_Telemetry
+          Request log
         </h3>
 
         <div className="surface shadow-2xl h-[480px] flex flex-col overflow-hidden">
@@ -204,7 +204,7 @@ export function RateLimiterDemo() {
                  <tbody>
                    <AnimatePresence initial={false}>
                      {localRequests.length === 0 ? (
-                       <tr><td colSpan={3} className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black">No_Ingress_Traffic_Detected</td></tr>
+                       <tr><td colSpan={3} className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black">No traffic yet — fire some requests.</td></tr>
                      ) : (
                        localRequests.map((req) => (
                          <motion.tr
@@ -231,7 +231,7 @@ export function RateLimiterDemo() {
            
            <div className="p-4 glass-subtle border-t border-white/5">
               <p className="text-[10px] text-muted/60 leading-relaxed font-mono uppercase tracking-tighter text-center">
-                Kernel: Sliding_Window_L2 // Provider: Redis_Cluster // Region: {CLUSTER_LABEL}
+                Kernel: sliding window // Provider: Redis cluster // Region: {CLUSTER_LABEL}
               </p>
            </div>
         </div>

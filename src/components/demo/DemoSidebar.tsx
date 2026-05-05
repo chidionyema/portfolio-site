@@ -22,47 +22,63 @@ export interface DemoGroup {
 export const demoGroups: DemoGroup[] = [
   {
     id: 'data',
-    label: 'Reliable_Transactions',
+    label: 'Reliable transactions',
     demos: [
-      { id: 'checkout',    label: 'Distributed_Saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Stops orders from being half-charged', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc' },
-      { id: 'events',      label: 'Transactional_Outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Never silently drops a published event', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox' },
-      { id: 'concurrency', label: 'Optimistic_Locking',  desc: 'Pre-emptive conflict detection in Postgres',   valueProp: 'Two edits never overwrite each other', Icon: DemoIcon.concurrency },
+      { id: 'checkout',    label: 'Distributed saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Stops orders from being half-charged', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc' },
+      { id: 'events',      label: 'Transactional outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Never silently drops a published event', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox' },
+      { id: 'concurrency', label: 'Optimistic locking',  desc: 'Pre-emptive conflict detection in Postgres',   valueProp: 'Two edits never overwrite each other', Icon: DemoIcon.concurrency },
     ],
   },
   {
     id: 'resilience',
-    label: 'Resilience_Under_Load',
+    label: 'Resilience under load',
     demos: [
-      { id: 'circuit',     label: 'Circuit_Breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Stops a slow dep from taking everyone down', Icon: DemoIcon.circuit },
-      { id: 'idempotency', label: 'Deterministic_Identity',     desc: 'Safe retries with Redis-backed identity',   valueProp: 'Safe to retry — never charges twice', Icon: DemoIcon.idempotency },
-      { id: 'ratelimit',   label: 'Traffic_Shaping',      desc: 'Token-bucket throttling and QoS',       valueProp: 'One bad client cannot starve everyone else', Icon: DemoIcon.ratelimit },
+      { id: 'circuit',     label: 'Circuit breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Stops a slow dep from taking everyone down', Icon: DemoIcon.circuit },
+      { id: 'idempotency', label: 'Idempotency keys',     desc: 'Safe retries with Redis-backed identity',   valueProp: 'Safe to retry — never charges twice', Icon: DemoIcon.idempotency },
+      { id: 'ratelimit',   label: 'Rate limiting',      desc: 'Token-bucket throttling and QoS',       valueProp: 'One bad client cannot starve everyone else', Icon: DemoIcon.ratelimit },
     ],
   },
   {
     id: 'caching',
-    label: 'Cache_Coherence',
+    label: 'Cache coherence',
     demos: [
-      { id: 'stampede', label: 'Multi_Tier_Cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'A popular cache key never floods the DB', Icon: DemoIcon.stampede },
-      { id: 'cache',    label: 'PubSub_Invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Updates show up everywhere within ms', Icon: DemoIcon.cache },
+      { id: 'stampede', label: 'Multi-tier cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'A popular cache key never floods the DB', Icon: DemoIcon.stampede },
+      { id: 'cache',    label: 'Pub/sub invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Updates show up everywhere within ms', Icon: DemoIcon.cache },
     ],
   },
   {
     id: 'secrets',
-    label: 'Secret_Lifecycle',
+    label: 'Secret lifecycle',
     demos: [
-      { id: 'vault', label: 'Dynamic_Credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Database passwords rotate with no downtime', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
+      { id: 'vault', label: 'Dynamic credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Database passwords rotate with no downtime', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
     ],
   },
   {
     id: 'observability',
     label: 'Observability',
     demos: [
-      { id: 'tracing', label: 'Distributed_Tracing', desc: 'Spans across 6 services rendered as a flame graph', valueProp: 'Follow one request across every service', Icon: DemoIcon.tracing },
+      { id: 'tracing', label: 'Distributed tracing', desc: 'Spans across 6 services rendered as a flame graph', valueProp: 'Follow one request across every service', Icon: DemoIcon.tracing },
     ],
   },
 ];
 
 export const allDemos: DemoMeta[] = demoGroups.flatMap((g) => g.demos);
+
+// Recommended order in which a first-time visitor sees the demos. Sequenced
+// from simplest concept to most complex so the "Try next" CTA in the hub
+// builds understanding rather than throwing the user at the saga first.
+export const DEMO_LEARNING_ORDER: string[] = [
+  'idempotency',
+  'ratelimit',
+  'circuit',
+  'stampede',
+  'cache',
+  'concurrency',
+  'events',
+  'checkout',
+  'vault',
+  'tracing',
+];
 
 export function findDemo(id: string): DemoMeta {
   return allDemos.find((d) => d.id === id) ?? allDemos[0];
@@ -70,6 +86,12 @@ export function findDemo(id: string): DemoMeta {
 
 export function findGroupOf(id: string): DemoGroup {
   return demoGroups.find((g) => g.demos.some((d) => d.id === id)) ?? demoGroups[0];
+}
+
+export function findNextDemo(id: string): DemoMeta | null {
+  const idx = DEMO_LEARNING_ORDER.indexOf(id);
+  if (idx === -1 || idx >= DEMO_LEARNING_ORDER.length - 1) return null;
+  return findDemo(DEMO_LEARNING_ORDER[idx + 1]);
 }
 
 interface SidebarProps {

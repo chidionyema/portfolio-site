@@ -46,7 +46,7 @@ export const LiveEnvironmentToast: React.FC = () => {
               
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">System_Online</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">System online</h4>
                   <button onClick={dismiss} className="text-muted hover:text-primary transition-colors">
                     <X className="w-3 h-3" />
                   </button>
@@ -59,7 +59,7 @@ export const LiveEnvironmentToast: React.FC = () => {
 
                 <div className="pt-2 flex items-center gap-2">
                    <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
-                   <span className="text-[9px] font-black uppercase tracking-widest text-muted">Ready_For_Interaction</span>
+                   <span className="text-[9px] font-black uppercase tracking-widest text-muted">Ready</span>
                 </div>
               </div>
             </div>

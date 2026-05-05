@@ -23,8 +23,8 @@ interface TraceResult {
 }
 
 const SCENARIO_LABEL: Record<Scenario, string> = {
-  happyPath: 'Happy_Path',
-  withFailure: 'Stripe_Failure',
+  happyPath: 'Happy path',
+  withFailure: 'Stripe failure',
 };
 
 const SCENARIO_HINT: Record<Scenario, string> = {
@@ -77,7 +77,7 @@ export function DistributedTracingDemo() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Telescope className="w-4 h-4 text-accent" />
-            Cross_Service_Trace
+            Cross-service trace
           </h3>
           <span className="text-[10px] font-mono text-muted uppercase tracking-widest">
             6 services · 7 spans
@@ -132,7 +132,7 @@ export function DistributedTracingDemo() {
             className="focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-30 flex items-center justify-center gap-3"
           >
             {isRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
-            {isRunning ? 'Recording_Spans...' : 'Start_Trace'}
+            {isRunning ? 'Recording spans…' : 'Start trace'}
           </button>
 
           <AnimatePresence>
@@ -145,10 +145,10 @@ export function DistributedTracingDemo() {
                 <GitBranch className="w-4 h-4 text-success" />
                 <div className="flex-1">
                   <div className="text-[10px] font-black text-success uppercase tracking-[0.25em]">
-                    Trace_Recorded
+                    Trace recorded
                   </div>
                   <div className="text-[10px] text-muted/80 mt-1">
-                    Open the <span className="text-primary">Distributed_Trace</span> disclosure below to see the flame graph.
+                    Open the <span className="text-primary">distributed trace</span> disclosure below to see the flame graph.
                   </div>
                 </div>
                 <span className="text-[9px] font-mono text-muted/60">
@@ -163,19 +163,19 @@ export function DistributedTracingDemo() {
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <Activity className="w-4 h-4 text-muted" />
-          Trace_History
+          Trace history
         </h3>
 
         <div className="surface shadow-2xl h-[480px] flex flex-col overflow-hidden font-mono">
           <div className="px-6 py-4 border-b border-white/5 text-[10px] font-black text-muted uppercase tracking-[0.2em] flex items-center justify-between">
-            <span>Recent_Traces</span>
+            <span>Recent traces</span>
             <span className="text-success/60">{history.length} entries</span>
           </div>
           <div className="flex-1 overflow-y-auto">
             <AnimatePresence initial={false}>
               {history.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-muted/30 text-[10px] font-black uppercase tracking-[0.4em] italic">
-                  No_Traces_Recorded
+                <div className="h-full flex items-center justify-center text-muted/40 text-[11px] italic">
+                  Start a trace to see entries here.
                 </div>
               ) : (
                 <ul className="divide-y divide-white/[0.03]">

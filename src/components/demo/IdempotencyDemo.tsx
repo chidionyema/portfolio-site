@@ -202,7 +202,7 @@ export function IdempotencyDemo() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Fingerprint className="w-4 h-4 text-accent" />
-            Deterministic_Identity_Subsystem
+            Idempotency keys
           </h3>
         </div>
 
@@ -258,7 +258,7 @@ export function IdempotencyDemo() {
               className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
-              Send_Request
+              Send request
             </button>
             <button
               onClick={fireRace}
@@ -268,7 +268,7 @@ export function IdempotencyDemo() {
               className="focus-ring py-4 bg-warning/10 hover:bg-warning/15 border border-warning/30 text-warning font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isRacing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Swords className="w-4 h-4" />}
-              {isRacing ? 'Racing...' : 'Fire_Race'}
+              {isRacing ? 'Racing…' : 'Fire 4 in parallel'}
             </button>
           </div>
 
@@ -277,7 +277,7 @@ export function IdempotencyDemo() {
               <div className="flex items-center gap-3">
                 <Database className="w-4 h-4 text-muted/60" />
                 <span className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">
-                  Distributed_Key_Cache
+                  Key cache
                 </span>
               </div>
               <AnimatePresence>
@@ -287,7 +287,7 @@ export function IdempotencyDemo() {
                     animate={{ opacity: 1 }}
                     className="text-[10px] font-black text-success tracking-widest"
                   >
-                    KEY_ACTIVE
+                    Key active
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -313,8 +313,8 @@ export function IdempotencyDemo() {
                   </div>
                 </motion.div>
               ) : (
-                <div className="text-center text-[10px] text-muted/20 font-black uppercase tracking-[0.6em] italic">
-                  Cache_Register_Empty
+                <div className="text-center text-[11px] text-muted/40 italic">
+                  Cache empty — first request will create a new entry.
                 </div>
               )}
             </div>
@@ -329,7 +329,7 @@ export function IdempotencyDemo() {
                 className="surface p-5 border border-warning/20 space-y-4"
               >
                 <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.25em]">
-                  <span className="text-warning">Race_Outcome // {lastRace.count} concurrent</span>
+                  <span className="text-warning">Race outcome — {lastRace.count} concurrent</span>
                   <span className="text-muted">key {lastRace.key}</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -391,12 +391,12 @@ export function IdempotencyDemo() {
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <Server className="w-4 h-4 text-muted" />
-          Production_Ledger_Audit
+          Audit log
         </h3>
 
         <div className="surface shadow-2xl h-[620px] flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-            <span className="text-muted/60 tracking-widest uppercase font-black">Cluster_Ingress_History</span>
+            <span className="text-muted/60 tracking-widest uppercase font-black">Recent requests</span>
             <Fingerprint className="w-4 h-4 text-accent/20" />
           </div>
 
@@ -417,7 +417,7 @@ export function IdempotencyDemo() {
                         colSpan={3}
                         className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black"
                       >
-                        Null_Transaction_Set
+                        Send a request to start.
                       </td>
                     </tr>
                   ) : (
@@ -463,15 +463,15 @@ function ActionLabel({ status }: { status: LogStatus }) {
       : 'text-error';
   const label =
     status === 'created'
-      ? 'Commit_New'
+      ? 'Commit new'
       : status === 'replay-cached'
-      ? 'Replay_Cached'
+      ? 'Replay (cached)'
       : status === 'replay-after-expiry'
-      ? 'Replay_After_Expiry'
+      ? 'Replay after expiry'
       : status === 'race-winner'
-      ? 'Race_Winner'
+      ? 'Race winner'
       : status === 'race-loser'
-      ? 'Race_Loser'
+      ? 'Race loser'
       : 'Error';
   return <span className={`font-black uppercase tracking-tighter ${tone}`}>{label}</span>;
 }
@@ -486,9 +486,9 @@ function StateBadge({ req }: { req: RequestLog }) {
     ? 'border-success/30 bg-success/10 text-success'
     : 'border-error/30 bg-error/10 text-error';
   const label = isCacheHit
-    ? 'Cache_Hit'
+    ? 'Cache hit'
     : isCommit
-    ? 'DB_Write'
+    ? 'DB write'
     : 'Failure';
 
   return (

@@ -117,7 +117,7 @@ export function VaultRotationDemo() {
          <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Shield className="w-4 h-4 text-accent" />
-            Security_Infrastructure_Vault
+            Active credential
           </h3>
         </div>
 
@@ -128,7 +128,7 @@ export function VaultRotationDemo() {
                    <Key className="w-6 h-6" />
                 </div>
                 <div>
-                   <h4 className="text-lg font-bold text-primary leading-none mb-1">Dynamic_Postgres_Role</h4>
+                   <h4 className="text-lg font-bold text-primary leading-none mb-1">Dynamic Postgres role</h4>
                    <p className="text-[10px] text-muted font-mono uppercase tracking-widest opacity-60">HashiCorp Vault Engine</p>
                 </div>
              </div>
@@ -144,14 +144,14 @@ export function VaultRotationDemo() {
             <div className="space-y-8 relative z-10">
               <div className="grid gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Credential_Username</label>
+                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Username</label>
                   <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex items-center justify-between font-mono">
                      <span className="text-accent-light font-bold">{credential.username}</span>
                      {isRotating && <RefreshCw className="w-4 h-4 text-warning animate-spin" />}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Access_Token</label>
+                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Access token</label>
                   <div className="flex gap-2">
                     <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex-1 text-muted tracking-[0.4em] font-black font-mono overflow-hidden truncate">
                       {showPassword ? 'sha256:a9f2b48c1e...' : '••••••••••••••••'}
@@ -169,7 +169,7 @@ export function VaultRotationDemo() {
               <div className="space-y-3">
                  <div className="flex justify-between text-[9px] font-black text-muted/60 uppercase tracking-widest">
                     <span>Provisioned</span>
-                    <span className="text-warning/60">Rotation_Threshold</span>
+                    <span className="text-warning/60">Rotation threshold</span>
                  </div>
                  <div className="h-2 bg-white/5 rounded-full overflow-hidden relative border border-white/5">
                     <div className="absolute top-0 bottom-0 w-px bg-warning/40 z-10" style={{ left: '80%' }} />
@@ -186,13 +186,13 @@ export function VaultRotationDemo() {
                 disabled={isRotating || !isConnected}
                 className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] text-muted hover:text-primary hover:bg-white/10 transition-all disabled:opacity-20"
               >
-                 Force_Manual_Rotation
+                 Force rotation
               </button>
             </div>
           ) : (
             <div className="py-24 text-center">
                <div className="inline-block p-4 rounded-full border-2 border-white/5 border-t-accent animate-spin mb-6" />
-               <p className="text-[10px] font-mono text-muted uppercase tracking-[0.4em] animate-pulse">Initializing_Secure_Session...</p>
+               <p className="text-[10px] font-mono text-muted uppercase tracking-[0.4em] animate-pulse">Initializing secure session…</p>
             </div>
           )}
         </div>
@@ -202,13 +202,13 @@ export function VaultRotationDemo() {
       <div className="space-y-6">
          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
            <Activity className="w-4 h-4 text-accent" />
-           Live_Identity_Audit
+           Audit log
          </h3>
 
         <div className="surface p-8 shadow-2xl space-y-8">
            <div className="space-y-4 font-mono">
               <div className="text-[10px] font-black text-muted uppercase tracking-widest flex items-center justify-between">
-                 <span>Ingress_Traffic_Volume</span>
+                 <span>Ingress traffic</span>
                  <div className="flex gap-4 text-[8px] font-black">
                     <span className="flex items-center gap-1.5 text-success/60"><div className="w-1.5 h-1.5 bg-success rounded-full" /> 200_OK</span>
                     <span className="flex items-center gap-1.5 text-error/60"><div className="w-1.5 h-1.5 bg-error rounded-full" /> 403_DENIED</span>
@@ -224,7 +224,7 @@ export function VaultRotationDemo() {
            <div className="glass-subtle p-6 flex flex-col h-[230px] overflow-hidden">
               <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
                  <ArrowRightLeft className="w-4 h-4 text-muted/60" />
-                 <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">System_Auth_Events</span>
+                 <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Auth events</span>
               </div>
               <div className="flex-1 overflow-y-auto space-y-4 font-mono">
                  <AnimatePresence initial={false}>

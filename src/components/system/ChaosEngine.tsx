@@ -27,6 +27,15 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
     onStateChange(next);
   };
 
+  // Auto-reset chaos when the panel closes — the explainer above promises it,
+  // and it prevents the next visitor from inheriting somebody else's mess.
+  const closeAndReset = () => {
+    const reset: ChaosState = { latencyMs: 0, brokerDown: false, serviceFaulty: false };
+    setState(reset);
+    onStateChange(reset);
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -34,7 +43,7 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
           {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={closeAndReset}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
           />
           
@@ -46,20 +55,27 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 h-full w-full max-w-sm bg-base border-l border-white/10 z-[101] shadow-2xl p-8 flex flex-col"
           >
-            <div className="flex items-center justify-between mb-12">
+            <div className="flex items-center justify-between mb-6">
                <div className="flex items-center gap-3">
                   <div className="p-2 bg-error/10 border border-error/20 rounded-lg text-error">
                      <ShieldAlert className="w-5 h-5" />
                   </div>
                   <div>
-                     <h3 className="font-mono text-sm font-black uppercase tracking-[0.2em] text-primary leading-none">Chaos_Engine_v1</h3>
-                     <span className="text-[9px] font-mono text-muted uppercase tracking-widest">Fault_Injection_Controller</span>
+                     <h3 className="font-mono text-sm font-black uppercase tracking-[0.2em] text-primary leading-none">Chaos engine</h3>
+                     <span className="text-[9px] font-mono text-muted uppercase tracking-widest">Inject faults into the active demo</span>
                   </div>
                </div>
-               <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-muted">
+               <button onClick={closeAndReset} aria-label="Close chaos engine and reset all faults" className="focus-ring p-2 hover:bg-white/5 rounded-full transition-colors text-muted">
                   <X className="w-5 h-5" />
                </button>
             </div>
+
+            <p className="text-[11px] text-muted/80 leading-relaxed font-mono mb-10 border-l-2 border-warning/30 pl-3">
+              Toggles below affect the demo currently active behind this panel.
+              Faults stay injected until you flip them off or close this panel —
+              all toggles auto-reset on close so you cannot leave a demo silently
+              broken for the next visitor.
+            </p>
 
             <div className="space-y-10 flex-1">
                {/* Latency Injection */}
@@ -67,7 +83,7 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
                   <div className="flex items-center justify-between font-mono">
                      <label className="text-[10px] font-black uppercase tracking-widest text-secondary flex items-center gap-2">
                         <Timer className="w-4 h-4 text-warning" />
-                        Latency_Injection
+                        Latency injection
                      </label>
                      <span className="text-xs font-bold text-primary tabular-nums">+{state.latencyMs}ms</span>
                   </div>
@@ -85,7 +101,7 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
                   <div className="flex items-center justify-between">
                      <label className="text-[10px] font-black uppercase tracking-widest text-secondary flex items-center gap-2">
                         <ServerOff className="w-4 h-4 text-error" />
-                        Broker_Partition
+                        Broker partition
                      </label>
                      <button 
                        onClick={() => updateState({ brokerDown: !state.brokerDown })}
@@ -102,7 +118,7 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
                   <div className="flex items-center justify-between">
                      <label className="text-[10px] font-black uppercase tracking-widest text-secondary flex items-center gap-2">
                         <Activity className="w-4 h-4 text-accent" />
-                        Service_Degradation
+                        Service degradation
                      </label>
                      <button 
                        onClick={() => updateState({ serviceFaulty: !state.serviceFaulty })}
@@ -118,7 +134,7 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
             <div className="pt-8 border-t border-white/5">
                <div className="flex items-center gap-2 text-success font-mono text-[9px] font-black uppercase tracking-widest">
                   <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
-                  Telemetry_Relay: Active
+                  Telemetry relay active
                </div>
             </div>
           </motion.div>

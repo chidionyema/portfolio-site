@@ -137,7 +137,7 @@ export function ConcurrencyDemo() {
               disabled={isRacing || user.readVersion === null || isActive || !isConnected}
               className="py-3 px-4 glass-subtle text-[10px] font-black uppercase tracking-[0.2em] text-muted hover:text-success transition-all disabled:opacity-20"
             >
-              Put_Commit
+              Commit
             </button>
           </div>
 
@@ -146,17 +146,17 @@ export function ConcurrencyDemo() {
                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 font-mono">
                   <div className="p-5 bg-black/40 border border-white/5 rounded-2xl space-y-2 text-[11px]">
                      <div className="flex justify-between">
-                        <span className="text-muted/60 uppercase font-black tracking-widest">Snapshot_Value</span>
+                        <span className="text-muted/60 uppercase font-black tracking-widest">Snapshot value</span>
                         <span className="text-secondary font-bold">{user.readQuantity} units</span>
                      </div>
                      <div className="flex justify-between">
-                        <span className="text-muted/60 uppercase font-black tracking-widest">Snapshot_ETag</span>
+                        <span className="text-muted/60 uppercase font-black tracking-widest">ETag</span>
                         <span className="text-accent-light font-black">v{user.readVersion}</span>
                      </div>
                   </div>
                   
                   <div className="space-y-2">
-                     <label className="text-[10px] text-muted font-black uppercase tracking-[0.3em] ml-1">Draft_Update</label>
+                     <label className="text-[10px] text-muted font-black uppercase tracking-[0.3em] ml-1">New value</label>
                      <div className="relative">
                         <input
                            type="number"
@@ -193,7 +193,7 @@ export function ConcurrencyDemo() {
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
                <div className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-               <h3 className="text-xs font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Production_Cluster_State</h3>
+               <h3 className="text-xs font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Live inventory</h3>
             </div>
             <div className="flex items-baseline justify-center lg:justify-start gap-8">
               <div className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none">{inventory.quantity}</div>
@@ -210,14 +210,14 @@ export function ConcurrencyDemo() {
                className="py-5 px-8 bg-white text-black font-black text-sm uppercase rounded-2xl transition-all shadow-[0_20px_50px_rgba(255,255,255,0.1)] flex items-center justify-center gap-4 disabled:opacity-20"
             >
                {isRacing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
-               Trigger_Atomic_Race
+               Trigger race
             </button>
             <div className="flex items-center justify-between px-2 font-black uppercase tracking-widest text-[9px]">
                <div className="flex items-center gap-2.5">
                   <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-success shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-muted'}`} />
-                  <span className="text-muted">{isConnected ? 'Live_Sync_Active' : 'Offline_Snapshot'}</span>
+                  <span className="text-muted">{isConnected ? 'Live' : 'Offline'}</span>
                </div>
-               <button onClick={() => fetchInventory()} className="text-secondary hover:text-primary underline underline-offset-8 decoration-white/10">Synchronize_State</button>
+               <button onClick={() => fetchInventory()} className="text-secondary hover:text-primary underline underline-offset-8 decoration-white/10">Refresh</button>
             </div>
           </div>
         </div>
@@ -231,7 +231,7 @@ export function ConcurrencyDemo() {
       <div className="glass-subtle p-5 flex items-center gap-6 font-mono">
          <ShieldCheck className="w-6 h-6 text-success opacity-50 shrink-0" />
          <p className="text-[10px] text-muted font-bold leading-relaxed uppercase tracking-widest">
-            Entity_Framework_Core [OptimisticConcurrency] engine engaged. <br/>
+            Entity Framework Core optimistic concurrency engaged. <br/>
             The second commit will trigger a real [DbUpdateConcurrencyException] at the data layer.
          </p>
       </div>

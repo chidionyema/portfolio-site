@@ -31,12 +31,12 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-1">
                <span className="text-[10px] font-black text-primary uppercase tracking-widest leading-none">
-                 Production_Source_Code
+                 Source code
                </span>
                {snippet?.impact && (
                  <div className="flex items-center gap-1 px-1.5 py-0.5 bg-accent/20 rounded text-[7px] font-black text-accent-light uppercase animate-pulse">
                     <Zap className="w-2 h-2 fill-current" />
-                    Key_Pattern_Identified
+                    Key pattern
                  </div>
                )}
             </div>
@@ -106,7 +106,7 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
                 </pre>
                 {isHighlighted && (
                   <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover/line:opacity-100 transition-opacity">
-                    <span className="text-[7px] font-black uppercase text-accent-light tracking-tighter bg-accent/10 px-1 rounded">Crucial_Logic</span>
+                    <span className="text-[7px] font-black uppercase text-accent-light tracking-tighter bg-accent/10 px-1 rounded">Critical</span>
                   </div>
                 )}
               </div>

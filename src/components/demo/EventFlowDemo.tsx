@@ -147,7 +147,7 @@ export function EventFlowDemo() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Database className="w-4 h-4 text-accent" />
-            Transactional_Outbox_Engine
+            Transactional outbox
           </h3>
           <RelayPill relay={relay} />
         </div>
@@ -165,7 +165,7 @@ export function EventFlowDemo() {
               className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 fill-current" />}
-              Commit_Event
+              Commit event
             </button>
             <button
               onClick={toggleRelay}
@@ -189,7 +189,7 @@ export function EventFlowDemo() {
               ) : (
                 <Pause className="w-4 h-4" />
               )}
-              {relay.isPaused ? 'Resume_Relay' : 'Pause_Relay'}
+              {relay.isPaused ? 'Resume relay' : 'Pause relay'}
             </button>
           </div>
 
@@ -204,7 +204,7 @@ export function EventFlowDemo() {
                 <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
                 <div className="flex-1 space-y-1">
                   <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
-                    Relay_Paused
+                    Relay paused
                   </div>
                   <div className="text-[10px] text-muted/80 leading-relaxed">
                     The broker is unreachable. New events are buffered locally and
@@ -221,13 +221,13 @@ export function EventFlowDemo() {
 
           <div className="space-y-4">
             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
-              Database_Outbox_Audit
+              Outbox table
             </label>
             <div className="glass-subtle overflow-hidden min-h-[220px]">
               <table className="w-full text-[10px] border-collapse">
                 <thead className="bg-white/5 border-b border-white/5 text-muted/60 uppercase tracking-widest">
                   <tr>
-                    <th className="px-4 py-3 text-left font-black">Event_ID</th>
+                    <th className="px-4 py-3 text-left font-black">Event ID</th>
                     <th className="px-4 py-3 text-left font-black">Status</th>
                     <th className="px-4 py-3 text-right font-black">TS</th>
                   </tr>
@@ -240,7 +240,7 @@ export function EventFlowDemo() {
                           colSpan={3}
                           className="py-16 text-center text-muted/20 italic uppercase tracking-[0.4em]"
                         >
-                          Table_Buffer_Null
+                          No events yet — commit one to start.
                         </td>
                       </tr>
                     ) : (
@@ -272,7 +272,7 @@ export function EventFlowDemo() {
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <Share2 className="w-4 h-4 text-muted" />
-          Message_Broker_Cluster_LHR
+          Message broker
         </h3>
 
         <div className="surface shadow-2xl flex flex-col h-full overflow-hidden">
@@ -319,7 +319,7 @@ export function EventFlowDemo() {
 
             <div className="space-y-6 px-2">
               <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/30">
-                Exchange_Queue_Depth
+                Queue depth
               </label>
               <div className="space-y-6">
                 {brokerQueue.map((q) => (
@@ -392,7 +392,7 @@ function RelayPill({ relay }: { relay: RelayStatus }) {
           : 'border-success/30 bg-success/10 text-success'
       }`}
     >
-      Relay // {relay.isPaused ? `paused (${relay.queuedCount})` : 'live'}
+      Relay {relay.isPaused ? `paused (${relay.queuedCount})` : 'live'}
     </span>
   );
 }

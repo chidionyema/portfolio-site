@@ -44,7 +44,7 @@ export function StatusTray({ isOpen, onClose, snapshot }: StatusTrayProps) {
                   </div>
                   <div>
                     <h2 className="font-mono text-xl font-black uppercase tracking-tighter text-primary">
-                      Cluster_Health_Telemetry
+                      Cluster health
                     </h2>
                     <p className="text-[10px] font-mono text-muted uppercase tracking-[0.3em]">
                       Real-time service health & probe results
@@ -68,7 +68,7 @@ export function StatusTray({ isOpen, onClose, snapshot }: StatusTrayProps) {
                 <div className="surface p-6 space-y-4">
                   <div className="flex items-center gap-3 text-muted">
                     <Globe className="w-4 h-4" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Global_Infrastructure</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Infrastructure</span>
                   </div>
                   <div className="space-y-3 font-mono text-xs">
                     <div className="flex justify-between">

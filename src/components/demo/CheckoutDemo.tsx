@@ -31,10 +31,10 @@ interface LaneState {
 }
 
 const SCENARIO_LABEL: Record<Scenario, string> = {
-  success: 'Path_Happy',
-  stockFailure: 'Fault_Stock',
-  paymentFailure: 'Fault_Pay',
-  stockRace: 'Stock_Race',
+  success: 'Happy path',
+  stockFailure: 'Stock failure',
+  paymentFailure: 'Payment failure',
+  stockRace: 'Stock race',
 };
 
 export function CheckoutDemo() {
@@ -167,7 +167,7 @@ export function CheckoutDemo() {
         </div>
         <p className="text-[10px] text-muted/60 leading-relaxed mt-4 font-mono max-w-2xl">
           {scenario === 'stockRace'
-            ? 'Two carts will be created targeting the same product after stock is seeded to 5. Each cart asks for 3 units — one cart wins, the other compensates.'
+            ? 'Heads up: this scenario splits the panel below into two side-by-side lanes — one per cart. Both carts request 3 units of a product that has stock=5. Optimistic concurrency picks the winner; the loser compensates.'
             : 'A single checkout saga runs end-to-end. Stock and payment failures simulate compensation paths.'}
         </p>
       </div>
@@ -198,11 +198,11 @@ export function CheckoutDemo() {
           {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
           {isProcessing
             ? scenario === 'stockRace'
-              ? 'Race_Executing...'
-              : 'Saga_Executing...'
+              ? 'Running race…'
+              : 'Running saga…'
             : scenario === 'stockRace'
-            ? 'Dispatch_Race'
-            : 'Dispatch_New_Order'}
+            ? 'Run race'
+            : 'Dispatch order'}
         </button>
 
         <ChaosButton scenario="inventory-kill" label="Kill Inventory Mid-Saga" durationSeconds={10} />
@@ -241,7 +241,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Activity className="w-4 h-4 text-accent" />
-            Distributed_Saga_Orchestrator
+            Saga state machine
           </h3>
         </div>
 
@@ -265,7 +265,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
                   className="mt-6 pt-6 border-t border-white/5 flex items-center justify-center gap-3 text-warning font-black tracking-widest uppercase text-xs"
                 >
                   <RefreshCcw className="w-4 h-4 animate-spin-slow" />
-                  Rollback_In_Progress
+                  Rollback in progress
                 </motion.div>
               )}
             </AnimatePresence>
@@ -276,7 +276,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <Database className="w-4 h-4 text-muted" />
-          Live_SignalR_Telemetry (L2)
+          Live event stream
         </h3>
 
         <div className="surface shadow-2xl h-[480px] flex flex-col overflow-hidden">
@@ -298,7 +298,7 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
               <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10">
                 <tr className="text-muted/60 uppercase text-[10px] font-black tracking-widest">
                   <th className="px-6 py-3">Time</th>
-                  <th className="px-6 py-3">Event_Type</th>
+                  <th className="px-6 py-3">Event</th>
                   <th className="px-6 py-3 text-right">Status</th>
                 </tr>
               </thead>
@@ -308,9 +308,9 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
                     <tr>
                       <td
                         colSpan={3}
-                        className="py-24 text-center text-muted/20 italic uppercase tracking-widest font-black"
+                        className="py-24 text-center text-muted/40 italic"
                       >
-                        Awaiting_Ingress_Data...
+                        Run a saga to see events flow.
                       </td>
                     </tr>
                   ) : (
@@ -321,11 +321,17 @@ function SingleSagaView({ sagaState, localEvents, isProcessing, formatTime }: Si
                         animate={{ opacity: 1, x: 0 }}
                         className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="px-6 py-4 text-muted/50 text-[10px]">
+                        <td className="px-6 py-4 text-muted/50 text-[10px] whitespace-nowrap align-top">
                           [{formatTime(new Date(e.timestamp))}]
                         </td>
-                        <td className="px-6 py-4 text-secondary font-bold">{e.step}</td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 align-top">
+                          <div className="text-secondary font-bold">{describeSagaStep(e.step)}</div>
+                          <div className="text-[9px] text-muted/50 mt-0.5 font-mono uppercase tracking-widest">{e.step}</div>
+                          {e.description && (
+                            <div className="text-[10px] text-muted/70 mt-1.5 font-sans italic max-w-md leading-relaxed">{e.description}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right align-top">
                           <StatusBadge status={e.status} />
                         </td>
                       </motion.tr>
@@ -382,14 +388,16 @@ function RaceLaneCard({ lane, formatTime }: RaceLaneCardProps) {
       <div className="flex-1 overflow-y-auto font-mono text-[10px] min-h-[280px] max-h-[340px]">
         <ul className="divide-y divide-white/[0.03]">
           {lane.events.length === 0 ? (
-            <li className="py-12 text-center text-muted/20 italic uppercase tracking-widest font-black">
-              Awaiting_Stream...
+            <li className="py-12 text-center text-muted/40 italic">
+              Awaiting events…
             </li>
           ) : (
             lane.events.map((e, i) => (
               <li key={`${e.step}-${i}`} className="px-6 py-3 flex items-center justify-between">
                 <span className="text-muted/50">[{formatTime(new Date(e.timestamp))}]</span>
-                <span className="text-secondary font-bold flex-1 mx-3 truncate">{e.step}</span>
+                <span className="text-secondary font-bold flex-1 mx-3 truncate" title={e.step}>
+                  {describeSagaStep(e.step)}
+                </span>
                 <StatusBadge status={e.status} />
               </li>
             ))
@@ -398,6 +406,24 @@ function RaceLaneCard({ lane, formatTime }: RaceLaneCardProps) {
       </div>
     </div>
   );
+}
+
+// Maps the wire-format saga step name to a human-readable summary that fits
+// alongside it in the audit log. The raw step is still displayed underneath
+// (in monospace) so the technical reader can correlate with backend code.
+const SAGA_STEP_LABELS: Record<string, string> = {
+  initiated: 'Checkout started',
+  stock_reserved: 'Stock reserved',
+  stock_failed: 'Stock unavailable',
+  payment_ready: 'Payment session created',
+  payment_failed: 'Payment failed',
+  compensated: 'Stock released (compensation)',
+  completed: 'Order completed',
+  finalized: 'Order finalized',
+};
+
+function describeSagaStep(step: string): string {
+  return SAGA_STEP_LABELS[step] ?? step.replace(/_/g, ' ');
 }
 
 function StatusBadge({ status }: { status: SagaStepEvent['status'] }) {

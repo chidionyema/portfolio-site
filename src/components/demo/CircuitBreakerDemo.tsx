@@ -151,7 +151,7 @@ export function CircuitBreakerDemo() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <ShieldCheck className="w-4 h-4 text-accent" />
-            Circuit_Breaker_State_Machine
+            Circuit breaker
           </h3>
           <span className="text-[10px] font-mono text-muted uppercase tracking-widest">
             Threshold: 2 · Cooldown: 6s
@@ -174,7 +174,7 @@ export function CircuitBreakerDemo() {
               className="focus-ring py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isRequesting && !isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-              {probeArmed ? 'Send_Probe' : 'Send_Request'}
+              {probeArmed ? 'Send probe' : 'Send request'}
             </button>
             <button
               onClick={tripBreaker}
@@ -184,7 +184,7 @@ export function CircuitBreakerDemo() {
               className="focus-ring py-4 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {isTripping ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-              {isTripping ? 'Tripping...' : 'Trip_Breaker'}
+              {isTripping ? 'Tripping…' : 'Trip breaker'}
             </button>
           </div>
 
@@ -196,7 +196,7 @@ export function CircuitBreakerDemo() {
             className="focus-ring w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-secondary font-bold text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
           >
             <RefreshCcw className="w-3.5 h-3.5" />
-            Manual_Reset
+            Manual reset
           </button>
         </div>
       </div>
@@ -204,19 +204,19 @@ export function CircuitBreakerDemo() {
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <ShieldAlert className="w-4 h-4 text-error" />
-          Resilience_Audit_Trail
+          Event log
         </h3>
 
         <div className="surface shadow-2xl h-[540px] flex flex-col overflow-hidden font-mono">
           <div className="px-6 py-4 border-b border-white/5 text-[10px] font-black text-muted uppercase tracking-[0.2em] flex items-center justify-between">
-            <span>Event_Log</span>
-            <span className="text-success/60">{logs.length} entries</span>
+            <span>{logs.length} entr{logs.length === 1 ? 'y' : 'ies'}</span>
+            <span className="text-success/60">most recent first</span>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
             <AnimatePresence initial={false}>
               {logs.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-muted/20 text-[10px] font-black uppercase tracking-[0.4em] italic">
-                  Pipeline_Idle
+                <div className="h-full flex items-center justify-center text-muted/40 text-[11px] italic">
+                  Run a request to see events.
                 </div>
               ) : (
                 logs.map((log) => (
@@ -233,7 +233,7 @@ export function CircuitBreakerDemo() {
                     }`}
                   >
                     <div className="flex items-center gap-3 text-[10px] font-bold">
-                      <span className="opacity-30 uppercase">[{log.status.replace('-', '_')}]</span>
+                      <span className="opacity-30 uppercase">[{log.status.replace('-', ' ')}]</span>
                       <span className="truncate max-w-[220px] uppercase">{log.message}</span>
                     </div>
                     <span className="opacity-40 text-[9px] tabular-nums">{log.latency}ms</span>
@@ -333,7 +333,7 @@ function ProbeIndicator({ armed, inFlight, state }: ProbeIndicatorProps) {
           <Radar className={`w-4 h-4 text-warning ${inFlight ? 'animate-spin-slow' : 'animate-pulse'}`} />
           <div className="flex-1">
             <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
-              {inFlight ? 'Probe_In_Flight' : 'Probe_Armed'}
+              {inFlight ? 'Probe in flight' : 'Probe armed'}
             </div>
             <div className="text-[10px] text-muted font-mono mt-1">
               {inFlight
@@ -356,14 +356,14 @@ function TransitionTimeline({ transitions }: TransitionTimelineProps) {
   if (transitions.length === 0) {
     return (
       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-muted/60 border-t border-white/5 pt-5">
-        <span>Transition_Log</span>
+        <span>Transition log</span>
         <span className="italic">No transitions observed</span>
       </div>
     );
   }
   return (
     <div className="border-t border-white/5 pt-5 space-y-3 font-mono">
-      <div className="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Transition_Log</div>
+      <div className="text-[10px] font-black text-muted uppercase tracking-[0.3em]">Transition log</div>
       <ul className="space-y-1.5">
         {transitions.map((t, idx) => (
           <li
@@ -482,7 +482,7 @@ function JitterStorm() {
         <div className="flex items-center gap-3">
           <Waves className="w-4 h-4 text-accent" />
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em]">
-            Retry_Storm_Simulator
+            Retry storm
           </h3>
         </div>
         <div className="flex items-center gap-3 font-mono">
@@ -501,7 +501,7 @@ function JitterStorm() {
                   : 'text-muted hover:text-secondary hover:bg-white/5'
               }`}
             >
-              No_Jitter
+              No jitter
             </button>
             <button
               onClick={() => setJitterEnabled(true)}
@@ -513,7 +513,7 @@ function JitterStorm() {
                   : 'text-muted hover:text-secondary hover:bg-white/5'
               }`}
             >
-              Full_Jitter
+              Full jitter
             </button>
           </div>
           <button

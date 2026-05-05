@@ -140,7 +140,7 @@ export function CacheStampedeDemo() {
       <div className="space-y-6">
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <Timer className="w-4 h-4 text-muted" />
-          Latency_Profiling_Node
+          Latency profile
         </h3>
 
         <div className="surface p-8 shadow-2xl h-[340px] flex flex-col">
@@ -163,7 +163,7 @@ export function CacheStampedeDemo() {
               {requests.length === 0 && (
                 <div className="h-full flex flex-col items-center justify-center pt-12 text-muted/20 italic uppercase tracking-[0.4em] font-mono">
                    <Server className="w-16 h-16 mb-6 opacity-5" strokeWidth={1} />
-                   Awaiting_Cluster_Load
+                   Run a stampede to populate.
                 </div>
               )}
            </div>

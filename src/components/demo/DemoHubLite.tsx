@@ -2,7 +2,7 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Zap, ShieldAlert, Code2, Cpu, BookOpen } from 'lucide-react';
 import { DEMO_FOOTER, CLUSTER_LABEL } from '../../lib/copy';
-import { DemoSidebar, DemoMobileNav, findDemo, findGroupOf } from './DemoSidebar';
+import { DemoSidebar, DemoMobileNav, findDemo, findGroupOf, findNextDemo } from './DemoSidebar';
 import { ChaosEngine } from '../system/ChaosEngine';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { CodeDrawer } from './CodeDrawer';
@@ -22,7 +22,7 @@ const ConcurrencyDemo       = lazy(() => import('./ConcurrencyDemo').then(m => (
 const RateLimiterDemo       = lazy(() => import('./RateLimiterDemo').then(m => ({ default: m.RateLimiterDemo })));
 const DistributedTracingDemo = lazy(() => import('./DistributedTracingDemo').then(m => ({ default: m.DistributedTracingDemo })));
 
-const DEFAULT_DEMO = 'checkout';
+const DEFAULT_DEMO = 'idempotency';
 
 function readDemoFromURL(): string {
   if (typeof window === 'undefined') return DEFAULT_DEMO;
@@ -43,8 +43,8 @@ function LoadingSkeleton() {
       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}>
         <Zap className="w-16 h-16 text-accent opacity-20" />
       </motion.div>
-      <div className="text-xs font-mono text-muted tracking-[0.4em] animate-pulse uppercase">
-        Hydrating_Production_State...
+      <div className="text-xs font-mono text-muted animate-pulse">
+        Loading demo…
       </div>
     </div>
   );
@@ -131,7 +131,7 @@ export function DemoHub() {
                           }`}
                         />
                         <span className="tracking-normal font-black">
-                           {isConnected ? 'SignalR_Live' : connectionError ? 'SignalR_Offline' : 'SignalR_Connecting'}
+                           {isConnected ? 'SignalR live' : connectionError ? 'SignalR offline' : 'SignalR connecting'}
                         </span>
                      </div>
                      <div className="flex items-center gap-2.5">
@@ -165,7 +165,7 @@ export function DemoHub() {
                        className="focus-ring flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-xl transition-all group"
                      >
                         <ShieldAlert className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-                        <span className="tracking-widest">Inject_Chaos</span>
+                        <span className="tracking-widest">Inject chaos</span>
                      </button>
                   </div>
                </div>
@@ -252,12 +252,29 @@ export function DemoHub() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-4 py-6 font-mono text-[10px] uppercase tracking-[0.3em] text-muted">
-         <span>{DEMO_FOOTER}</span>
-         <a href="#deep-dives" className="text-accent-light hover:text-white transition-colors flex items-center gap-2 group">
-           Explore_Deep_Dives <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-         </a>
-      </div>
+      {(() => {
+         const next = findNextDemo(activeId);
+         return (
+           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 py-6 font-mono text-[10px] text-muted">
+              <span className="uppercase tracking-[0.3em]">{DEMO_FOOTER}</span>
+              <div className="flex items-center gap-6">
+                 {next && (
+                    <button
+                      onClick={() => handleSelect(next.id)}
+                      className="focus-ring text-secondary hover:text-primary transition-colors flex items-center gap-2 group uppercase tracking-[0.2em]"
+                    >
+                       <span className="opacity-50">Up next:</span>
+                       <span className="font-bold">{next.label}</span>
+                       <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                 )}
+                 <a href="#deep-dives" className="text-accent-light hover:text-white transition-colors flex items-center gap-2 group uppercase tracking-[0.3em]">
+                    Read the deep dives <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                 </a>
+              </div>
+           </div>
+         );
+      })()}
     </div>
   );
 }
