@@ -41,7 +41,7 @@ For each demo, the work is the same shape:
 - [x] **3 — RateLimiterDemo**. File: `src/components/demo/RateLimiterDemo.tsx`. Section: §3.
 - [x] **4 — VaultRotationDemo**. File: `src/components/demo/VaultRotationDemo.tsx`. Section: §4.
 - [x] **5 — CacheStampedeDemo**. File: `src/components/demo/CacheStampedeDemo.tsx`. Section: §5.
-- [ ] **6 — CacheInvalidationDemo**. File: `src/components/demo/CacheInvalidationDemo.tsx`. Section: §6.
+- [x] **6 — CacheInvalidationDemo**. File: `src/components/demo/CacheInvalidationDemo.tsx`. Section: §6.
 - [ ] **7 — ConcurrencyDemo**. File: `src/components/demo/ConcurrencyDemo.tsx`. Section: §7.
 - [ ] **8 — CircuitBreakerDemo**. File: `src/components/demo/CircuitBreakerDemo.tsx`. Section: §8.
 - [ ] **9 — EventFlowDemo**. File: `src/components/demo/EventFlowDemo.tsx`. Section: §9.
@@ -61,15 +61,15 @@ edited.)
 
 ## Last activity
 
-2026-05-06 22:20 | demo-5 | Applied 5-element pattern to CacheStampedeDemo and verified build.
+2026-05-06 22:23 | demo-6 | Applied 5-element pattern to CacheInvalidationDemo and verified build.
 
 ---
 
 ## Last build output
 
 ```
-22:16:59 [build] 5 page(s) built in 6.94s
-22:16:59 [build] Complete!
+22:18:43 [build] 5 page(s) built in 7.82s
+22:18:43 [build] Complete!
 ```
 
 ## Smoke notes (per-demo, one line each)
@@ -79,7 +79,7 @@ edited.)
 3 RateLimiterDemo:     build verified; manual smoke confirmed new headline and in-flight labels render during request burst.
 4 VaultRotationDemo:   build verified; manual smoke confirmed new headline and in-flight labels render during rotation.
 5 CacheStampedeDemo:   build verified; manual smoke confirmed new headline and lane-specific in-flight labels render during the race.
-6 CacheInvalidationDemo: —
+6 CacheInvalidationDemo: build verified; manual smoke confirmed headline replacement and in-flight labels render during the invalidation wave.
 7 ConcurrencyDemo:     —
 8 CircuitBreakerDemo:  —
 9 EventFlowDemo:       —
