@@ -12,6 +12,7 @@ import {
   Radar,
   Waves,
   Play,
+  Check,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { CircuitBreakerEvent } from '../../lib/api/signalr';
@@ -53,6 +54,7 @@ export function CircuitBreakerDemo() {
   const [probeArmed, setProbeArmed] = useState(false);
   const [probeInFlight, setProbeInFlight] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [showOutcome, setShowOutcome] = useState(false);
 
   const { executeCommand, events } = useDemoSession('circuit');
   const lastEventIdRef = useRef<string>('');
@@ -73,6 +75,10 @@ export function CircuitBreakerDemo() {
     } else if (state === 'closed' || state === 'open') {
       setProbeArmed(false);
       setProbeInFlight(false);
+    }
+
+    if (state === 'open') {
+      setShowOutcome(true);
     }
   };
 
@@ -144,6 +150,7 @@ export function CircuitBreakerDemo() {
 
   const tripBreaker = async () => {
     setIsTripping(true);
+    setShowOutcome(false);
     // Fires Failures to trip breaker AND Baseline failures in parallel for contrast.
     await Promise.all([
        (async () => {
@@ -204,16 +211,25 @@ export function CircuitBreakerDemo() {
         ...prev.slice(0, 14),
       ]);
       setBaselineLogs([]);
+      setShowOutcome(false);
     } catch {}
   };
+
+  const SAGA_IN_FLIGHT_LABELS: Record<string, { label: string; tooltip: string }> = {
+    'half-open': { label: "Breaker trial: sending 1 test request.", tooltip: "The breaker is testing the waters. If this succeeds, it closes; if it fails, it re-opens." },
+    'open': { label: "Breaker open: rejecting all traffic locally.", tooltip: "Fail fast. No network calls are made to the broken service, saving your resources." },
+    'closed': { label: "Breaker closed: traffic allowed.", tooltip: "" },
+  };
+
+  const inFlight = SAGA_IN_FLIGHT_LABELS[circuitState];
 
   return (
     <div className="space-y-10">
       <div className="surface p-10 shadow-2xl flex flex-col items-center gap-8 relative overflow-hidden">
          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-20" />
          <div className="text-center space-y-2 relative z-10">
-            <h3 className="text-sm font-black text-primary uppercase tracking-[0.4em]">Scenario_Simulation</h3>
-            <p className="text-[10px] text-muted font-bold uppercase tracking-widest opacity-60">High load + Upstream failure contrast</p>
+            <h3 className="text-sm font-black text-primary uppercase tracking-[0.4em]">The shipping-label service is down. Do you let it crash your entire checkout page too?</h3>
+            <p className="text-[10px] text-muted font-bold uppercase tracking-widest opacity-60">Press <strong>Trip & Hammer</strong>. Watch the right lane (with the breaker) fail fast after a few errors, while the left lane (no breaker) hangs and eventually times out for every single request.</p>
          </div>
 
          <div className="flex flex-wrap justify-center gap-4 relative z-10">
@@ -244,6 +260,22 @@ export function CircuitBreakerDemo() {
                Cooldown: 6s
             </div>
          </div>
+         
+         <AnimatePresence>
+           {inFlight && (
+             <motion.div
+               key={circuitState}
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0 }}
+               className="bg-accent/5 px-3 py-1.5 border border-accent/20 rounded-lg text-[10px] font-bold text-accent-light"
+             >
+               <abbr title={inFlight.tooltip} className="no-underline cursor-help">
+                 {inFlight.label}
+               </abbr>
+             </motion.div>
+           )}
+         </AnimatePresence>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 relative">
@@ -343,6 +375,18 @@ export function CircuitBreakerDemo() {
                   )}
                </AnimatePresence>
 
+               <AnimatePresence>
+                 {showOutcome && (
+                   <motion.div
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     className="p-4 border border-success/30 bg-success/5 text-primary text-[11px] leading-relaxed shadow-lg mb-4"
+                   >
+                     ✓ The broken service was isolated; checkout remained responsive. <strong>Without this pattern</strong>, every customer's browser hangs for 30 seconds while the server waits for a dead service; your thread pool exhausts; your entire site goes offline because of one minor dependency.
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+
                <div className="pt-6 border-t border-white/5 flex items-center justify-between">
                   <button onClick={resetBreaker} className="text-[10px] font-black text-muted hover:text-primary uppercase tracking-widest flex items-center gap-2">
                      <RefreshCcw className="w-3 h-3" />
@@ -359,8 +403,13 @@ export function CircuitBreakerDemo() {
 
       <JitterStorm />
       
-      <div className="surface p-10">
+      <div className="surface p-10 space-y-8">
          <RequestReceiptHistory receipts={receipts} />
+         
+         <div className="pt-8 border-t border-white/5 font-mono text-[10px] text-muted/50 uppercase tracking-widest text-center">
+           Pattern: circuit breaker (fail-fast) with Polly. Code: <code>src/BuildingBlocks/Extensions/HttpExtensions.cs</code>.
+           The hard part is tuning the thresholds — trip too early and you're fragile; trip too late and you're already dead.
+         </div>
       </div>
     </div>
   );
