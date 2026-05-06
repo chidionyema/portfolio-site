@@ -149,8 +149,13 @@ export function CheckoutDemo() {
         {/* Left Pane - Customer context */}
         <div className="space-y-6">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em]">
-            {CHECKOUT_COPY.ORDER_HEADER}
+            What happens to the customer's order if Stripe crashes mid-payment?
           </h3>
+          <p className="text-xs text-muted leading-relaxed">
+            Press <strong>Pay</strong>. Then press <strong>Crash payment service</strong> before the
+            third stage lights up. Watch the customer's view on the left and
+            the saga state machine on the right.
+          </p>
 
           <div className="relative">
             <AnimatePresence mode="wait">
@@ -230,6 +235,8 @@ export function CheckoutDemo() {
               )}
             </AnimatePresence>
           </div>
+
+          <OutcomeBanner sagaState={sagaState} />
         </div>
 
         {/* Right Pane - Engineering context */}
@@ -315,6 +322,11 @@ export function CheckoutDemo() {
             </>
           )}
         </div>
+      </div>
+
+      <div className="pt-8 border-t border-white/5 font-mono text-[10px] text-muted/50 uppercase tracking-widest">
+        Pattern: transactional outbox + saga compensation. Code: <code>src/CheckoutOrchestrator/Application/Sagas/CheckoutSaga.cs</code>.
+        The hard part wasn't the saga; it was making the compensation event survive a broker outage.
       </div>
 
       <RequestReceiptHistory receipts={receipts} />
@@ -414,6 +426,33 @@ function ConfirmationCard({ orderId, onReset }: { orderId: string | null; onRese
           {CHECKOUT_COPY.RUN_ANOTHER}
         </button>
       </div>
+    </motion.div>
+  );
+}
+
+function OutcomeBanner({ sagaState }: { sagaState: string }) {
+  const isSuccess = sagaState === 'completed' || sagaState === 'finalized';
+  const isFailure = sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated';
+
+  if (!isSuccess && !isFailure) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`p-6 border font-sans text-xs leading-relaxed shadow-xl ${
+        isSuccess ? 'border-success/30 bg-success/5 text-primary' : 'border-error/30 bg-error/5 text-primary'
+      }`}
+    >
+      {isSuccess ? (
+        <>
+          ✓ The customer's order is complete and stock is committed. <strong>Without this pattern</strong>, a failure in the final stage would leave you with inconsistent state between services.
+        </>
+      ) : (
+        <>
+          ✓ The customer's order rolled back, the stock was returned, and the customer wasn't double-charged. <strong>Without this pattern</strong>, your order is in <code>Paid</code> state in your DB but Stripe never confirmed — you find out from a refund ticket the next morning.
+        </>
+      )}
     </motion.div>
   );
 }
@@ -619,6 +658,14 @@ function VerticalSagaLadder({ sagaState }: { sagaState: string }) {
 
   const currentIndex = getStepIndex(sagaState);
 
+  const SAGA_IN_FLIGHT_LABELS: Record<string, { label: string; tooltip: string }> = {
+    initiated: { label: "Order created. Now reserving stock.", tooltip: "First step of the saga." },
+    stock_reserved: { label: "Stock reserved on catalog-svc.", tooltip: "The catalog replica that handled this. Aspire runs two — load-balances across them." },
+    payment_ready: { label: "Payment session created with Stripe.", tooltip: "If the next step fails, the saga rolls back the stock." },
+    completed: { label: "Order completed.", tooltip: "" },
+    compensated: { label: "Compensation flow firing — releasing stock.", tooltip: "The saga's whole point. State that was reserved is now being given back." },
+  };
+
   return (
     <div className="space-y-6">
       {steps.map((step, i) => {
@@ -626,13 +673,14 @@ function VerticalSagaLadder({ sagaState }: { sagaState: string }) {
           i < currentIndex || (i === currentIndex && (sagaState === 'completed' || sagaState === 'finalized'));
         const isActive = i === currentIndex && !isFinished;
         const isPending = i > currentIndex;
+        const inFlight = SAGA_IN_FLIGHT_LABELS[step.id];
 
         return (
           <motion.div
             key={step.id}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: isPending ? 0.3 : 1, x: 0 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-4 relative"
           >
             <div
               className={`w-8 h-8 rounded-none border flex items-center justify-center transition-all duration-500 ${
@@ -651,12 +699,31 @@ function VerticalSagaLadder({ sagaState }: { sagaState: string }) {
                 <span className="text-[10px] font-black">{i + 1}</span>
               )}
             </div>
-            <div>
+            <div className="flex-1">
               <div className="text-[9px] font-mono text-muted/50 uppercase tracking-widest">{step.id}</div>
               <div className={`text-sm font-bold transition-colors ${isActive ? 'text-accent' : 'text-primary'}`}>
                 {step.label}
               </div>
             </div>
+            
+            <AnimatePresence>
+              {isActive && inFlight && (
+                <motion.span
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute left-full ml-4 whitespace-nowrap text-[10px] font-bold text-accent-light bg-accent/5 px-2 py-1 border border-accent/20"
+                >
+                  {inFlight.tooltip ? (
+                    <abbr title={inFlight.tooltip} className="no-underline cursor-help">
+                      {inFlight.label}
+                    </abbr>
+                  ) : (
+                    inFlight.label
+                  )}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </motion.div>
         );
       })}

@@ -37,7 +37,7 @@ For each demo, the work is the same shape:
 
 ### Demos
 
-- [ ] **2 — CheckoutDemo** (saga). File: `src/components/demo/CheckoutDemo.tsx`. Section: §2 in templates.
+- [x] **2 — CheckoutDemo** (saga). File: `src/components/demo/CheckoutDemo.tsx`. Section: §2 in templates.
 - [ ] **3 — RateLimiterDemo**. File: `src/components/demo/RateLimiterDemo.tsx`. Section: §3.
 - [ ] **4 — VaultRotationDemo**. File: `src/components/demo/VaultRotationDemo.tsx`. Section: §4.
 - [ ] **5 — CacheStampedeDemo**. File: `src/components/demo/CacheStampedeDemo.tsx`. Section: §5.
@@ -61,20 +61,21 @@ edited.)
 
 ## Last activity
 
-(Replace this line each subtask: `YYYY-MM-DD HH:MM | demo-N | one line`)
+2026-05-06 22:06 | demo-2 | Applied 5-element pattern to CheckoutDemo and verified build.
 
-—
+---
 
 ## Last build output
 
 ```
-(paste tail of `npm run build` here)
+22:03:26 [build] 5 page(s) built in 7.29s
+22:03:26 [build] Complete!
 ```
 
 ## Smoke notes (per-demo, one line each)
 
 ```
-2 CheckoutDemo:        (your one-line note here)
+2 CheckoutDemo:        build verified; manual smoke confirmed new headline and setup line render on the demo card.
 3 RateLimiterDemo:     —
 4 VaultRotationDemo:   —
 5 CacheStampedeDemo:   —
