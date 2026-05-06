@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Shield, Activity, RefreshCw, Key, Database, ArrowRightLeft, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Shield, Activity, RefreshCw, Key, Database, ArrowRightLeft, AlertCircle, Check } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { VaultRotationEvent } from '../../lib/api/signalr';
 import { RequestReceiptHistory } from './RequestReceipt';
@@ -28,6 +28,8 @@ export function VaultRotationDemo() {
   const [ttlProgress, setTtlProgress] = useState(100);
   const [isRotating, setIsRotating] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [lastAction, setLastAction] = useState<{ label: string; tooltip: string } | null>(null);
+  const [showOutcome, setShowOutcome] = useState(false);
 
   const { executeCommand, events } = useDemoSession('vault');
 
@@ -73,6 +75,11 @@ export function VaultRotationDemo() {
 
         if (stage === 'started') {
            setIsRotating(true);
+           setLastAction({
+             label: "Vault is generating credential v(n+1).",
+             tooltip: "HashiCorp Vault dynamically creates a fresh DB user for each rotation."
+           });
+           setShowOutcome(false);
         }
 
         if (stage === 'activated') {
@@ -84,6 +91,11 @@ export function VaultRotationDemo() {
               issuedAt: new Date(lastEvent.timestamp),
               expiresAt: new Date(Date.now() + 60000)
            });
+           setLastAction({
+             label: "v(n+1) becomes active. v(n) revoked.",
+             tooltip: ""
+           });
+           setShowOutcome(true);
         }
      }
   }, [events]);
@@ -128,10 +140,15 @@ export function VaultRotationDemo() {
     <div className="grid lg:grid-cols-2 gap-8">
       <div className="space-y-6">
          <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
-            <Shield className="w-4 h-4 text-accent" />
-            Active credential
-          </h3>
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+              <Shield className="w-4 h-4 text-accent" />
+              How do you rotate the database password on 200 live servers without breaking anyone's connection?
+            </h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Press <strong>Force credential rotation</strong>. Watch the active credential card slide out and the standby card slide in. The "App connection" badge below should stay green throughout.
+            </p>
+          </div>
         </div>
 
         <div className="surface p-8 shadow-2xl relative overflow-hidden space-y-8">
@@ -144,57 +161,76 @@ export function VaultRotationDemo() {
              Force credential rotation
           </button>
 
-          <div className="relative h-[180px] overflow-hidden">
-             <AnimatePresence mode="popLayout" initial={false}>
-                <motion.div 
-                   key={version}
-                   initial={{ x: 100, opacity: 0 }}
-                   animate={{ x: 0, opacity: 1 }}
-                   exit={{ x: -100, opacity: 0 }}
-                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                   className="grid grid-cols-2 gap-4 absolute inset-0"
-                >
-                   {/* Active Card v(n) */}
-                   <div className="glass-subtle rounded-2xl p-5 border border-white/10 space-y-4">
-                      <div className="flex items-center justify-between">
-                         <div className="p-2 bg-success/20 text-success rounded-lg">
-                            <Key className="w-4 h-4" />
-                         </div>
-                         <div className="text-[10px] font-black text-success uppercase tracking-widest">Active</div>
-                      </div>
-                      <div>
-                         <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
-                         <div className="text-xl font-mono font-black text-primary">v({version || 'n'})</div>
-                      </div>
-                      <div className="pt-2 border-t border-white/5">
-                         <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Expires in</div>
-                         <div className="text-sm font-mono font-bold text-accent-light tabular-nums">
-                            {credential ? formatTime(credential.expiresAt) : '---'}
-                         </div>
-                      </div>
-                   </div>
+          <div className="relative">
+            <div className="relative h-[180px] overflow-hidden">
+               <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div 
+                     key={version}
+                     initial={{ x: 100, opacity: 0 }}
+                     animate={{ x: 0, opacity: 1 }}
+                     exit={{ x: -100, opacity: 0 }}
+                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                     className="grid grid-cols-2 gap-4 absolute inset-0"
+                  >
+                     {/* Active Card v(n) */}
+                     <div className="glass-subtle rounded-2xl p-5 border border-white/10 space-y-4">
+                        <div className="flex items-center justify-between">
+                           <div className="p-2 bg-success/20 text-success rounded-lg">
+                              <Key className="w-4 h-4" />
+                           </div>
+                           <div className="text-[10px] font-black text-success uppercase tracking-widest">Active</div>
+                        </div>
+                        <div>
+                           <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
+                           <div className="text-xl font-mono font-black text-primary">v({version || 'n'})</div>
+                        </div>
+                        <div className="pt-2 border-t border-white/5">
+                           <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Expires in</div>
+                           <div className="text-sm font-mono font-bold text-accent-light tabular-nums">
+                              {credential ? formatTime(credential.expiresAt) : '---'}
+                           </div>
+                        </div>
+                     </div>
 
-                   {/* Standby Card v(n+1) */}
-                   <div className="glass-subtle rounded-2xl p-5 border border-white/5 opacity-40 space-y-4">
-                      <div className="flex items-center justify-between">
-                         <div className="p-2 bg-white/5 text-muted rounded-lg">
-                            <Key className="w-4 h-4" />
-                         </div>
-                         <div className="text-[10px] font-black text-muted uppercase tracking-widest">Standby</div>
-                      </div>
-                      <div>
-                         <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
-                         <div className="text-xl font-mono font-black text-muted">v({version ? version + 1 : 'n+1'})</div>
-                      </div>
-                      <div className="pt-2 border-t border-white/5">
-                         <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Status</div>
-                         <div className="text-xs font-black text-muted uppercase tracking-widest">
-                            Ready
-                         </div>
-                      </div>
-                   </div>
-                </motion.div>
-             </AnimatePresence>
+                     {/* Standby Card v(n+1) */}
+                     <div className="glass-subtle rounded-2xl p-5 border border-white/5 opacity-40 space-y-4">
+                        <div className="flex items-center justify-between">
+                           <div className="p-2 bg-white/5 text-muted rounded-lg">
+                              <Key className="w-4 h-4" />
+                           </div>
+                           <div className="text-[10px] font-black text-muted uppercase tracking-widest">Standby</div>
+                        </div>
+                        <div>
+                           <div className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Version</div>
+                           <div className="text-xl font-mono font-black text-muted">v({version ? version + 1 : 'n+1'})</div>
+                        </div>
+                        <div className="pt-2 border-t border-white/5">
+                           <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">Status</div>
+                           <div className="text-xs font-black text-muted uppercase tracking-widest">
+                              Ready
+                           </div>
+                        </div>
+                     </div>
+                  </motion.div>
+               </AnimatePresence>
+            </div>
+
+            <AnimatePresence>
+               {lastAction && (
+                 <motion.div
+                   key={lastAction.label}
+                   initial={{ opacity: 0, y: 10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0 }}
+                   onAnimationComplete={() => setTimeout(() => setLastAction(null), 3000)}
+                   className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-accent-light bg-accent/5 px-2 py-1 border border-accent/20"
+                 >
+                   <abbr title={lastAction.tooltip} className="no-underline cursor-help">
+                     {lastAction.label}
+                   </abbr>
+                 </motion.div>
+               )}
+            </AnimatePresence>
           </div>
 
           {credential ? (
@@ -239,23 +275,52 @@ export function VaultRotationDemo() {
               </div>
 
               {/* App Connection Pane */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
-                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-success/10 text-success rounded-lg">
-                       <Database className="w-4 h-4" />
-                    </div>
-                    <div>
-                       <div className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none mb-1">App connection</div>
-                       <div className="text-[9px] text-muted font-mono uppercase tracking-tighter opacity-60">Session pooling active</div>
-                    </div>
-                 </div>
-                 <div className="flex items-center gap-2 px-3 py-1.5 bg-success/20 border border-success/30 rounded-full">
-                    <div className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                    <span className="text-[9px] font-black text-success uppercase tracking-widest">Connected</span>
-                 </div>
+              <div className="relative">
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <div className="p-2 bg-success/10 text-success rounded-lg">
+                         <Database className="w-4 h-4" />
+                      </div>
+                      <div>
+                         <div className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none mb-1">App connection</div>
+                         <div className="text-[9px] text-muted font-mono uppercase tracking-tighter opacity-60">Session pooling active</div>
+                      </div>
+                   </div>
+                   <div className="flex items-center gap-2 px-3 py-1.5 bg-success/20 border border-success/30 rounded-full">
+                      <div className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                      <span className="text-[9px] font-black text-success uppercase tracking-widest">Connected</span>
+                   </div>
+                </div>
+                
+                <AnimatePresence>
+                  {isRotating && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute left-full ml-4 top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] font-bold text-success bg-success/5 px-2 py-1 border border-success/20"
+                    >
+                      <abbr title="Existing connections are drained over a TTL window. New requests use the new credential." className="no-underline cursor-help">
+                        App pool refreshes connections without dropping.
+                      </abbr>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <RequestReceiptHistory receipts={receipts} />
+
+              <AnimatePresence>
+                {showOutcome && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 border border-success/30 bg-success/5 text-primary text-xs leading-relaxed shadow-xl"
+                  >
+                    ✓ The new credential is active. Old one is revoked at Vault. App connections never blinked. <strong>Without this pattern</strong>, your team rotates DB passwords once a year and writes the new one in a Slack DM. The current credential leaks into application logs and CI artefacts; you find out when audit notices the same hash for 18 months.
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
             <div className="py-24 text-center">
@@ -265,6 +330,10 @@ export function VaultRotationDemo() {
           )}
         </div>
 
+        <div className="pt-8 border-t border-white/5 font-mono text-[10px] text-muted/50 uppercase tracking-widest">
+          Pattern: Vault dynamic database credentials with TTL-bounded rotation. Code: <code>src/Identity/Identity.Infrastructure/Vault/DynamicCredentialProvider.cs</code>.
+          The hard part is the connection-pool refresh; getting it right means the rotation is invisible to running code.
+        </div>
       </div>
 
       <div className="space-y-6">
