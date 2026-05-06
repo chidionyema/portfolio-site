@@ -185,6 +185,17 @@ export interface RequestMetadata {
   latencyMs: number;
   statusCode: number;
   service: string;
+  // Replica identifiers stamped by `InstanceIdMiddleware` in
+  // ritualworks-platform's BuildingBlocks. With Aspire's WithReplicas(N)
+  // the upstream service round-robins across replicas; the BFF captures
+  // each upstream's X-Instance-Id and forwards it on the response body
+  // (as `upstreamInstance`). The BFF stamps its own X-Instance-Id on
+  // the response header (read into `bffInstance`).
+  //
+  // RequestReceipt renders these as `bff-web-1c4a → catalog-svc-7e3f`
+  // so the visitor can watch instance ids rotate as load-balancing happens.
+  bffInstance: string | null;
+  upstreamInstance: string | null;
 }
 
 async function handleResponse<T>(response: Response, start: number, path: string): Promise<T & RequestMetadata> {

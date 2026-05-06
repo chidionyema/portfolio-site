@@ -98,6 +98,10 @@ export function useDemoSession(moduleName?: string) {
       const latencyMs = Math.round(performance.now() - start);
       const statusCode = response.status;
       const service = response.headers.get('X-Service-Id') || inferService(endpoint);
+      // Replica id of the BFF that served this response. With BFF at one
+      // instance today this is constant per session; once BFF is replicated
+      // it'll rotate. Either way it's surfaced honestly.
+      const bffInstance = response.headers.get('X-Instance-Id');
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -107,10 +111,17 @@ export function useDemoSession(moduleName?: string) {
       const data = await response.json();
       const traceId = response.headers.get('X-Trace-Id');
       if (traceId) traceStore.set(traceId);
+      // Upstream replica id (e.g. catalog-svc-7e3f) is on the response BODY
+      // because the BFF can't propagate the upstream's X-Instance-Id header
+      // through to its own response without a custom proxy filter; it pulls
+      // it from the upstream's response and includes it in the JSON.
+      const upstreamInstance = (data && typeof data === 'object' && 'upstreamInstance' in data)
+        ? (data.upstreamInstance ?? null)
+        : null;
 
       setState(prev => ({ ...prev, lastSuccessAt: Date.now() }));
 
-      return { ...data, traceId, latencyMs, statusCode, service };
+      return { ...data, traceId, latencyMs, statusCode, service, bffInstance, upstreamInstance };
     } catch (err: any) {
       console.error('Command Execution Failed:', err);
       throw err;
