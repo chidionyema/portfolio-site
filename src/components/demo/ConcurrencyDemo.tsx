@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Zap, Database, User, ShieldCheck, Save, ArrowRightLeft } from 'lucide-react';
+import { Loader2, Zap, Database, User, ShieldCheck, Save, ArrowRightLeft, Check } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { RequestReceiptHistory } from './RequestReceipt';
 import type { RequestMetadata } from '../../lib/api/demo-client';
@@ -28,6 +28,7 @@ export function ConcurrencyDemo() {
   });
   const [isRacing, setIsRacing] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [lastAction, setLastAction] = useState<{ label: string; tooltip: string } | null>(null);
 
   const { executeCommand, events, isConnected } = useDemoSession('concurrency');
 
@@ -79,13 +80,23 @@ export function ConcurrencyDemo() {
 
       setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
       setUser(prev => ({ ...prev, status: 'success', message: `Committed: v${result.inventory.version}` }));
+      
+      setLastAction({ 
+        label: `Winner: version v${userState.readVersion} → v${result.inventory.version} committed.`, 
+        tooltip: "The first request to reach the database claims the version increment." 
+      });
     } catch (err: any) {
        setUser(prev => ({ ...prev, status: 'conflict', message: 'Update Failed' }));
+       setLastAction({ 
+         label: `Conflict: expected v${userState.readVersion}, found v${inventory.version}.`, 
+         tooltip: "The second request tried to update version 1, but found the database is already at version 2. It must refresh and try again." 
+       });
     }
   };
 
   const raceUpdates = async () => {
     setIsRacing(true);
+    setLastAction({ label: "Concurrent updates dispatched.", tooltip: "" });
     await Promise.all([fetchInventory('A'), fetchInventory('B')]);
     await new Promise(r => setTimeout(r, 800));
     await saveInventory('A');
@@ -190,8 +201,20 @@ export function ConcurrencyDemo() {
     );
   };
 
+  const isRaceOutcomeVisible = userA.status !== 'idle' && userB.status !== 'idle' && !isRacing;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+          <Database className="w-4 h-4 text-accent" />
+          Two staff members edit the same product at the same time. How do you prevent one person's changes from being silently overwritten?
+        </h3>
+        <p className="text-xs text-muted leading-relaxed">
+          Press <strong>Trigger race</strong>. Two requests will fire at once. One will succeed; the other will receive a '409 Conflict' because the version it tried to update is already out of date.
+        </p>
+      </div>
+
       <div className="surface p-10 shadow-2xl relative overflow-hidden font-mono">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none grayscale">
            <Database className="w-64 h-64 text-white" />
@@ -201,7 +224,7 @@ export function ConcurrencyDemo() {
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
                <div className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-               <h3 className="text-xs font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Live inventory</h3>
+               <h3 className="text-[10px] font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Live inventory</h3>
             </div>
             <div className="flex items-baseline justify-center lg:justify-start gap-8">
               <motion.div 
@@ -239,6 +262,36 @@ export function ConcurrencyDemo() {
         <RequestReceiptHistory receipts={receipts} />
       </div>
 
+      <AnimatePresence>
+        {lastAction && (
+          <motion.div
+            key={lastAction.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="flex justify-center"
+          >
+            <div className="bg-accent/5 px-3 py-1.5 border border-accent/20 rounded-lg text-xs font-bold text-accent-light">
+              <abbr title={lastAction.tooltip} className="no-underline cursor-help">
+                {lastAction.label}
+              </abbr>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isRaceOutcomeVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 border border-success/30 bg-success/5 text-primary text-xs leading-relaxed shadow-xl"
+          >
+            ✓ User A succeeded; User B was blocked from overwriting changes and told to refresh. <strong>Without this pattern</strong>, User B's older data silently overwrites User A's newer data ("Last Write Wins"); your stock counts drift, your prices are wrong, and nobody knows why until a customer complains.
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Visual Ladder + Clash */}
       <div className="relative h-24 flex justify-center">
          <div className="absolute inset-y-0 w-px bg-white/10 left-1/4 lg:left-1/3" />
@@ -272,12 +325,11 @@ export function ConcurrencyDemo() {
         {renderUser(userB, 'B')}
       </div>
 
-      <div className="glass-subtle p-5 flex items-center gap-6 font-mono">
-         <ShieldCheck className="w-6 h-6 text-success opacity-50 shrink-0" />
-         <p className="text-[10px] text-muted font-bold leading-relaxed uppercase tracking-widest">
-            Entity Framework Core optimistic concurrency engaged. <br/>
-            The second commit will trigger a real [DbUpdateConcurrencyException] at the data layer.
-         </p>
+      <div className="pt-8 border-t border-white/5">
+        <div className="font-mono text-[10px] text-muted/50 uppercase tracking-widest text-center">
+          Pattern: optimistic concurrency via ETag/version columns. Code: <code>src/Catalog/Catalog.Infrastructure/Persistence/CatalogDbContext.cs</code> (search for <code>Version</code>).
+          The hard part is the UI — you have to give the user a way to merge or discard their changes after a 409.
+        </div>
       </div>
     </div>
   );
