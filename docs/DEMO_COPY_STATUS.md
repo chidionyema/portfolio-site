@@ -44,7 +44,7 @@ For each demo, the work is the same shape:
 - [x] **6 — CacheInvalidationDemo**. File: `src/components/demo/CacheInvalidationDemo.tsx`. Section: §6.
 - [x] **7 — ConcurrencyDemo**. File: `src/components/demo/ConcurrencyDemo.tsx`. Section: §7.
 - [x] **8 — CircuitBreakerDemo**. File: `src/components/demo/CircuitBreakerDemo.tsx`. Section: §8.
-- [ ] **9 — EventFlowDemo**. File: `src/components/demo/EventFlowDemo.tsx`. Section: §9.
+- [x] **9 — EventFlowDemo**. File: `src/components/demo/EventFlowDemo.tsx`. Section: §9.
 - [ ] **10 — DistributedTracingDemo**. File: `src/components/demo/DistributedTracingDemo.tsx`. Section: §10.
 
 (Demo 1, IdempotencyDemo, is the reference standard and is **not**
@@ -61,15 +61,15 @@ edited.)
 
 ## Last activity
 
-2026-05-06 22:25 | demo-8 | Applied 5-element pattern to CircuitBreakerDemo and verified build.
+2026-05-06 22:36 | demo-9 | Applied 5-element pattern to EventFlowDemo and verified build.
 
 ---
 
 ## Last build output
 
 ```
-22:23:02 [build] 5 page(s) built in 7.41s
-22:23:02 [build] Complete!
+22:34:36 [build] 5 page(s) built in 9.60s
+22:34:36 [build] Complete!
 ```
 
 ## Smoke notes (per-demo, one line each)
@@ -82,7 +82,7 @@ edited.)
 6 CacheInvalidationDemo: build verified; manual smoke confirmed headline replacement and in-flight labels render during the invalidation wave.
 7 ConcurrencyDemo:     build verified; manual smoke confirmed new headline and in-flight labels render during the concurrency race.
 8 CircuitBreakerDemo:  build verified; manual smoke confirmed new headline and circuit-state-driven in-flight labels render during the trip simulation.
-9 EventFlowDemo:       —
+9 EventFlowDemo:       build verified; manual smoke confirmed new headline and stage-driven in-flight labels render as the event advances.
 10 DistributedTracingDemo: —
 ```
 
