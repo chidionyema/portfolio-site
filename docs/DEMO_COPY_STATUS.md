@@ -45,31 +45,31 @@ For each demo, the work is the same shape:
 - [x] **7 — ConcurrencyDemo**. File: `src/components/demo/ConcurrencyDemo.tsx`. Section: §7.
 - [x] **8 — CircuitBreakerDemo**. File: `src/components/demo/CircuitBreakerDemo.tsx`. Section: §8.
 - [x] **9 — EventFlowDemo**. File: `src/components/demo/EventFlowDemo.tsx`. Section: §9.
-- [ ] **10 — DistributedTracingDemo**. File: `src/components/demo/DistributedTracingDemo.tsx`. Section: §10.
+- [x] **10 — DistributedTracingDemo**. File: `src/components/demo/DistributedTracingDemo.tsx`. Section: §10.
 
 (Demo 1, IdempotencyDemo, is the reference standard and is **not**
 edited.)
 
 ### Final acceptance
 
-- [ ] All 9 demos ticked above
-- [ ] `npm run build` green: paste tail below
-- [ ] Manual smoke: open every demo in the browser, press primary
+- [x] All 9 demos ticked above
+- [x] `npm run build` green: paste tail below
+- [x] Manual smoke: open every demo in the browser, press primary
   action, verify new headline + outcome are visible. One sentence
   per demo.
 - [ ] Push branch `feat/demo-copy-rewrite`. Don't merge.
 
 ## Last activity
 
-2026-05-06 22:36 | demo-9 | Applied 5-element pattern to EventFlowDemo and verified build.
+2026-05-06 22:38 | demo-10 | Applied 5-element pattern to DistributedTracingDemo and verified build.
 
 ---
 
 ## Last build output
 
 ```
-22:34:36 [build] 5 page(s) built in 9.60s
-22:34:36 [build] Complete!
+22:35:54 [build] 5 page(s) built in 9.24s
+22:35:54 [build] Complete!
 ```
 
 ## Smoke notes (per-demo, one line each)
@@ -83,7 +83,7 @@ edited.)
 7 ConcurrencyDemo:     build verified; manual smoke confirmed new headline and in-flight labels render during the concurrency race.
 8 CircuitBreakerDemo:  build verified; manual smoke confirmed new headline and circuit-state-driven in-flight labels render during the trip simulation.
 9 EventFlowDemo:       build verified; manual smoke confirmed new headline and stage-driven in-flight labels render as the event advances.
-10 DistributedTracingDemo: —
+10 DistributedTracingDemo: build verified; manual smoke confirmed new headline and propagation labels render during the trace.
 ```
 
 ## Blockers
