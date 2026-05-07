@@ -36,7 +36,8 @@ try {
   }
 
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
   for (const route of ROUTES) {
     const res = await page.goto(BASE + route, { waitUntil: 'networkidle' });
