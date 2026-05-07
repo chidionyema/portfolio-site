@@ -1,41 +1,125 @@
 ---
-// TODO(revisit): every island on /lab is `client:only="react"` to bypass SSR.
-// The cluster-store + useSyncExternalStore + signalR import chain triggers a
-// React "Invalid hook call" warning during SSR that ends up returning just
-// `<!DOCTYPE html>` (15 bytes) instead of the rendered tree. Symptoms:
-//   • /lab returns 15 bytes from `astro dev` and `astro build` SSR
-//   • /index renders fine — uses the same store but lighter component tree
-// Likely culprit: dual React copy at SSR time (lucide-react + signalr both
-// pulling React via different module paths under vite's optimizeDeps). Worth
-// investigating once Aspire is stable. For now `client:only` ships the page.
+// /lab — architecture canvas. Static reference page that explains how
+// this cluster is built. Hero → static cluster diagram → per-microservice
+// sections (BFF, Identity, Catalog, Orders, Payments, Checkout) →
+// saga message flow → ADR cards → CTA. Live chaos demonstration lives
+// at /chaos.
 //
-// Page architecture: three zones, shared containers, one timeline spine.
-//   WATCH   — lifecycle timeline + topology + chaos banner + request feed
-//   PROVE   — invariants (scoreboard) + pattern runners
-//   INSPECT — raw signals (metrics + sparklines) + interactive demos
-// Every panel currently kept; reorganization is grouping + hierarchy, not
-// demolition.
+// SSR-safety: every island is `client:only="react"` for the same
+// reason as /chaos — the cluster-store / signalR / lucide-react
+// import chain trips React's "Invalid hook call" warning at SSR time.
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { DemoHub } from '../components/demo/DemoHubLite';
-import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
-import { LiveMetricsPanel } from '../components/architecture/LiveMetricsPanel';
-import { LabBackgroundProber } from '../components/architecture/LabBackgroundProber';
-import { LabAutoRunners } from '../components/architecture/LabAutoRunners';
-import { LabRequestFeed } from '../components/architecture/LabRequestFeed';
-import { ChaosImpactBanner } from '../components/architecture/ChaosImpactBanner';
-import { LiveSparklines } from '../components/architecture/LiveSparklines';
-import { ResilienceScoreboard } from '../components/architecture/ResilienceScoreboard';
-import { ChaosTimelineStrip } from '../components/architecture/ChaosTimelineStrip';
-import PanelHeader from '../components/system/PanelHeader.astro';
+import { ArchitectureCanvas } from '../components/architecture/ArchitectureCanvas';
+import { SagaMessageFlow } from '../components/architecture/SagaMessageFlow';
+import { IdempotencyDemo } from '../components/demo/IdempotencyDemo';
+import { ConcurrencyDemo } from '../components/demo/ConcurrencyDemo';
+import { CacheInvalidationDemo } from '../components/demo/CacheInvalidationDemo';
+import { CircuitBreakerDemo } from '../components/demo/CircuitBreakerDemo';
+import { VaultRotationDemo } from '../components/demo/VaultRotationDemo';
+import { EventFlowDemo } from '../components/demo/EventFlowDemo';
+import { CheckoutDemo } from '../components/demo/CheckoutDemo';
+
+const GH_REPO = 'https://github.com/chidionyema/ritualworks-platform';
+
+interface ServiceSection {
+  id: string;
+  name: string;
+  oneLiner: string;
+  stack: string[];
+  patterns: { name: string; explainer: string }[];
+  ghPath: string;
+}
+
+const SERVICES: ServiceSection[] = [
+  {
+    id: 'bff',
+    name: 'BFF Web',
+    oneLiner: 'Single gateway from the browser to every microservice. Rate-limit, circuit-break, idempotency-replay, and the chaos fault-injection handler all live here.',
+    stack: ['ASP.NET Core 9', 'Polly v8', 'SignalR', 'YARP-style proxy'],
+    patterns: [
+      { name: 'Rate limit (token bucket)', explainer: 'Sliding-window token bucket per session. Replies 429 + Retry-After when the bucket empties; refills steadily.' },
+      { name: 'Circuit breaker', explainer: 'Polly StandardResilienceHandler wraps every outbound HttpClient. Opens after consecutive failures, half-opens on probe success.' },
+    ],
+    ghPath: '/tree/main/src/BffWeb/BffWeb.Api',
+  },
+  {
+    id: 'identity',
+    name: 'Identity',
+    oneLiner: 'JWT issuance, refresh, JTI revocation, and dynamic Postgres credentials sourced from Vault.',
+    stack: ['ASP.NET Core 9', 'EF Core', 'HashiCorp Vault', 'OpenIddict-style JTI'],
+    patterns: [
+      { name: 'Vault dynamic credentials', explainer: 'Postgres connection strings rotate every hour via Vault leases. The connection interceptor swaps the active credential without dropping in-flight queries.' },
+    ],
+    ghPath: '/tree/main/src/Identity/Identity.Api',
+  },
+  {
+    id: 'catalog',
+    name: 'Catalog',
+    oneLiner: 'Products, stock, OCC. Two replicas via Aspire WithReplicas. The hot path for every browse, every checkout.',
+    stack: ['ASP.NET Core 9', 'EF Core', 'Postgres xmin', 'HybridCache (Redis L2)'],
+    patterns: [
+      { name: 'Optimistic concurrency (xmin)', explainer: 'Postgres `xmin` shadow column is the EF concurrency token. Concurrent updates → exactly one wins, the rest get 412.' },
+      { name: 'Cache invalidation', explainer: 'L1 in-process + L2 Redis. Invalidations propagate via a Redis pub/sub channel so all replicas converge.' },
+    ],
+    ghPath: '/tree/main/src/Catalog/Catalog.Api',
+  },
+  {
+    id: 'orders',
+    name: 'Orders',
+    oneLiner: 'Idempotent claim creation. Owns the public idempotency contract for the storefront.',
+    stack: ['ASP.NET Core 9', 'EF Core', 'Postgres ON CONFLICT'],
+    patterns: [
+      { name: 'Idempotency via ON CONFLICT', explainer: '`INSERT … ON CONFLICT (key) DO UPDATE … RETURNING claim_id, (xmax = 0)` makes the first writer win and every replay return the same claim id without a transaction.' },
+    ],
+    ghPath: '/tree/main/src/Orders/Orders.Api',
+  },
+  {
+    id: 'payments',
+    name: 'Payments',
+    oneLiner: 'Stripe + PayPal webhook processors. Transactional outbox for outbound MassTransit events.',
+    stack: ['ASP.NET Core 9', 'EF Core', 'MassTransit', 'Stripe.NET', 'PayPalClient'],
+    patterns: [
+      { name: 'Transactional outbox', explainer: 'Webhook handler writes the payment row + an OutboxMessage in one transaction. A background worker dispatches the event to RabbitMQ; if dispatch fails the next pass retries.' },
+    ],
+    ghPath: '/tree/main/src/Payments/Payments.Api',
+  },
+  {
+    id: 'checkout',
+    name: 'Checkout orchestrator',
+    oneLiner: 'The saga state machine. Coordinates StockReservation → PaymentSession → Capture → Complete, with a compensation arc on every step.',
+    stack: ['ASP.NET Core 9', 'MassTransit Saga State Machine', 'EF Core (saga persistence)'],
+    patterns: [
+      { name: 'Place-order saga', explainer: 'State machine driven by published events. Every state transition is persisted; every failure path has a named compensating event. Visualised below.' },
+    ],
+    ghPath: '/tree/main/src/CheckoutOrchestrator/CheckoutOrchestrator.Api',
+  },
+];
+
+const ADRS = [
+  {
+    title: 'Saga vs 2PC',
+    blurb: 'Why every cross-service flow uses a MassTransit saga instead of a distributed transaction, and what compensation means in practice.',
+    href: '/deep-dives/saga-vs-2pc',
+  },
+  {
+    title: 'Transactional outbox',
+    blurb: 'Reliable event publishing without 2PC. Outbox table + dispatcher worker + idempotent consumers.',
+    href: '/deep-dives/transactional-outbox',
+  },
+  {
+    title: 'Vault rotation',
+    blurb: 'How dynamic Postgres credentials rotate hourly without dropping in-flight queries.',
+    href: '/deep-dives/vault-rotation',
+  },
+];
 ---
 
 <BaseLayout
   title="Lab — Chidi Onyema"
-  description="Live cluster: real .NET 9 microservices, real Postgres / RabbitMQ / Redis / Vault, real chaos controls. Inspect the patterns from chidionyema.dev."
+  description="Architecture canvas: the .NET 9 microservice cluster behind chidionyema.dev. Per-service stack, patterns, code, and the saga choreography."
 >
   <main>
-    <!-- Lab header — short. The page's job is to be the proof; the prose
-         is just enough to frame what follows. -->
+    <!-- Hero -->
     <section class="py-16 lg:py-20 border-b border-border">
       <div class="container-prose px-6 lg:px-8">
         <a
@@ -48,122 +132,196 @@ import PanelHeader from '../components/system/PanelHeader.astro';
           Lab
         </div>
         <h1 class="font-display text-4xl md:text-5xl lg:text-6xl text-primary font-semibold leading-[1.05] tracking-tight mb-5">
-          The live cluster.
+          Eight microservices, one cluster.
         </h1>
         <p class="text-lg text-secondary leading-relaxed max-w-2xl">
-          Real .NET 9 microservices, Postgres, RabbitMQ, Redis, Vault.
-          Click any node to fault-inject a 30-second pause and watch the
-          cluster survive and recover. The page does not narrate — it
-          shows.
+          .NET 9 + Aspire orchestration, MassTransit event mesh, Postgres
+          + Redis + RabbitMQ + Vault. Real production patterns, not
+          slideware. The static reference is below; the live cluster
+          under fault injection is on
+          <a href="/chaos" class="text-primary underline-offset-4 underline decoration-1 hover:decoration-2">/chaos</a>.
         </p>
       </div>
     </section>
 
-    <!-- Background prober — invisible. Continuously fires safe GETs so
-         the cluster has traffic for the watcher to observe even when
-         the visitor is idle. -->
-    <LabBackgroundProber client:only="react" />
-
-    <!-- ─────────────────────────────────────────────────────────────
-         ZONE 1 — WATCH the live cluster
-         Timeline spine + topology + chaos banner + request feed in
-         one shared container. Single time signature for all four.
-         ───────────────────────────────────────────────────────────── -->
+    <!-- Section 1: the cluster -->
     <section class="py-12 lg:py-14" data-reveal>
-      <PanelHeader
-        eyebrow="Watch"
-        title="The live cluster, right now."
-        summary="Pause anything in the topology — the lifecycle timeline names every phase as it happens, the banner identifies the failing request, the wire feed scrolls the actual /api/* traffic. One time signature."
-      />
+      <div class="container-prose px-6 lg:px-8 mb-6">
+        <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-3">
+          The cluster
+        </div>
+        <h2 class="font-display text-2xl md:text-3xl text-primary font-semibold mb-3">
+          One BFF, five microservices, eight infra dependencies.
+        </h2>
+        <p class="text-base text-secondary leading-relaxed">
+          Every browser request lands on the BFF. The BFF fans out over
+          HTTP to the five microservices, which own their own Postgres
+          schemas. Cross-service coordination flows through RabbitMQ via
+          MassTransit. Catalog reads go through Redis as an L2 cache.
+          Identity and the BFF lease dynamic credentials from Vault.
+        </p>
+      </div>
       <div class="container px-6 lg:px-8">
-        <div class="panel-dark p-6 md:p-10 shadow-2xl space-y-6">
-          <ChaosTimelineStrip client:only="react" />
-          <LiveTopologyMap client:only="react" />
-          <ChaosImpactBanner client:only="react" />
-          <div class="border-t border-white/[0.06] pt-6">
-            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
-              Wire feed · every /api/* the BFF handled
+        <ArchitectureCanvas client:only="react" />
+      </div>
+    </section>
+
+    <!-- Section 2: per-service -->
+    <section class="py-12 lg:py-14 border-t border-border" data-reveal>
+      <div class="container-prose px-6 lg:px-8 mb-8">
+        <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-3">
+          Each service
+        </div>
+        <h2 class="font-display text-2xl md:text-3xl text-primary font-semibold mb-3">
+          What every microservice owns.
+        </h2>
+        <p class="text-base text-secondary leading-relaxed">
+          Each service has a single responsibility, its own Postgres
+          schema, and the patterns that responsibility forces. Stack,
+          patterns, and a click-driven demo for the headline pattern.
+        </p>
+      </div>
+
+      <div class="container px-6 lg:px-8 space-y-10">
+        {SERVICES.map((svc) => (
+          <article id={svc.id} class="panel-dark p-6 md:p-8 shadow-2xl">
+            <div class="flex flex-wrap items-baseline justify-between gap-3 mb-3">
+              <h3 class="font-display text-xl md:text-2xl text-primary font-semibold">
+                {svc.name}
+              </h3>
+              <a
+                href={`${GH_REPO}${svc.ghPath}`}
+                class="text-[11px] font-mono uppercase tracking-widest text-muted hover:text-accent transition-colors"
+                target="_blank"
+                rel="noopener"
+              >
+                view on github →
+              </a>
             </div>
-            <LabRequestFeed client:only="react" />
-          </div>
+            <p class="text-secondary leading-relaxed mb-4 max-w-2xl">{svc.oneLiner}</p>
+            <div class="flex flex-wrap gap-1.5 mb-5">
+              {svc.stack.map((s) => (
+                <span class="inline-block text-[10px] font-mono uppercase tracking-widest text-muted/70 border border-white/[0.08] rounded px-2 py-0.5">
+                  {s}
+                </span>
+              ))}
+            </div>
+            <div class="space-y-3 border-t border-white/[0.06] pt-4">
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70">
+                Patterns this service owns
+              </div>
+              {svc.patterns.map((p) => (
+                <div class="border-l-2 border-accent/40 pl-3">
+                  <div class="text-sm text-primary font-semibold mb-1">{p.name}</div>
+                  <div class="text-[13px] text-secondary leading-relaxed">{p.explainer}</div>
+                </div>
+              ))}
+            </div>
+            <div class="mt-6 border-t border-white/[0.06] pt-5">
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+                Drive it · headline pattern
+              </div>
+              {svc.id === 'bff' && <CircuitBreakerDemo client:only="react" />}
+              {svc.id === 'identity' && <VaultRotationDemo client:only="react" />}
+              {svc.id === 'catalog' && <CacheInvalidationDemo client:only="react" />}
+              {svc.id === 'orders' && <IdempotencyDemo client:only="react" />}
+              {svc.id === 'payments' && <EventFlowDemo client:only="react" />}
+              {svc.id === 'checkout' && <CheckoutDemo client:only="react" />}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <!-- Section 3: saga message flow -->
+    <section class="py-12 lg:py-14 border-t border-border" data-reveal>
+      <div class="container-prose px-6 lg:px-8 mb-6">
+        <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-3">
+          Message flow
+        </div>
+        <h2 class="font-display text-2xl md:text-3xl text-primary font-semibold mb-3">
+          The place-order saga, choreographed.
+        </h2>
+        <p class="text-base text-secondary leading-relaxed">
+          MassTransit state machine. Each event is published, each
+          consumer transitions state, each failure has a named
+          compensating event. No 2PC. No distributed locks. Run a real
+          saga with a forced failure on
+          <a href="/chaos" class="text-primary underline-offset-4 underline decoration-1 hover:decoration-2">/chaos</a>
+          to see compensation fire end-to-end.
+        </p>
+      </div>
+      <div class="container px-6 lg:px-8">
+        <SagaMessageFlow client:only="react" />
+      </div>
+    </section>
+
+    <!-- Section 4: extra concurrency demo -->
+    <section class="py-12 lg:py-14 border-t border-border" data-reveal>
+      <div class="container-prose px-6 lg:px-8 mb-6">
+        <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-3">
+          Concurrency
+        </div>
+        <h2 class="font-display text-2xl md:text-3xl text-primary font-semibold mb-3">
+          Optimistic concurrency on real Postgres rows.
+        </h2>
+        <p class="text-base text-secondary leading-relaxed">
+          Click "Run race" to fire N concurrent inventory updates carrying
+          the same xmin. Postgres lets exactly one win; the rest fail with
+          412 Precondition Failed. No lost updates.
+        </p>
+      </div>
+      <div class="container px-6 lg:px-8">
+        <div class="panel-dark p-6 md:p-8 shadow-2xl">
+          <ConcurrencyDemo client:only="react" />
         </div>
       </div>
     </section>
 
-    <!-- ─────────────────────────────────────────────────────────────
-         ZONE 2 — PROVE invariants over time
-         Scoreboard + pattern runners share one container. They answer
-         the same question (is the system provably correct?) at two
-         granularities: invariant claims + per-pattern traffic.
-         ───────────────────────────────────────────────────────────── -->
-    <section id="runners" class="py-12 lg:py-14 border-t border-border" data-reveal>
-      <PanelHeader
-        eyebrow="Prove"
-        title="Continuous invariants under load and under chaos."
-        summary="Three live invariant proofs running real loops, plus nine pattern runners firing real traffic. Pause a dependency — the affected ones turn red, but the invariants do not violate."
-      />
-      <div class="container px-6 lg:px-8">
-        <div class="panel-dark p-6 md:p-8 shadow-2xl space-y-6">
-          <ResilienceScoreboard client:only="react" />
-          <div class="border-t border-white/[0.06] pt-6">
-            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
-              Pattern runners · each loop fires its own real traffic
-            </div>
-            <LabAutoRunners client:only="react" />
-          </div>
+    <!-- Section 5: ADRs -->
+    <section class="py-12 lg:py-14 border-t border-border" data-reveal>
+      <div class="container-prose px-6 lg:px-8 mb-8">
+        <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-3">
+          Decisions on record
         </div>
+        <h2 class="font-display text-2xl md:text-3xl text-primary font-semibold mb-3">
+          Why this is shaped the way it is.
+        </h2>
       </div>
-    </section>
-
-    <!-- ─────────────────────────────────────────────────────────────
-         ZONE 3 — INSPECT raw signals & drive it yourself
-         Quieter chrome. Live metrics + sparklines side by side, then
-         the interactive demo hub for visitors who want to drive a
-         single pattern by hand.
-         ───────────────────────────────────────────────────────────── -->
-    <section id="demo" class="py-12 lg:py-14 border-t border-border" data-reveal>
-      <PanelHeader
-        eyebrow="Inspect"
-        title="Raw signals & drive it yourself."
-        summary="Live measurements on the left, RPS + p99 sparklines on the right. Below: interactive demos for visitors who want to pick scenarios one at a time."
-      />
-      <div class="container px-6 lg:px-8 space-y-6">
-        <div class="panel-dark p-5 md:p-6 shadow-2xl">
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
-                Live measurements · trailing 30s
-              </div>
-              <LiveMetricsPanel client:only="react" />
+      <div class="container px-6 lg:px-8 grid md:grid-cols-3 gap-4">
+        {ADRS.map((adr) => (
+          <a
+            href={adr.href}
+            class="block panel-dark p-5 md:p-6 shadow-2xl group hover:border-accent/40 transition-colors"
+          >
+            <div class="text-[10px] uppercase tracking-[0.22em] text-accent mb-2">
+              ADR
             </div>
-            <div>
-              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
-                RPS + p99 · trailing 60s
-              </div>
-              <LiveSparklines client:only="react" />
+            <h3 class="text-lg text-primary font-semibold mb-2 group-hover:text-accent transition-colors">
+              {adr.title}
+            </h3>
+            <p class="text-[13px] text-secondary leading-relaxed">{adr.blurb}</p>
+            <div class="text-[11px] text-muted mt-4 group-hover:text-accent transition-colors">
+              read →
             </div>
-          </div>
-        </div>
-        <div class="panel-dark p-6 md:p-10 shadow-2xl">
-          <DemoHub client:only="react" />
-        </div>
+          </a>
+        ))}
       </div>
     </section>
 
     <!-- Footer return -->
     <section class="py-16 border-t border-border" data-reveal>
-      <div class="container-prose px-6 lg:px-8 text-center">
+      <div class="container-prose px-6 lg:px-8 text-center space-y-4">
         <a
-          href="/#contact"
+          href="/chaos"
           class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-base font-medium rounded-md hover:bg-secondary transition-colors"
           style="color: rgb(var(--color-base))"
         >
-          Get in touch
-          <span>→</span>
+          See it under fault →
         </a>
-        <div class="mt-4 text-sm text-muted">
-          <a href="/" class="hover:text-primary transition-colors">
-            ← back to chidionyema.dev
+        <div class="text-sm text-muted">
+          <a href="/#contact" class="hover:text-primary transition-colors">
+            or email me about your system →
           </a>
         </div>
       </div>
