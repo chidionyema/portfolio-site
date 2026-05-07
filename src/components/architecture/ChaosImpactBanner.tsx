@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useClusterState } from '../../hooks/useClusterState';
 import type { ConsoleEvent } from '../../lib/cluster-store';
 
@@ -331,9 +331,9 @@ function HopStrip({ ev, tone }: { ev: ConsoleEvent; tone: 'error' | 'success' })
   return (
     <div className="flex items-center gap-2 text-[10.5px] text-muted overflow-x-auto pb-1">
       <Hop label="browser" />
-      <ArrowRight className="w-3 h-3 text-muted/40 shrink-0" />
+      <span className="text-muted/40 shrink-0 text-[11px]">→</span>
       <Hop label={`bff-web · ${ev.instanceId.slice(0, 6)}`} />
-      <ArrowRight className="w-3 h-3 text-muted/40 shrink-0" />
+      <span className="text-muted/40 shrink-0 text-[11px]">→</span>
       {upstream ? (
         <Hop
           label={`${upstream.service.replace('-svc', '')} · ${upstream.instanceId.slice(0, 6)}`}
@@ -342,7 +342,7 @@ function HopStrip({ ev, tone }: { ev: ConsoleEvent; tone: 'error' | 'success' })
       ) : (
         <Hop label="(no upstream — chaos blocked)" extraClass={failTone} />
       )}
-      <ArrowRight className="w-3 h-3 text-muted/40 shrink-0" />
+      <span className="text-muted/40 shrink-0 text-[11px]">→</span>
       <Hop
         label={`${ev.status || 'ERR'} · ${ev.durationMs.toFixed(0)}ms`}
         extraClass={failTone}

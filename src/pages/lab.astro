@@ -8,6 +8,7 @@ import { LabAutoRunners } from '../components/architecture/LabAutoRunners';
 import { LabRequestFeed } from '../components/architecture/LabRequestFeed';
 import { ChaosImpactBanner } from '../components/architecture/ChaosImpactBanner';
 import { LiveSparklines } from '../components/architecture/LiveSparklines';
+import { ResilienceScoreboard } from '../components/architecture/ResilienceScoreboard';
 import PanelHeader from '../components/system/PanelHeader.astro';
 ---
 
@@ -55,6 +56,14 @@ import PanelHeader from '../components/system/PanelHeader.astro';
          service and the metrics panel below reflects it within
          seconds, with no "click a demo to see what happens" step. -->
     <LabBackgroundProber client:load />
+
+    <!-- Resilience scoreboard — three live proofs (idempotency,
+         saga atomicity, OCC concurrency) running continuously
+         against the cluster. Each row turns amber when a dependency
+         is paused, green when it recovers. Visible by default. -->
+    <section class="container px-6 lg:px-8 pt-4">
+      <ResilienceScoreboard client:only="react" />
+    </section>
 
     <!-- Chaos impact banner — only renders while a target is paused
          or briefly after resume. Names the paused target, lists the
