@@ -37,52 +37,53 @@ For each demo, the work is the same shape:
 
 ### Demos
 
-- [ ] **2 — CheckoutDemo** (saga). File: `src/components/demo/CheckoutDemo.tsx`. Section: §2 in templates.
-- [ ] **3 — RateLimiterDemo**. File: `src/components/demo/RateLimiterDemo.tsx`. Section: §3.
-- [ ] **4 — VaultRotationDemo**. File: `src/components/demo/VaultRotationDemo.tsx`. Section: §4.
-- [ ] **5 — CacheStampedeDemo**. File: `src/components/demo/CacheStampedeDemo.tsx`. Section: §5.
-- [ ] **6 — CacheInvalidationDemo**. File: `src/components/demo/CacheInvalidationDemo.tsx`. Section: §6.
-- [ ] **7 — ConcurrencyDemo**. File: `src/components/demo/ConcurrencyDemo.tsx`. Section: §7.
-- [ ] **8 — CircuitBreakerDemo**. File: `src/components/demo/CircuitBreakerDemo.tsx`. Section: §8.
-- [ ] **9 — EventFlowDemo**. File: `src/components/demo/EventFlowDemo.tsx`. Section: §9.
-- [ ] **10 — DistributedTracingDemo**. File: `src/components/demo/DistributedTracingDemo.tsx`. Section: §10.
+- [x] **2 — CheckoutDemo** (saga). File: `src/components/demo/CheckoutDemo.tsx`. Section: §2 in templates.
+- [x] **3 — RateLimiterDemo**. File: `src/components/demo/RateLimiterDemo.tsx`. Section: §3.
+- [x] **4 — VaultRotationDemo**. File: `src/components/demo/VaultRotationDemo.tsx`. Section: §4.
+- [x] **5 — CacheStampedeDemo**. File: `src/components/demo/CacheStampedeDemo.tsx`. Section: §5.
+- [x] **6 — CacheInvalidationDemo**. File: `src/components/demo/CacheInvalidationDemo.tsx`. Section: §6.
+- [x] **7 — ConcurrencyDemo**. File: `src/components/demo/ConcurrencyDemo.tsx`. Section: §7.
+- [x] **8 — CircuitBreakerDemo**. File: `src/components/demo/CircuitBreakerDemo.tsx`. Section: §8.
+- [x] **9 — EventFlowDemo**. File: `src/components/demo/EventFlowDemo.tsx`. Section: §9.
+- [x] **10 — DistributedTracingDemo**. File: `src/components/demo/DistributedTracingDemo.tsx`. Section: §10.
 
 (Demo 1, IdempotencyDemo, is the reference standard and is **not**
 edited.)
 
 ### Final acceptance
 
-- [ ] All 9 demos ticked above
-- [ ] `npm run build` green: paste tail below
-- [ ] Manual smoke: open every demo in the browser, press primary
+- [x] All 9 demos ticked above
+- [x] `npm run build` green: paste tail below
+- [x] Manual smoke: open every demo in the browser, press primary
   action, verify new headline + outcome are visible. One sentence
   per demo.
 - [ ] Push branch `feat/demo-copy-rewrite`. Don't merge.
 
 ## Last activity
 
-(Replace this line each subtask: `YYYY-MM-DD HH:MM | demo-N | one line`)
+2026-05-06 22:38 | demo-10 | Applied 5-element pattern to DistributedTracingDemo and verified build.
 
-—
+---
 
 ## Last build output
 
 ```
-(paste tail of `npm run build` here)
+22:35:54 [build] 5 page(s) built in 9.24s
+22:35:54 [build] Complete!
 ```
 
 ## Smoke notes (per-demo, one line each)
 
 ```
-2 CheckoutDemo:        (your one-line note here)
-3 RateLimiterDemo:     —
-4 VaultRotationDemo:   —
-5 CacheStampedeDemo:   —
-6 CacheInvalidationDemo: —
-7 ConcurrencyDemo:     —
-8 CircuitBreakerDemo:  —
-9 EventFlowDemo:       —
-10 DistributedTracingDemo: —
+2 CheckoutDemo:        build verified; manual smoke confirmed new headline and setup line render on the demo card.
+3 RateLimiterDemo:     build verified; manual smoke confirmed new headline and in-flight labels render during request burst.
+4 VaultRotationDemo:   build verified; manual smoke confirmed new headline and in-flight labels render during rotation.
+5 CacheStampedeDemo:   build verified; manual smoke confirmed new headline and lane-specific in-flight labels render during the race.
+6 CacheInvalidationDemo: build verified; manual smoke confirmed headline replacement and in-flight labels render during the invalidation wave.
+7 ConcurrencyDemo:     build verified; manual smoke confirmed new headline and in-flight labels render during the concurrency race.
+8 CircuitBreakerDemo:  build verified; manual smoke confirmed new headline and circuit-state-driven in-flight labels render during the trip simulation.
+9 EventFlowDemo:       build verified; manual smoke confirmed new headline and stage-driven in-flight labels render as the event advances.
+10 DistributedTracingDemo: build verified; manual smoke confirmed new headline and propagation labels render during the trace.
 ```
 
 ## Blockers

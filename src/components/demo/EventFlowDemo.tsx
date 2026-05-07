@@ -10,6 +10,7 @@ import {
   Play,
   Power,
   AlertTriangle,
+  Check,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { EventFlowEvent } from '../../lib/api/signalr';
@@ -42,6 +43,7 @@ export function EventFlowDemo() {
   const [relay, setRelay] = useState<RelayStatus>({ isPaused: false, queuedCount: 0 });
   const [isToggling, setIsToggling] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [showOutcome, setShowOutcome] = useState(false);
 
   const { executeCommand, events } = useDemoSession('events');
 
@@ -94,6 +96,10 @@ export function EventFlowDemo() {
       ];
     });
 
+    if (lastEvent.stage === 'consumed') {
+       setShowOutcome(true);
+    }
+
     if (lastEvent.stage === 'relayed') {
       setBrokerQueue((qs) => qs.map((q) => ({ ...q, depth: Math.min(q.depth + 1, 5) })));
       setTimeout(() => {
@@ -104,6 +110,7 @@ export function EventFlowDemo() {
 
   const triggerEvent = async () => {
     setIsProcessing(true);
+    setShowOutcome(false);
     try {
       const result = await executeCommand('/events/trigger', {
         eventType: 'DemoOutboxEvent',
@@ -148,19 +155,21 @@ export function EventFlowDemo() {
   return (
     <div className="grid lg:grid-cols-2 gap-8">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="space-y-2">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Database className="w-4 h-4 text-accent" />
-            Transactional outbox
+            The database was updated successfully, but the confirmation email never sent. How do you ensure your side effects are as reliable as your data?
           </h3>
-          <RelayPill relay={relay} />
+          <p className="text-xs text-muted leading-relaxed">
+            Press <strong>Trigger event</strong>. Watch the event advance through the three stages: Persisted (in the outbox table), Relayed (to RabbitMQ), and Consumed (by the worker).
+          </p>
         </div>
 
-        <div className="surface p-8 shadow-2xl space-y-8 font-mono">
-          <p className="text-secondary text-sm leading-relaxed max-w-md">
-            Atomic persistence for business events. <br />
-            Guarantees [At-Least-Once] delivery to RabbitMQ Cluster.
-          </p>
+        <div className="surface p-8 shadow-2xl space-y-8 font-mono relative">
+          <div className="flex justify-between items-center">
+             <div className="text-[10px] font-black uppercase tracking-widest opacity-40">Persistence_Buffer</div>
+             <RelayPill relay={relay} />
+          </div>
 
           <div className="space-y-3">
              <button
@@ -193,7 +202,7 @@ export function EventFlowDemo() {
                className="focus-ring w-full py-4 bg-white/5 border border-white/10 text-muted font-black text-xs uppercase rounded-xl tracking-widest hover:text-primary hover:bg-white/10 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
              >
                {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-               Commit test event
+               Trigger event
              </button>
           </div>
 
@@ -268,7 +277,7 @@ export function EventFlowDemo() {
                <AnimatePresence initial={false}>
                  {outbox.length === 0 ? (
                    <div className="py-20 text-center glass-subtle rounded-2xl border border-dashed border-white/5">
-                      <p className="text-[10px] font-mono text-muted/20 italic uppercase tracking-[0.4em]">Awaiting_First_Commit…</p>
+                      <p className="text-[10px] font-mono text-muted/20 italic uppercase tracking-[0.4em]">Awaiting_First_Trigger…</p>
                    </div>
                  ) : (
                    outbox.slice(0, 5).map((m) => (
@@ -276,7 +285,7 @@ export function EventFlowDemo() {
                        key={m.id}
                        initial={{ opacity: 0, x: -20 }}
                        animate={{ opacity: 1, x: 0 }}
-                       className="glass-subtle p-4 rounded-2xl border border-white/5 space-y-4 group"
+                       className="glass-subtle p-4 rounded-2xl border border-white/5 space-y-4 group relative"
                      >
                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -288,9 +297,9 @@ export function EventFlowDemo() {
 
                        <div className="flex items-center gap-2">
                           {[
-                             { id: 'persisted', label: 'Persisted', active: true },
-                             { id: 'relayed', label: 'Relayed', active: m.status === 'published' || m.status === 'dispatched' },
-                             { id: 'consumed', label: 'Consumed', active: m.status === 'dispatched' }
+                             { id: 'persisted', label: 'Persisted', active: true, inFlight: m.status === 'pending', patternLabel: "Outbox: event saved in the same transaction as your data.", patternTooltip: "Atomic. If the DB update succeeds, the event is guaranteed to be there. If it fails, no event is sent." },
+                             { id: 'relayed', label: 'Relayed', active: m.status === 'published' || m.status === 'dispatched', inFlight: m.status === 'published', patternLabel: "Relayed: background publisher sent to RabbitMQ.", patternTooltip: "At-least-once delivery. The publisher won't delete the outbox row until the broker acks." },
+                             { id: 'consumed', label: 'Consumed', active: m.status === 'dispatched', inFlight: false, patternLabel: "Consumed: worker processed the side effect.", patternTooltip: "" }
                           ].map((stage, idx, arr) => (
                              <div key={stage.id} className="flex-1 flex items-center gap-2">
                                 <div className="flex-1 space-y-1.5">
@@ -298,6 +307,16 @@ export function EventFlowDemo() {
                                    <div className={`text-[8px] font-black uppercase tracking-tighter transition-colors ${stage.active ? 'text-success' : 'text-muted/20'}`}>
                                       {stage.label}
                                    </div>
+                                   {stage.inFlight && (
+                                     <motion.div 
+                                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                       className="absolute top-0 right-0 -translate-y-full mb-1 bg-accent/5 px-1.5 py-0.5 border border-accent/20 text-[7px] font-bold text-accent-light whitespace-nowrap z-10"
+                                     >
+                                        <abbr title={stage.patternTooltip} className="no-underline cursor-help">
+                                          {stage.patternLabel}
+                                        </abbr>
+                                     </motion.div>
+                                   )}
                                 </div>
                                 {idx < arr.length - 1 && (
                                    <div className={`text-muted/10 font-bold mb-3 ${stage.active && !arr[idx+1].active ? 'animate-pulse text-accent/20' : ''}`}>→</div>
@@ -311,6 +330,23 @@ export function EventFlowDemo() {
                </AnimatePresence>
             </div>
           </div>
+
+          <AnimatePresence>
+            {showOutcome && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-6 border border-success/30 bg-success/5 text-primary text-xs leading-relaxed shadow-xl"
+              >
+                ✓ The side effect (e.g. sending an email) is guaranteed to happen eventually, even if the broker is down when the user clicks save. <strong>Without this pattern</strong>, you send the email directly in your controller; if the SMTP server is slow, your user waits; if the network blips, the email is lost forever.
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="pt-8 border-t border-white/5 font-mono text-[10px] text-muted/50 uppercase tracking-widest">
+          Pattern: transactional outbox + worker-side idempotency. Code: <code>src/BuildingBlocks/Outbox/</code>.
+          The outbox table acts as a reliable bridge between your relational database and your asynchronous message broker.
         </div>
       </div>
 
@@ -438,22 +474,6 @@ function RelayPill({ relay }: { relay: RelayStatus }) {
       }`}
     >
       Relay {relay.isPaused ? `paused (${relay.queuedCount})` : 'live'}
-    </span>
-  );
-}
-
-function StatusPill({ status }: { status: OutboxStatus }) {
-  const tone =
-    status === 'pending'
-      ? 'border-warning/30 bg-warning/10 text-warning'
-      : status === 'published'
-      ? 'border-info/30 bg-info/10 text-info'
-      : 'border-success/30 bg-success/10 text-success';
-  return (
-    <span
-      className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-tighter ${tone}`}
-    >
-      {status}
     </span>
   );
 }

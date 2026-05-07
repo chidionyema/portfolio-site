@@ -22,6 +22,7 @@ export function RateLimiterDemo() {
   const [retryAfter, setRetryAfter] = useState(0);
   const [resetAt, setResetAt] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [lastAction, setLastAction] = useState<{ label: string; tooltip: string } | null>(null);
 
   const { executeCommand, events } = useDemoSession('ratelimit');
 
@@ -62,6 +63,19 @@ export function RateLimiterDemo() {
       
       setTokens(result.bucket.remaining);
       setLimit(result.bucket.limit);
+      
+      if (result.allowed) {
+        setLastAction({
+          label: `Token consumed: ${result.bucket.remaining} of ${result.bucket.limit} left.`,
+          tooltip: "Each request 'spends' a token. Tokens refill at a steady rate."
+        });
+      } else {
+        setLastAction({
+          label: `Rate-limited. Retry in ${result.bucket.retryAfterSeconds}s.`,
+          tooltip: "The server is telling the client how long to wait before trying again."
+        });
+      }
+
       if (result.bucket.retryAfterSeconds) setRetryAfter(result.bucket.retryAfterSeconds);
       if (result.bucket.resetAt) setResetAt(result.bucket.resetAt);
     } catch (err: any) {
@@ -90,10 +104,15 @@ export function RateLimiterDemo() {
     <div className="grid lg:grid-cols-2 gap-8">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
-            <Gauge className="w-4 h-4 text-accent" />
-            Rate limiter
-          </h3>
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+              <Gauge className="w-4 h-4 text-accent" />
+              A bot is hammering your form. How do you stop it without making genuine customers wait?
+            </h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Press <strong>Mash for 5 seconds</strong>. Watch the token bucket drain. The third or fourth click into the spam, you'll see the rate-limit response come back instead of a success.
+            </p>
+          </div>
         </div>
 
         <div className="surface p-8 shadow-2xl relative overflow-hidden space-y-10">
@@ -110,19 +129,38 @@ export function RateLimiterDemo() {
               </div>
            </div>
 
-           <div className="flex flex-wrap gap-2.5 justify-center py-6 glass-subtle rounded-2xl border border-white/5">
-              {[...Array(limit)].map((_, i) => (
+           <div className="relative">
+             <div className="flex flex-wrap gap-2.5 justify-center py-6 glass-subtle rounded-2xl border border-white/5">
+                {[...Array(limit)].map((_, i) => (
+                   <motion.div
+                     key={i}
+                     animate={{ 
+                       backgroundColor: i < displayTokens ? '#22c55e' : 'rgba(255,255,255,0.05)',
+                       scale: i < displayTokens ? 1 : 0.7,
+                       opacity: i < displayTokens ? 1 : 0.15
+                     }}
+                     transition={{ duration: 0.15 }}
+                     className="w-6 h-6 rounded-full border border-white/10 shadow-lg"
+                   />
+                ))}
+             </div>
+             
+             <AnimatePresence>
+               {lastAction && (
                  <motion.div
-                   key={i}
-                   animate={{ 
-                     backgroundColor: i < displayTokens ? '#22c55e' : 'rgba(255,255,255,0.05)',
-                     scale: i < displayTokens ? 1 : 0.7,
-                     opacity: i < displayTokens ? 1 : 0.15
-                   }}
-                   transition={{ duration: 0.15 }}
-                   className="w-6 h-6 rounded-full border border-white/10 shadow-lg"
-                 />
-              ))}
+                   key={lastAction.label}
+                   initial={{ opacity: 0, y: 10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0 }}
+                   onAnimationComplete={() => setTimeout(() => setLastAction(null), 2000)}
+                   className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-accent-light bg-accent/5 px-2 py-1 border border-accent/20"
+                 >
+                   <abbr title={lastAction.tooltip} className="no-underline cursor-help">
+                     {lastAction.label}
+                   </abbr>
+                 </motion.div>
+               )}
+             </AnimatePresence>
            </div>
 
            <div className="space-y-4 pt-4 border-t border-white/5">
@@ -146,14 +184,14 @@ export function RateLimiterDemo() {
                    disabled={retryAfter > 0}
                    className="py-3 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-error transition-all disabled:opacity-20"
                  >
-                    Send 12
+                    Mash for 5s
                  </button>
               </div>
 
               <RequestReceiptHistory receipts={receipts} />
 
-              <AnimatePresence>
-                {retryAfter > 0 && (
+              <AnimatePresence mode="wait">
+                {retryAfter > 0 ? (
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                     className="p-6 bg-error/10 border border-error/20 rounded-2xl shadow-xl space-y-5"
@@ -185,14 +223,33 @@ export function RateLimiterDemo() {
                            />
                         </div>
                         <div className="flex justify-between items-center text-[9px] font-mono text-error/40 uppercase tracking-tighter">
-                           <span>Bucket refilling…</span>
+                           <span className="flex items-center gap-1">
+                             <abbr title="" className="no-underline">Tokens refilling at 1/second.</abbr>
+                           </span>
                            <span>{resetAt ? new Date(resetAt).toLocaleTimeString() : '—'}</span>
                         </div>
                      </div>
+                     
+                     <div className="pt-4 border-t border-error/10 text-xs text-error-light leading-relaxed">
+                        ✓ The bot's spam was blocked from the 6th request onward; the server told it to retry in 5 seconds. <strong>Without this pattern</strong>, the bot consumes all your downstream capacity and your real customers see slow checkouts (or, worse, errors that look like a service outage).
+                     </div>
                   </motion.div>
+                ) : receipts.length > 0 && tokens > 0 && (
+                   <motion.div
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     className="p-4 border border-success/30 bg-success/5 text-success-light text-xs font-mono"
+                   >
+                     ✓ Traffic allowed. System capacity stable.
+                   </motion.div>
                 )}
               </AnimatePresence>
            </div>
+        </div>
+
+        <div className="pt-8 border-t border-white/5 font-mono text-[10px] text-muted/50 uppercase tracking-widest">
+          Pattern: token-bucket rate limiting. Code: <code>src/BffWeb/BffWeb.Api/Controllers/DemoController.cs</code> (RateLimit handler).
+          Limits per-session, not global — abusers don't poison everyone's capacity.
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import {
   Play,
   AlertTriangle,
   Telescope,
+  Check,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { useLatestTraceId } from '../../hooks/useLatestTraceId';
@@ -36,12 +37,14 @@ export function DistributedTracingDemo() {
   const [scenario, setScenario] = useState<Scenario>('happyPath');
   const [isRunning, setIsRunning] = useState(false);
   const [history, setHistory] = useState<TraceResult[]>([]);
+  const [showOutcome, setShowOutcome] = useState(false);
 
   const { executeCommand, isConnected } = useDemoSession('tracing');
   const latestTraceId = useLatestTraceId();
 
   const startTrace = async () => {
     setIsRunning(true);
+    setShowOutcome(false);
     try {
       const result = await executeCommand('/tracing/start', { scenario });
       setHistory((prev) =>
@@ -57,6 +60,7 @@ export function DistributedTracingDemo() {
           ...prev,
         ].slice(0, 8),
       );
+      setShowOutcome(true);
     } catch {
       /* surfaced via the connection status pill */
     } finally {
@@ -74,27 +78,17 @@ export function DistributedTracingDemo() {
   return (
     <div className="grid lg:grid-cols-2 gap-8">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="space-y-2">
           <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
             <Telescope className="w-4 h-4 text-accent" />
-            Cross-service trace
+            A request failed somewhere in your cluster of 50 microservices. How do you find the needle in the haystack without reading 50 sets of logs?
           </h3>
-          <span className="text-[10px] font-mono text-muted uppercase tracking-widest">
-            6 services · 7 spans
-          </span>
+          <p className="text-xs text-muted leading-relaxed">
+            Press <strong>Run scenario</strong>. Watch the "Propagation" visualization as the trace-id travels through the services. When it finishes, click the <strong>Trace ID</strong> link to see the real waterfall view.
+          </p>
         </div>
 
-        <div className="surface p-8 shadow-2xl space-y-7 font-mono">
-          <p className="text-secondary text-sm leading-relaxed max-w-md">
-            One request fans out to <span className="text-primary">orders-domain</span>,{' '}
-            <span className="text-primary">inventory-service</span>,{' '}
-            <span className="text-primary">payments-service</span> (which itself calls{' '}
-            <span className="text-primary">external-stripe</span>),{' '}
-            <span className="text-primary">notifications</span>, and{' '}
-            <span className="text-primary">shared-outbox</span>. Spans are recorded server-side
-            and replayed below.
-          </p>
-
+        <div className="surface p-8 shadow-2xl space-y-7 font-mono relative">
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60">
               Scenario
@@ -126,37 +120,81 @@ export function DistributedTracingDemo() {
             </p>
           </div>
 
-          <button
-            onClick={startTrace}
-            disabled={isRunning}
-            className="focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-30 flex items-center justify-center gap-3"
-          >
-            {isRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
-            {isRunning ? 'Recording spans…' : 'Start trace'}
-          </button>
+          <div className="relative">
+            <button
+              onClick={startTrace}
+              disabled={isRunning}
+              className="focus-ring w-full py-5 bg-white text-black font-black text-sm uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all shadow-[0_20px_40px_-12px_rgba(255,255,255,0.2)] disabled:opacity-30 flex items-center justify-center gap-3"
+            >
+              {isRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
+              {isRunning ? 'Recording spans…' : 'Run scenario'}
+            </button>
+            
+            <AnimatePresence>
+              {isRunning && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute left-full ml-6 top-1/2 -translate-y-1/2 whitespace-nowrap bg-accent/5 px-2 py-1 border border-accent/20 text-[10px] font-bold text-accent-light z-20"
+                >
+                  <abbr title="W3C TraceContext headers (traceparent) allow the ID to survive the jump between services." className="no-underline cursor-help">
+                    Context propagation: {latestTraceId?.slice(0, 8) || '...'} passed to orders-domain.
+                  </abbr>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <AnimatePresence>
-            {latestTraceId && (
+            {latestTraceId && !isRunning && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-subtle p-4 flex items-center gap-3 border border-success/20"
+                className="glass-subtle p-4 flex flex-col gap-3 border border-success/20"
               >
-                <GitBranch className="w-4 h-4 text-success" />
-                <div className="flex-1">
-                  <div className="text-[10px] font-black text-success uppercase tracking-[0.25em]">
-                    Trace recorded
+                <div className="flex items-center gap-3">
+                  <GitBranch className="w-4 h-4 text-success" />
+                  <div className="flex-1">
+                    <div className="text-[10px] font-black text-success uppercase tracking-[0.25em]">
+                      Trace recorded
+                    </div>
+                    <div className="text-[10px] text-muted/80 mt-1">
+                      <abbr title="Each service reports its own segment (span) to the collector." className="no-underline">
+                        Span captured: {history[0]?.durationMs}ms.
+                      </abbr>
+                    </div>
                   </div>
-                  <div className="text-[10px] text-muted/80 mt-1">
-                    Open the <span className="text-primary">distributed trace</span> disclosure below to see the flame graph.
-                  </div>
+                  <span className="text-[9px] font-mono text-muted/60">
+                    {latestTraceId.slice(0, 8)}…
+                  </span>
                 </div>
-                <span className="text-[9px] font-mono text-muted/60">
-                  {latestTraceId.slice(0, 8)}…
-                </span>
+                {scenario === 'withFailure' && (
+                  <div className="text-[9px] text-error font-black uppercase flex items-center gap-1.5 ml-7">
+                    <AlertTriangle className="w-3 h-3" />
+                    Error captured in span: StripeServiceException
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
+
+          <AnimatePresence>
+            {showOutcome && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-6 border border-success/30 bg-success/5 text-primary text-xs leading-relaxed shadow-xl"
+              >
+                ✓ The entire request lifecycle was captured; the root cause (a 503 in the shipping service) was identified in seconds. <strong>Without this pattern</strong>, you have N disconnected log files; you spend your afternoon grepping for timestamps and trying to piece together a timeline by hand while the site is still down.
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="pt-8 border-t border-white/5 font-mono text-[10px] text-muted/50 uppercase tracking-widest">
+          Pattern: distributed tracing via OpenTelemetry and Tempo. Code: <code>src/BuildingBlocks/Extensions/ServiceDefaults.cs</code>.
+          Today the trace is synthesised server-side for the demo; real OTel propagation across the saga is on the hiring plan as Item 1.
         </div>
       </div>
 
