@@ -66,23 +66,24 @@ import PanelHeader from '../components/system/PanelHeader.astro';
          seconds, with no "click a demo to see what happens" step. -->
     <LabBackgroundProber client:only="react" />
 
-    <!-- Resilience scoreboard — three live proofs (idempotency,
-         saga atomicity, OCC concurrency) running continuously
-         against the cluster. Each row turns amber when a dependency
-         is paused, green when it recovers. Visible by default. -->
-    <section class="container px-6 lg:px-8 pt-4">
-      <ResilienceScoreboard client:only="react" />
-    </section>
-
     <!-- Chaos impact banner — only renders while a target is paused
-         or briefly after resume. Names the paused target, lists the
-         runners that depend on it, counts 5xx as they land, then
-         flips to a recovery view showing time-to-first-success per
-         runner once resumed. The cause-effect-recovery story made
-         explicit so the visitor doesn't have to scan 9 runner cards
-         to find the one that's failing. -->
+         or briefly after resume. Names the paused target, features the
+         most recent failing request with its hop chain + plain-English
+         narration. Goes FIRST under the header so the moment you pause,
+         the cause/effect/recovery story is the dominant element on
+         the page (auto-scrolls into view too). -->
     <section class="container px-6 lg:px-8 pt-4">
       <ChaosImpactBanner client:only="react" />
+    </section>
+
+    <!-- Resilience scoreboard — three live invariant proofs
+         (idempotency, saga atomicity, OCC concurrency). Sits below
+         the chaos banner because it's the steady-state "is the system
+         provably correct" view; the banner is the "what just broke"
+         view. Each row turns amber when a dependency is paused,
+         green when it recovers. -->
+    <section class="container px-6 lg:px-8 pt-4">
+      <ResilienceScoreboard client:only="react" />
     </section>
 
     <!-- Live cluster — topology + metrics in one eyeline. -->
