@@ -78,8 +78,8 @@ jobs:
 
       - name: Install Playwright + axe
         run: |
+          npm install --no-save playwright @axe-core/playwright
           npx playwright install --with-deps chromium
-          npm install --no-save @axe-core/playwright
 
       - name: Build
         env:
