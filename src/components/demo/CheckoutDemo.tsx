@@ -247,7 +247,18 @@ export function CheckoutDemo() {
           ) : (
             <>
               <div className="surface p-8 shadow-2xl">
-                <VerticalSagaLadder sagaState={sagaState} />
+                <div className="mb-4">
+                  <h4 className="text-[10px] font-mono text-muted uppercase tracking-[0.3em] mb-1">
+                    Choreography · cross-service event flow
+                  </h4>
+                  <p className="text-[10px] text-muted/60 leading-relaxed">
+                    Each row is one message — direct HTTP at the top,
+                    RabbitMQ events between services after that. The saga
+                    state machine in checkout-orchestrator drives all of
+                    it; there is no central transaction.
+                  </p>
+                </div>
+                <SagaSequenceView sagaState={sagaState} localEvents={localEvents} />
               </div>
 
               <CompensationDrawer sagaState={sagaState} localEvents={localEvents} />
@@ -604,6 +615,225 @@ const SAGA_STEPS = [
   { id: 'payment_ready', label: 'Payment session created' },
   { id: 'completed', label: 'Order completed' },
 ] as const;
+
+// Saga choreography. Each row is one message exchange: a service
+// publishing or consuming a real RabbitMQ event (or, for the first two
+// rows, an HTTP request). Maps the saga-step name the SignalR bridge
+// sends (initiated, stock_reserved, ...) to the underlying message
+// flow so the visitor sees the actual cross-service coordination
+// instead of a single "Stock reserved" badge that hides four hops.
+//
+// Source code anchors: ritualworks-platform/src/CheckoutOrchestrator/
+// Application/Sagas/CheckoutSaga.cs lines 71-150 (Initially / During
+// blocks). Consumers: src/Catalog/Catalog.Application/Consumers/
+// StockReservationRequestedConsumer.cs +
+// src/Payments/Payments.Application/Consumers/
+// PaymentSessionRequestedConsumer.cs.
+type SagaLaneId = 'browser' | 'bff' | 'checkout' | 'catalog' | 'payments';
+
+interface SagaHop {
+  id: string;
+  source: SagaLaneId;
+  dest: SagaLaneId;
+  eventName: string;
+  /** Short why-it-happens annotation rendered under the event name. */
+  detail: string;
+  /** SignalR step name that flips this hop from pending → done. */
+  signalsStep: string | null;
+  kind: 'http' | 'event' | 'compensation';
+}
+
+const SAGA_LANES: { id: SagaLaneId; label: string }[] = [
+  { id: 'browser',  label: 'Browser' },
+  { id: 'bff',      label: 'bff-web' },
+  { id: 'checkout', label: 'checkout-orchestrator' },
+  { id: 'catalog',  label: 'catalog-svc' },
+  { id: 'payments', label: 'payments-svc' },
+];
+
+const SAGA_HAPPY_PATH: SagaHop[] = [
+  { id: 'http-1',          source: 'browser',  dest: 'bff',      eventName: 'POST /api/demo/saga/start', detail: 'Visitor clicks Pay',                                kind: 'http',  signalsStep: null },
+  { id: 'http-2',          source: 'bff',      dest: 'checkout', eventName: 'POST /api/checkouts',       detail: 'BFF proxies to checkout-orchestrator',             kind: 'http',  signalsStep: null },
+  { id: 'stock-req',       source: 'checkout', dest: 'catalog',  eventName: 'StockReservationRequested', detail: 'Saga: Initial → Initiated · publish via RabbitMQ', kind: 'event', signalsStep: 'initiated' },
+  { id: 'stock-reserved',  source: 'catalog',  dest: 'checkout', eventName: 'StockReserved',             detail: 'Catalog: Product.ReserveStock + outbox publish',   kind: 'event', signalsStep: 'stock_reserved' },
+  { id: 'payment-req',     source: 'checkout', dest: 'payments', eventName: 'PaymentSessionRequested',   detail: 'Saga: Initiated → StockReserved · publish',        kind: 'event', signalsStep: 'stock_reserved' },
+  { id: 'payment-created', source: 'payments', dest: 'checkout', eventName: 'PaymentSessionCreated',     detail: 'Payments: create Stripe session + outbox publish', kind: 'event', signalsStep: 'payment_ready' },
+  { id: 'payment-done',    source: 'payments', dest: 'checkout', eventName: 'PaymentCompleted',          detail: 'On Stripe webhook · saga: → Completed (final)',    kind: 'event', signalsStep: 'completed' },
+];
+
+const SAGA_COMPENSATION_PATHS: Record<string, SagaHop[]> = {
+  stock_failed: [
+    { id: 'comp-stock-failed', source: 'catalog',  dest: 'checkout', eventName: 'StockReservationFailed', detail: 'Saga: Initiated → Abandoned (no compensation needed — nothing reserved)', kind: 'compensation', signalsStep: 'stock_failed' },
+  ],
+  payment_failed: [
+    { id: 'comp-payment-failed', source: 'payments', dest: 'checkout', eventName: 'PaymentSessionFailed',   detail: 'Saga: StockReserved → Compensating',                  kind: 'compensation', signalsStep: 'payment_failed' },
+    { id: 'comp-release',        source: 'checkout', dest: 'catalog',  eventName: 'StockReleaseRequested', detail: 'Compensation: return reserved stock to inventory',     kind: 'compensation', signalsStep: 'compensated' },
+  ],
+};
+
+function SagaSequenceView({
+  sagaState,
+  localEvents,
+}: {
+  sagaState: string;
+  localEvents: SagaStepEvent[];
+}) {
+  const completedSteps = new Set(localEvents.map((e) => e.step));
+  // Active step = the most recent SignalR event we've seen, falls back
+  // to whatever sagaState says when the events list is empty.
+  const activeStep = localEvents[0]?.step ?? sagaState;
+
+  // Add compensation rows when a failure step has been observed.
+  const hops: SagaHop[] = [...SAGA_HAPPY_PATH];
+  for (const [trigger, comp] of Object.entries(SAGA_COMPENSATION_PATHS)) {
+    if (completedSteps.has(trigger) || sagaState === trigger) {
+      hops.push(...comp);
+    }
+  }
+
+  // Index for quick lane-position lookup when drawing the arrow.
+  const laneIndex = Object.fromEntries(
+    SAGA_LANES.map((l, i) => [l.id, i] as const),
+  ) as Record<SagaLaneId, number>;
+
+  return (
+    <div className="font-mono">
+      {/* Header: lane labels for orientation */}
+      <div className="grid gap-0 mb-4 pb-3 border-b border-white/10"
+           style={{ gridTemplateColumns: `repeat(${SAGA_LANES.length}, 1fr)` }}>
+        {SAGA_LANES.map((lane) => (
+          <div key={lane.id} className="text-[9px] uppercase tracking-[0.2em] text-muted/60 text-center font-bold">
+            {lane.label}
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-1">
+        {hops.map((hop, idx) => {
+          const isDone = hop.signalsStep ? completedSteps.has(hop.signalsStep) : idx < 2 && (sagaState !== 'Initial' || localEvents.length > 0);
+          const isActive = hop.signalsStep === activeStep && !isDone;
+          const isCompensation = hop.kind === 'compensation';
+          const dim = !isDone && !isActive;
+
+          return (
+            <SagaSequenceRow
+              key={hop.id}
+              hop={hop}
+              laneIndex={laneIndex}
+              laneCount={SAGA_LANES.length}
+              isDone={isDone}
+              isActive={isActive}
+              isCompensation={isCompensation}
+              dim={dim}
+            />
+          );
+        })}
+      </div>
+
+      <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-muted/60 uppercase tracking-widest space-y-1">
+        <div>http = direct HTTP call · event = published via RabbitMQ outbox</div>
+        <div>compensation = saga's failure-recovery path (red rows)</div>
+      </div>
+    </div>
+  );
+}
+
+function SagaSequenceRow({
+  hop,
+  laneIndex,
+  laneCount,
+  isDone,
+  isActive,
+  isCompensation,
+  dim,
+}: {
+  hop: SagaHop;
+  laneIndex: Record<SagaLaneId, number>;
+  laneCount: number;
+  isDone: boolean;
+  isActive: boolean;
+  isCompensation: boolean;
+  dim: boolean;
+}) {
+  const fromIdx = laneIndex[hop.source];
+  const toIdx = laneIndex[hop.dest];
+  const left = Math.min(fromIdx, toIdx);
+  const span = Math.abs(toIdx - fromIdx) + 1;
+  const reversed = toIdx < fromIdx;
+
+  const tone = isCompensation
+    ? 'text-error border-error/30'
+    : isActive
+      ? 'text-accent border-accent/40'
+      : isDone
+        ? 'text-success border-success/30'
+        : 'text-muted/40 border-white/5';
+
+  return (
+    <div
+      className={`grid gap-0 items-stretch transition-all duration-300 ${dim ? 'opacity-30' : 'opacity-100'}`}
+      style={{ gridTemplateColumns: `repeat(${laneCount}, 1fr)` }}
+    >
+      {Array.from({ length: laneCount }).map((_, i) => {
+        const isInArrow = i >= left && i < left + span;
+        const isStart = !reversed ? i === fromIdx : i === fromIdx;
+        const isEnd = i === toIdx;
+        const showArrow = isInArrow;
+        return (
+          <div
+            key={i}
+            className={`relative h-12 flex items-center justify-center px-2 border-l-2 first:border-l-0 ${
+              showArrow ? tone : 'border-transparent'
+            }`}
+          >
+            {showArrow && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* The arrow line spans this cell */}
+                <div className={`absolute left-0 right-0 top-1/2 h-px ${
+                  isCompensation ? 'bg-error/40' : isActive ? 'bg-accent/40' : isDone ? 'bg-success/40' : 'bg-white/5'
+                }`} />
+                {isStart && (
+                  <div className={`absolute left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${
+                    isCompensation ? 'bg-error' : isActive ? 'bg-accent animate-pulse' : isDone ? 'bg-success' : 'bg-muted/40'
+                  }`} />
+                )}
+                {isEnd && (
+                  <div className={`absolute right-0 top-1/2 -translate-y-1/2 ${
+                    isCompensation ? 'text-error' : isActive ? 'text-accent' : isDone ? 'text-success' : 'text-muted/40'
+                  }`}>
+                    {reversed ? '◄' : '►'}
+                  </div>
+                )}
+                {/* Label + detail centered above the arrow line on the start cell */}
+                {isStart && (
+                  <div
+                    className="absolute -top-1 z-10 flex flex-col items-start gap-0.5 leading-tight"
+                    style={{
+                      left: '8px',
+                      // Span across the cells the arrow occupies so the
+                      // label doesn't get clipped by the cell border.
+                      width: `calc(${span * 100}% + ${(span - 1) * 2}px)`,
+                    }}
+                  >
+                    <span className={`text-[10.5px] font-bold tracking-tight ${
+                      isCompensation ? 'text-error' : isActive ? 'text-accent' : isDone ? 'text-secondary' : 'text-muted/50'
+                    }`}>
+                      {hop.kind === 'http' ? '→ ' : ''}
+                      {hop.eventName}
+                    </span>
+                    <span className="text-[9px] text-muted/60">
+                      {hop.detail}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function VerticalSagaLadder({ sagaState }: { sagaState: string }) {
   const steps = [...SAGA_STEPS] as Array<{ id: string; label: string }>;
