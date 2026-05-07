@@ -4,35 +4,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Light editorial palette. The dark dashboard look is reserved
-        // for the embedded "operations console" panel (live topology,
-        // dock, demo cards) which retains its own dark surface so it
-        // reads as a separate device embedded in the article.
-        base: '#FAFAF7',         // warm off-white page background
-        surface: '#FFFFFF',      // card surface
-        'surface-warm': '#F4F1EA', // slightly warmer secondary surface
-        'panel-dark': '#0B0B0E', // for the embedded ops console panel
-        border: '#E8E5DE',       // hairline borders on light surfaces
-        'border-strong': '#D9D4C8',
+        // CSS-variable-backed tokens. Light editorial palette set in
+        // :root by BaseLayout; .panel-dark overrides the same variables
+        // so embedded ops-console panels use a dark surface without
+        // forking the token system. Every text-primary / bg-surface /
+        // border-border in the codebase auto-adapts based on which
+        // surface it's rendered on.
+        base: 'rgb(var(--color-base) / <alpha-value>)',
+        surface: 'rgb(var(--color-surface) / <alpha-value>)',
+        'surface-warm': 'rgb(var(--color-surface-warm) / <alpha-value>)',
+        'panel-dark': 'rgb(var(--color-panel-dark) / <alpha-value>)',
 
-        // States — readable on cream backgrounds
-        success: '#15803D',
-        info: '#1E40AF',
-        warning: '#B45309',
-        error: '#B91C1C',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        'border-strong': 'rgb(var(--color-border-strong) / <alpha-value>)',
 
-        // Accent — deep navy-purple, the only saturated colour on the
-        // editorial side. Dashboard sections use their own brighter
-        // neon tokens scoped to their dark surfaces.
+        // States — same hex on both surfaces; readable enough on each.
+        success: '#16A34A',
+        info: '#2563EB',
+        warning: '#D97706',
+        error: '#DC2626',
+
         accent: {
-          DEFAULT: '#3B2D87',
-          light: '#5B3FD6',
+          DEFAULT: 'rgb(var(--color-accent) / <alpha-value>)',
+          light: 'rgb(var(--color-accent-light) / <alpha-value>)',
         },
 
-        // Text — warm-black not pure-black, easier on cream
-        primary: '#14110F',
-        secondary: '#3D3833',
-        muted: '#6B665E',
+        primary: 'rgb(var(--color-text-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+        muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
       },
       fontFamily: {
         // Display = Fraunces (variable serif already imported in

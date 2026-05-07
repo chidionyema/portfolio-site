@@ -915,11 +915,6 @@ export const LiveTopologyMap: React.FC = () => {
         </g>
       </svg>
 
-      {/* Impact ribbon — visible cause-and-effect for chaos actions.
-          Each card shows what depends on what's currently paused, the
-          live success/fail count from the trailing 60s window, and a
-          recovery time after resume. Without this, "pause catalog" is
-          a button-press without a visible consequence. */}
       <ImpactRibbon
         chaos={chaos}
         events={demoEventsRef.current}
@@ -927,18 +922,6 @@ export const LiveTopologyMap: React.FC = () => {
         chaosSessionStarts={chaosSessionStartRef.current}
         warmingUntil={warmingUntilRef.current}
       />
-
-      <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 text-[10px] font-mono uppercase tracking-widest text-muted/70">
-        <span>click any node to pause it · auto-resume after 30s</span>
-        <span>{(() => {
-          const cutoff = performance.now() - REPLICA_TTL_MS;
-          const total = Object.values(replicas).reduce(
-            (s, m) => s + Object.values(m).filter((ts) => ts >= cutoff).length,
-            0,
-          );
-          return `${total} replica${total === 1 ? '' : 's'} live`;
-        })()}</span>
-      </div>
     </div>
   );
 };

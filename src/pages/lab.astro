@@ -1,0 +1,114 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { DemoHub } from '../components/demo/DemoHubLite';
+import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
+import { GrafanaPanel } from '../components/metrics/GrafanaPanel';
+import PanelHeader from '../components/system/PanelHeader.astro';
+---
+
+<BaseLayout
+  title="Lab — Chidi Onyema"
+  description="Live cluster: real .NET 9 microservices, real Postgres / RabbitMQ / Redis / Vault, real chaos controls. Inspect the patterns from chidionyema.dev."
+>
+  <main>
+    <!-- Lab header — frames the page for visitors who arrived here from
+         the home-page CTA. Plain English: this is the live cluster, here's
+         what to do with it. -->
+    <section class="py-20 lg:py-28 border-b border-border">
+      <div class="container-prose px-6 lg:px-8">
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 text-sm text-muted hover:text-primary transition-colors mb-10"
+        >
+          ← Back home
+        </a>
+        <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-4">
+          Lab
+        </div>
+        <h1 class="font-display text-4xl md:text-5xl lg:text-6xl text-primary font-semibold leading-[1.05] tracking-tight mb-6">
+          The live cluster.
+        </h1>
+        <p class="text-lg text-secondary leading-relaxed max-w-2xl mb-4">
+          Everything below is real. The topology shows what's actually
+          running on the .NET 9 cluster behind this site — Postgres,
+          RabbitMQ, Redis, Vault, and five microservices coordinating via
+          MassTransit events.
+        </p>
+        <p class="text-lg text-secondary leading-relaxed max-w-2xl">
+          Click any service or infra node to fault-inject a 30-second
+          pause and watch the dependent demos start failing. The page
+          self-recovers. Every demo below proxies to a real backend —
+          the View source link on each one points at the production code
+          on GitHub.
+        </p>
+      </div>
+    </section>
+
+    <!-- Live topology + chaos panel -->
+    <section class="py-16 lg:py-20" data-reveal>
+      <div class="container px-6 lg:px-8">
+        <div class="panel-dark p-6 md:p-10 shadow-2xl">
+          <LiveTopologyMap client:load />
+        </div>
+      </div>
+    </section>
+
+    <!-- Demos -->
+    <section id="demo" class="py-16 lg:py-20 border-t border-border" data-reveal>
+      <PanelHeader
+        eyebrow="Patterns"
+        title="Working demos."
+        summary="Each one proxies to a real backend service. Press Send and the BFF makes a real HTTP / RabbitMQ / Postgres round-trip; click View source to read the production code that handled it."
+      />
+      <div class="container px-6 lg:px-8">
+        <div class="panel-dark p-6 md:p-10 shadow-2xl">
+          <DemoHub client:load />
+        </div>
+      </div>
+    </section>
+
+    <!-- Telemetry -->
+    <section class="py-16 lg:py-20 border-t border-border" data-reveal>
+      <PanelHeader
+        eyebrow="Telemetry"
+        title="What the cluster is doing right now."
+        summary="Prometheus and OpenTelemetry through Grafana Cloud — the same dashboards an on-call engineer would watch. Embedded here because the demos above are what's generating the traffic."
+      />
+      <div class="container px-6 lg:px-8">
+        <div class="panel-dark p-6 md:p-10 grid md:grid-cols-2 gap-6 shadow-2xl">
+          <GrafanaPanel
+            panelId={1}
+            title="Requests per second"
+            height={240}
+            client:visible
+          />
+          <GrafanaPanel
+            panelId={2}
+            title="Response time (p99)"
+            height={240}
+            client:visible
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer return -->
+    <section class="py-16 border-t border-border" data-reveal>
+      <div class="container-prose px-6 lg:px-8 text-center">
+        <a
+          href="/#contact"
+          class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-base font-medium rounded-md hover:bg-secondary transition-colors"
+          style="color: rgb(var(--color-base))"
+        >
+          Get in touch
+          <span>→</span>
+        </a>
+        <div class="mt-4 text-sm text-muted">
+          <a href="/" class="hover:text-primary transition-colors">
+            ← back to chidionyema.dev
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
