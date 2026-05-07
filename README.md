@@ -72,7 +72,7 @@ gated on CI passing. Mirrors the backend's Fly auto-deploy pattern (see
 
    ```bash
    npx wrangler login
-   npx wrangler pages project create chidionyema-dev --production-branch main
+   npx wrangler pages project create ritualworks --production-branch main
    ```
 
 2. In **GitHub repo → Settings → Secrets and variables → Actions**:
@@ -83,17 +83,18 @@ gated on CI passing. Mirrors the backend's Fly auto-deploy pattern (see
      template: *Edit Cloudflare Workers* (or custom token with
      `Account → Cloudflare Pages → Edit`).
    - `CLOUDFLARE_ACCOUNT_ID` — copy from any Cloudflare dashboard URL.
+   - `PUBLIC_API_URL` — production BFF URL, e.g.
+     `https://ritualworks-bffweb.fly.dev`. Inlined into the build at
+     compile time, so it's a secret rather than a variable.
 
    **Variables** (visible in build logs, easy to tweak):
-   - `CLOUDFLARE_PAGES_PROJECT` — `chidionyema-dev` (or whatever you
-     named it in step 1).
-   - `PUBLIC_API_URL` — production BFF URL, e.g.
-     `https://ritualworks-bffweb.fly.dev`.
-   - `PUBLIC_SIGNALR_URL` — same host, hub path, e.g.
+   - `CLOUDFLARE_PAGES_PROJECT` — defaults to `ritualworks`. Override
+     here if you renamed the Pages project.
+   - `PUBLIC_SIGNALR_URL` — same host as `PUBLIC_API_URL`, hub path, e.g.
      `https://ritualworks-bffweb.fly.dev/hubs/demo`.
    - `PUBLIC_CLUSTER_LABEL` — optional; defaults to `production`.
 
-3. In **Cloudflare dashboard → Pages → chidionyema-dev → Custom domains**,
+3. In **Cloudflare dashboard → Pages → ritualworks → Custom domains**,
    add `chidionyema.dev` and follow the DNS instructions.
 
 That's it. After this, every merge to `main` triggers CI, and on success
