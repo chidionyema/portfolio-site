@@ -11,6 +11,20 @@ export interface DemoMeta {
   valueProp: string;
   Icon: LucideIcon;
   deepDiveSlug?: string;
+  /**
+   * Path within ritualworks-platform that holds the primary
+   * implementation behind this demo. Rendered as a "view source" link
+   * so technical reviewers can verify the claim instead of taking the
+   * UI's word for it.
+   */
+  sourcePath?: string;
+}
+
+const REPO_BASE_URL =
+  'https://github.com/chidionyema/ritualworks-platform/blob/main/';
+
+export function sourceUrlFor(demo: DemoMeta): string | null {
+  return demo.sourcePath ? `${REPO_BASE_URL}${demo.sourcePath}` : null;
 }
 
 export interface DemoGroup {
@@ -24,33 +38,44 @@ export const demoGroups: DemoGroup[] = [
     id: 'data',
     label: 'Reliable transactions',
     demos: [
-      { id: 'checkout',    label: 'Distributed saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Stops orders from being half-charged', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc' },
-      { id: 'events',      label: 'Transactional outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Never silently drops a published event', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox' },
-      { id: 'concurrency', label: 'Optimistic locking',  desc: 'Pre-emptive conflict detection in Postgres',   valueProp: 'Two edits never overwrite each other', Icon: DemoIcon.concurrency },
+      { id: 'checkout',    label: 'Distributed saga',         desc: 'Transaction orchestration across Fly.io nodes', valueProp: 'Stops orders from being half-charged', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc',
+        sourcePath: 'src/CheckoutOrchestrator/CheckoutOrchestrator.Application/Sagas/CheckoutSaga.cs' },
+      { id: 'events',      label: 'Transactional outbox',       desc: 'Atomic event persistence and broker relay',    valueProp: 'Never silently drops a published event', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox',
+        sourcePath: 'src/Payments/Payments.Application/Consumers/PaymentSessionRequestedConsumer.cs' },
+      { id: 'concurrency', label: 'Optimistic locking',  desc: 'Pre-emptive conflict detection in Postgres',   valueProp: 'Two edits never overwrite each other', Icon: DemoIcon.concurrency,
+        sourcePath: 'src/Catalog/Catalog.Api/Controllers/DemoConcurrencyController.cs' },
     ],
   },
   {
     id: 'resilience',
     label: 'Resilience under load',
     demos: [
-      { id: 'circuit',     label: 'Circuit breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Stops a slow dep from taking everyone down', Icon: DemoIcon.circuit },
-      { id: 'idempotency', label: 'Idempotency keys',     desc: 'Safe retries with Redis-backed identity',   valueProp: 'Safe to retry — never charges twice', Icon: DemoIcon.idempotency },
-      { id: 'ratelimit',   label: 'Rate limiting',      desc: 'Token-bucket throttling and QoS',       valueProp: 'One bad client cannot starve everyone else', Icon: DemoIcon.ratelimit },
+      { id: 'circuit',     label: 'Circuit breaker', desc: 'Fail-fast and graceful recovery pipeline', valueProp: 'Stops a slow dep from taking everyone down', Icon: DemoIcon.circuit,
+        sourcePath: 'src/BffWeb/BffWeb.Api/Controllers/DemoController.cs' },
+      // Idempotency now uses Postgres UNIQUE constraint, not Redis —
+      // updated copy elsewhere; sidebar desc kept short.
+      { id: 'idempotency', label: 'Idempotency keys',     desc: 'Safe retries via PG UNIQUE constraint',   valueProp: 'Safe to retry — never charges twice', Icon: DemoIcon.idempotency,
+        sourcePath: 'src/Orders/Orders.Api/Controllers/DemoIdempotencyController.cs' },
+      { id: 'ratelimit',   label: 'Rate limiting',      desc: 'Token-bucket throttling and QoS',       valueProp: 'One bad client cannot starve everyone else', Icon: DemoIcon.ratelimit,
+        sourcePath: 'src/BffWeb/BffWeb.Api/Controllers/DemoController.cs' },
     ],
   },
   {
     id: 'caching',
     label: 'Cache coherence',
     demos: [
-      { id: 'stampede', label: 'Multi-tier cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'A popular cache key never floods the DB', Icon: DemoIcon.stampede },
-      { id: 'cache',    label: 'Pub/sub invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Updates show up everywhere within ms', Icon: DemoIcon.cache },
+      { id: 'stampede', label: 'Multi-tier cache',    desc: 'Memory + Redis tiers prevent thundering herd', valueProp: 'A popular cache key never floods the DB', Icon: DemoIcon.stampede,
+        sourcePath: 'src/Catalog/Catalog.Api/Controllers/DemoTestController.cs' },
+      { id: 'cache',    label: 'Pub/sub invalidation', desc: 'Real-time cache coherence across nodes',     valueProp: 'Updates show up everywhere within ms', Icon: DemoIcon.cache,
+        sourcePath: 'src/Catalog/Catalog.Application/Commands/UpdateProductCommand.cs' },
     ],
   },
   {
     id: 'secrets',
     label: 'Secret lifecycle',
     demos: [
-      { id: 'vault', label: 'Dynamic credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Database passwords rotate with no downtime', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
+      { id: 'vault', label: 'Dynamic credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Database passwords rotate with no downtime', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation',
+        sourcePath: 'src/Identity/Identity.Api/Controllers/AdminController.cs' },
     ],
   },
   // Observability group used to host a "Distributed tracing" demo, but
