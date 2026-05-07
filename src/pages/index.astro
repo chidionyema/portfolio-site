@@ -12,6 +12,7 @@ import { getMetricsSnapshot } from '../lib/api/demo-client';
 
 import { Scorecard } from '../components/quality/Scorecard';
 import { GrafanaPanel } from '../components/metrics/GrafanaPanel';
+import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
 import PanelHeader from '../components/system/PanelHeader.astro';
 
 const initialMetrics = await getMetricsSnapshot().catch(() => undefined);
@@ -46,17 +47,21 @@ const deepDives = dd.map((e) => ({
 
 
 
-    <!-- Demo panels — each demo is one widget in the operations console.
-         Header is dashboard chrome: thin label, plain English title,
-         optional status pill on the right. Same shape used by the other
-         sections so the page reads as one panel grid, not five slabs. -->
+    <!-- "Inspect the work" — the live cluster + demos sit here as
+         supporting proof, not as the main artefact. The hero already
+         did the conversion work; this is for the technical reviewer
+         who wants to verify the depth before recommending. -->
     <section id="demo" class="py-20 bg-black border-t border-white/10">
       <div class="container mx-auto px-4" data-reveal>
         <PanelHeader
-          eyebrow="Operations"
-          title="Try the patterns"
-          summary="Nine working demos. Each is wired to real Postgres, RabbitMQ, Redis, Vault, or Stripe — not in-memory state. Click View source on any demo to verify against the production code."
+          eyebrow="Inspect the work"
+          title="The site itself is the demo"
+          summary="A real .NET 9 cluster on Aspire. Topology below shows what's running right now — click any service or infra node to fault-inject a 30-second pause and watch the demos route around it. Each pattern below proxies to a real backend; click View source on any demo to read the production code."
         />
+        <!-- Live cluster topology: the proof artefact -->
+        <div class="mb-12">
+          <LiveTopologyMap client:load />
+        </div>
         <DemoHub client:load />
       </div>
     </section>
