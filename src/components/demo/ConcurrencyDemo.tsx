@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Zap, Database, User, ShieldCheck, Save, ArrowRightLeft, Check } from 'lucide-react';
+import { Loader2, Zap, Database, User, ShieldCheck, Save, ArrowRightLeft } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { RequestReceiptHistory } from './RequestReceipt';
+import { getDemoProduct } from '../../lib/api/demo-client';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 
 interface InventoryState {
@@ -28,7 +29,11 @@ export function ConcurrencyDemo() {
   });
   const [isRacing, setIsRacing] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
-  const [lastAction, setLastAction] = useState<{ label: string; tooltip: string } | null>(null);
+  // Real product GUID for the demo. Resolved once via the idempotent
+  // /api/demo/cache/product/demo seed endpoint and re-resolved on 404
+  // (Aspire restart spawns a fresh PG; old id no longer exists).
+  const [productId, setProductId] = useState<string | null>(null);
+  const reseedingRef = useRef(false);
 
   const { executeCommand, events, isConnected } = useDemoSession('concurrency');
 
@@ -41,11 +46,30 @@ export function ConcurrencyDemo() {
      }
   }, [events]);
 
-  const fetchInventory = async (user?: 'A' | 'B') => {
+  const reseed = async (): Promise<string | null> => {
+    if (reseedingRef.current) return null;
+    reseedingRef.current = true;
+    try {
+      const data = await getDemoProduct();
+      setProductId(data.id);
+      return data.id;
+    } catch {
+      return null;
+    } finally {
+      reseedingRef.current = false;
+    }
+  };
+
+  const fetchInventory = async (user?: 'A' | 'B', idOverride?: string) => {
     const setUser = user === 'A' ? setUserA : user === 'B' ? setUserB : null;
     if (setUser) setUser(prev => ({ ...prev, status: 'reading', message: 'Fetching_State...' }));
+    let id = idOverride ?? productId;
+    if (!id) {
+      id = await reseed();
+      if (!id) return;
+    }
     try {
-      const result = await executeCommand('/inventory/demo-stock', {}, { method: 'GET' });
+      const result = await executeCommand(`/inventory/${id}`, {}, { method: 'GET' });
       setReceipts(prev => [result, ...prev].slice(0, 10));
       setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
       if (setUser) {
@@ -58,20 +82,38 @@ export function ConcurrencyDemo() {
             message: `Snapshot: v${result.inventory.version}`
          }));
       }
-    } catch (err) {}
+    } catch (err: any) {
+      // Stale id self-heal: re-seed once and retry.
+      const message = err?.message ?? '';
+      if (!idOverride && /404|not found/i.test(message)) {
+        const fresh = await reseed();
+        if (fresh) {
+          await fetchInventory(user, fresh);
+          return;
+        }
+      }
+    }
   };
 
-  useEffect(() => { fetchInventory(); }, []);
+  // Bootstrap: resolve real product id, then fetch its inventory.
+  useEffect(() => {
+    (async () => {
+      const id = await reseed();
+      if (id) await fetchInventory(undefined, id);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveInventory = async (user: 'A' | 'B') => {
     const userState = user === 'A' ? userA : userB;
     const setUser = user === 'A' ? setUserA : setUserB;
     if (userState.readVersion === null) return;
+    if (!productId) return;
     setUser(prev => ({ ...prev, status: 'saving', message: 'Committing...' }));
     try {
-      const result = await executeCommand('/inventory/demo-stock', 
+      const result = await executeCommand(`/inventory/${productId}`,
         { quantity: parseInt(userState.newQuantity) },
-        { 
+        {
           method: 'PUT',
           headers: { 'If-Match': `"${userState.readVersion}"` }
         }
@@ -80,23 +122,13 @@ export function ConcurrencyDemo() {
 
       setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
       setUser(prev => ({ ...prev, status: 'success', message: `Committed: v${result.inventory.version}` }));
-      
-      setLastAction({ 
-        label: `Winner: version v${userState.readVersion} → v${result.inventory.version} committed.`, 
-        tooltip: "The first request to reach the database claims the version increment." 
-      });
     } catch (err: any) {
        setUser(prev => ({ ...prev, status: 'conflict', message: 'Update Failed' }));
-       setLastAction({ 
-         label: `Conflict: expected v${userState.readVersion}, found v${inventory.version}.`, 
-         tooltip: "The second request tried to update version 1, but found the database is already at version 2. It must refresh and try again." 
-       });
     }
   };
 
   const raceUpdates = async () => {
     setIsRacing(true);
-    setLastAction({ label: "Concurrent updates dispatched.", tooltip: "" });
     await Promise.all([fetchInventory('A'), fetchInventory('B')]);
     await new Promise(r => setTimeout(r, 800));
     await saveInventory('A');
@@ -108,13 +140,7 @@ export function ConcurrencyDemo() {
   const renderUser = (user: UserState, id: 'A' | 'B') => {
     const isActive = user.status !== 'idle';
     return (
-      <motion.div 
-        animate={user.status === 'success' ? { 
-           backgroundColor: ['rgba(34,197,94,0)', 'rgba(34,197,94,0.1)', 'rgba(34,197,94,0)'],
-           scale: [1, 1.02, 1]
-        } : {}}
-        className={`surface p-8 shadow-xl transition-all border-2 ${user.status === 'conflict' ? 'border-error/50 shadow-error/10' : user.status === 'success' ? 'border-success/50 shadow-success/10' : 'border-transparent'}`}
-      >
+      <div className={`surface p-8 shadow-xl transition-all border-2 ${user.status === 'conflict' ? 'border-error/50 shadow-error/10' : 'border-transparent'}`}>
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
@@ -169,23 +195,16 @@ export function ConcurrencyDemo() {
                   
                   <div className="space-y-2">
                      <label className="text-[10px] text-muted font-black uppercase tracking-[0.3em] ml-1">New value</label>
-                     <motion.div 
-                        animate={user.status === 'conflict' ? { 
-                           x: [0, -10, 10, -10, 10, 0],
-                           backgroundColor: ['rgba(255,255,255,0.05)', 'rgba(239,68,68,0.2)', 'rgba(255,255,255,0.05)']
-                        } : {}}
-                        transition={{ duration: 0.4 }}
-                        className="relative rounded-2xl overflow-hidden"
-                     >
+                     <div className="relative">
                         <input
                            type="number"
                            value={user.newQuantity}
                            onChange={e => id === 'A' ? setUserA(prev => ({ ...prev, newQuantity: e.target.value })) : setUserB(prev => ({ ...prev, newQuantity: e.target.value }))}
                            disabled={isRacing || isActive}
-                           className={`w-full px-5 py-4 bg-white/5 border rounded-2xl text-primary outline-none font-mono text-base transition-colors ${user.status === 'conflict' ? 'border-error' : 'border-white/10 focus:border-accent/40'}`}
+                           className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-primary outline-none font-mono text-base focus:border-accent/40 transition-colors"
                         />
-                        <Save className={`absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${user.status === 'conflict' ? 'text-error' : 'opacity-20'}`} />
-                     </motion.div>
+                        <Save className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 opacity-20" />
+                     </div>
                   </div>
                </motion.div>
             )}
@@ -197,24 +216,12 @@ export function ConcurrencyDemo() {
             </motion.div>
           )}
         </div>
-      </motion.div>
+      </div>
     );
   };
 
-  const isRaceOutcomeVisible = userA.status !== 'idle' && userB.status !== 'idle' && !isRacing;
-
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
-          <Database className="w-4 h-4 text-accent" />
-          Two staff members edit the same product at the same time. How do you prevent one person's changes from being silently overwritten?
-        </h3>
-        <p className="text-xs text-muted leading-relaxed">
-          Press <strong>Trigger race</strong>. Two requests will fire at once. One will succeed; the other will receive a '409 Conflict' because the version it tried to update is already out of date.
-        </p>
-      </div>
-
+    <div className="space-y-10">
       <div className="surface p-10 shadow-2xl relative overflow-hidden font-mono">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none grayscale">
            <Database className="w-64 h-64 text-white" />
@@ -224,16 +231,10 @@ export function ConcurrencyDemo() {
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
                <div className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-               <h3 className="text-[10px] font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Live inventory</h3>
+               <h3 className="text-xs font-black text-muted uppercase tracking-[0.4em] whitespace-nowrap">Live inventory</h3>
             </div>
             <div className="flex items-baseline justify-center lg:justify-start gap-8">
-              <motion.div 
-                 animate={isRacing ? { scale: [1, 1.05, 1] } : (userA.status === 'success' || userB.status === 'success' ? { scale: [1, 1.2, 1], color: ['#fff', '#22c55e', '#fff'] } : {})}
-                 transition={{ repeat: isRacing ? Infinity : 0, duration: isRacing ? 0.5 : 0.8 }}
-                 className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none"
-              >
-                 {inventory.quantity}
-              </motion.div>
+              <div className="text-8xl font-black text-primary tracking-tighter tabular-nums leading-none">{inventory.quantity}</div>
               <div className="px-5 py-2 bg-white/5 border border-white/10 rounded-full text-accent-light font-black text-xs tracking-[0.2em] uppercase">
                  ETag_v{inventory.version}
               </div>
@@ -262,74 +263,17 @@ export function ConcurrencyDemo() {
         <RequestReceiptHistory receipts={receipts} />
       </div>
 
-      <AnimatePresence>
-        {lastAction && (
-          <motion.div
-            key={lastAction.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="flex justify-center"
-          >
-            <div className="bg-accent/5 px-3 py-1.5 border border-accent/20 rounded-lg text-xs font-bold text-accent-light">
-              <abbr title={lastAction.tooltip} className="no-underline cursor-help">
-                {lastAction.label}
-              </abbr>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isRaceOutcomeVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-6 border border-success/30 bg-success/5 text-primary text-xs leading-relaxed shadow-xl"
-          >
-            ✓ User A succeeded; User B was blocked from overwriting changes and told to refresh. <strong>Without this pattern</strong>, User B's older data silently overwrites User A's newer data ("Last Write Wins"); your stock counts drift, your prices are wrong, and nobody knows why until a customer complains.
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Visual Ladder + Clash */}
-      <div className="relative h-24 flex justify-center">
-         <div className="absolute inset-y-0 w-px bg-white/10 left-1/4 lg:left-1/3" />
-         <div className="absolute inset-y-0 w-px bg-white/10 right-1/4 lg:right-1/3" />
-         
-         <AnimatePresence>
-            {isRacing && (
-               <motion.div 
-                 initial={{ opacity: 0, scale: 0 }}
-                 animate={{ opacity: 1, scale: [1, 1.5, 1], rotate: [0, 90, 180, 270, 360] }}
-                 exit={{ opacity: 0, scale: 0 }}
-                 className="absolute top-1/2 -translate-y-1/2 z-20"
-               >
-                  <div className="relative">
-                     <Zap className="w-10 h-10 text-warning fill-warning" />
-                     <motion.div 
-                       animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
-                       transition={{ repeat: Infinity, duration: 0.4 }}
-                       className="absolute inset-0 bg-warning rounded-full blur-xl"
-                     />
-                  </div>
-               </motion.div>
-            )}
-         </AnimatePresence>
-
-         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      </div>
-
       <div className="grid md:grid-cols-2 gap-8">
         {renderUser(userA, 'A')}
         {renderUser(userB, 'B')}
       </div>
 
-      <div className="pt-8 border-t border-white/5">
-        <div className="font-mono text-[10px] text-muted/50 uppercase tracking-widest text-center">
-          Pattern: optimistic concurrency via ETag/version columns. Code: <code>src/Catalog/Catalog.Infrastructure/Persistence/CatalogDbContext.cs</code> (search for <code>Version</code>).
-          The hard part is the UI — you have to give the user a way to merge or discard their changes after a 409.
-        </div>
+      <div className="glass-subtle p-5 flex items-center gap-6 font-mono">
+         <ShieldCheck className="w-6 h-6 text-success opacity-50 shrink-0" />
+         <p className="text-[10px] text-muted font-bold leading-relaxed uppercase tracking-widest">
+            Entity Framework Core optimistic concurrency engaged. <br/>
+            The second commit will trigger a real [DbUpdateConcurrencyException] at the data layer.
+         </p>
       </div>
     </div>
   );
