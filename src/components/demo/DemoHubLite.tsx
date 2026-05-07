@@ -7,7 +7,8 @@ import { ChaosEngine } from '../system/ChaosEngine';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { CodeDrawer } from './CodeDrawer';
 import { DemoContext } from './DemoContext';
-import { TraceViewer } from './TraceViewer';
+// TraceViewer removed alongside the hardcoded tracing demo. Pending
+// real OTel + Tempo integration before re-introducing.
 import { useLatestTraceId } from '../../hooks/useLatestTraceId';
 import { traceStore } from '../../lib/trace-store';
 
@@ -20,7 +21,8 @@ const CacheStampedeDemo     = lazy(() => import('./CacheStampedeDemo').then(m =>
 const CacheInvalidationDemo = lazy(() => import('./CacheInvalidationDemo').then(m => ({ default: m.CacheInvalidationDemo })));
 const ConcurrencyDemo       = lazy(() => import('./ConcurrencyDemo').then(m => ({ default: m.ConcurrencyDemo })));
 const RateLimiterDemo       = lazy(() => import('./RateLimiterDemo').then(m => ({ default: m.RateLimiterDemo })));
-const DistributedTracingDemo = lazy(() => import('./DistributedTracingDemo').then(m => ({ default: m.DistributedTracingDemo })));
+// DistributedTracingDemo removed — hardcoded flame graph, deferred
+// pending real Tempo + OTel integration.
 
 const DEFAULT_DEMO = 'idempotency';
 
@@ -61,7 +63,6 @@ function DemoContent({ id }: { id: string }) {
     case 'cache':       return <CacheInvalidationDemo />;
     case 'concurrency': return <ConcurrencyDemo />;
     case 'ratelimit':   return <RateLimiterDemo />;
-    case 'tracing':     return <DistributedTracingDemo />;
     default:            return null;
   }
 }
@@ -283,20 +284,12 @@ export function DemoHub() {
                         <Suspense fallback={<LoadingSkeleton />}>
                            <DemoContent id={activeId} />
                         </Suspense>
-                        <AnimatePresence>
-                          {latestTraceId && (
-                            <motion.div
-                              ref={traceRef}
-                              key={latestTraceId}
-                              initial={{ opacity: 0, y: 8 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0 }}
-                              className="mt-8"
-                            >
-                              <TraceViewer traceId={latestTraceId} />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                        {/* TraceViewer was here but the trace store was
+                            populated only by the (removed) hardcoded
+                            DistributedTracingDemo endpoint. Real OTel
+                            traces via Tempo will land via a separate
+                            integration; until then there's nothing to
+                            show. */}
                      </motion.div>
                   ) : (
                      <motion.div

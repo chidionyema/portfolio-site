@@ -53,13 +53,11 @@ export const demoGroups: DemoGroup[] = [
       { id: 'vault', label: 'Dynamic credentials', desc: 'Zero-downtime Vault rotation workflows', valueProp: 'Database passwords rotate with no downtime', Icon: DemoIcon.vault, deepDiveSlug: 'vault-rotation' },
     ],
   },
-  {
-    id: 'observability',
-    label: 'Observability',
-    demos: [
-      { id: 'tracing', label: 'Distributed tracing', desc: 'Spans across 6 services rendered as a flame graph', valueProp: 'Follow one request across every service', Icon: DemoIcon.tracing },
-    ],
-  },
+  // Observability group used to host a "Distributed tracing" demo, but
+  // it was a hardcoded flame graph fed from /api/demo/tracing/start —
+  // the spans, durations and tree shape were baked into the BFF
+  // controller, not real OTel data. Removed pending real Tempo +
+  // OTel propagation across services.
 ];
 
 export const allDemos: DemoMeta[] = demoGroups.flatMap((g) => g.demos);
@@ -77,7 +75,6 @@ export const DEMO_LEARNING_ORDER: string[] = [
   'events',
   'checkout',
   'vault',
-  'tracing',
 ];
 
 export function findDemo(id: string): DemoMeta {
