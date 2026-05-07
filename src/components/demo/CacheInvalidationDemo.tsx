@@ -1,6 +1,8 @@
-// SIMULATED — pattern walkthrough only. Wire to backend API: src/lib/api/cacheinvalidation.ts (see docs/UI_FEATURES_PLAN.md §5).
+// Real backend: proxies to catalog-svc HybridCache + Postgres. Update
+// invalidates the L1+L2 cache via the EF outbox + ProductCacheInvalidatedEvent.
+// See src/Catalog/Catalog.Application/Commands/UpdateProductCommand.cs.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Eye, Check, X, Pencil, Trash2, Radio, ClipboardList, type LucideIcon } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { getCachedProduct, updateProduct as apiUpdateProduct, invalidateCache as apiInvalidateCache, getDemoProduct } from '../../lib/api/demo-client';
@@ -38,7 +40,9 @@ export function CacheInvalidationDemo() {
 
   const { events } = useDemoSession('cache-invalidation');
 
-  // Initial load
+  // Initial load. The seed endpoint is idempotent (find-or-create);
+  // we re-call it on every mount so a fresh PG container after an
+  // Aspire restart doesn't leave the demo stuck on a stale id.
   useEffect(() => {
     getDemoProduct().then(data => {
       setDemoProductId(data.id);
@@ -53,6 +57,25 @@ export function CacheInvalidationDemo() {
       });
     }).catch(console.error);
   }, []);
+
+  // Self-heal: if the cached product id ever 404s (Aspire restart spawned
+  // a fresh PG; the id we hold no longer exists), re-seed via the
+  // idempotent /api/demo/cache/product/demo endpoint and retry. Mark to
+  // avoid loops if the seed itself keeps failing.
+  const reseedingRef = useRef(false);
+  const reseed = async (): Promise<string | null> => {
+    if (reseedingRef.current) return null;
+    reseedingRef.current = true;
+    try {
+      const data = await getDemoProduct();
+      setDemoProductId(data.id);
+      return data.id;
+    } catch {
+      return null;
+    } finally {
+      reseedingRef.current = false;
+    }
+  };
 
   // Telemetry
   useEffect(() => {
@@ -84,12 +107,13 @@ export function CacheInvalidationDemo() {
     }, ...prev.slice(0, 9)]);
   };
 
-  const readFromCache = async () => {
-    if (!demoProductId) return;
-    addLog('read', `GET /api/demo/cache/product/${demoProductId.split('-')[0]}`);
-    
+  const readFromCache = async (idOverride?: string) => {
+    const id = idOverride ?? demoProductId;
+    if (!id) return;
+    addLog('read', `GET /api/demo/cache/product/${id.split('-')[0]}`);
+
     try {
-      const res = await getCachedProduct(demoProductId);
+      const res = await getCachedProduct(id);
       setReceipts(prev => [res, ...prev].slice(0, 10));
       setCacheStatus(res.cacheInfo?.isHit ? 'hit' : 'miss');
       setProduct({
@@ -101,6 +125,19 @@ export function CacheInvalidationDemo() {
       });
       addLog(res.cacheInfo?.isHit ? 'hit' : 'miss', `Cache ${res.cacheInfo?.isHit ? 'HIT' : 'MISS'} (Source: ${res.cacheInfo?.source})`);
     } catch (err) {
+      // Most common cause of a read failure here: the product id was
+      // seeded against a previous Aspire run's PG container, then the
+      // backend was rebuilt and the row no longer exists. Re-seed once
+      // and retry transparently — feels like the demo just self-healed.
+      const message = (err as Error)?.message ?? '';
+      if (!idOverride && /404|not found|no such/i.test(message)) {
+        addLog('invalidate', 'Stale id · re-seeding from catalog');
+        const fresh = await reseed();
+        if (fresh) {
+          await readFromCache(fresh);
+          return;
+        }
+      }
       addLog('invalidate', 'Read failed');
     }
   };
