@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { GithubIcon } from '../../lib/brand-icons';
 import { HeroPreview, type HeroPreviewData } from './HeroPreview';
 import { LiveTopologyMap } from '../architecture/LiveTopologyMap';
+import { HeroFingerprint } from './HeroFingerprint';
 import { LiveMetricsRow } from '../metrics/LiveMetricsRow';
 import { HERO_PRIMARY_CTA, CLUSTER_LABEL } from '../../lib/copy';
 import type { LiveMetrics } from '../../lib/api/demo-client';
@@ -86,6 +87,8 @@ export function Hero({ preview, initialMetrics }: HeroProps) {
                 Distributed systems for 99.99% availability. <br/>
                 Live cluster telemetry active.
              </p>
+
+             <HeroFingerprint />
 
              <LiveMetricsRow initialMetrics={initialMetrics} />
 

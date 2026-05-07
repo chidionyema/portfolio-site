@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Zap, ShieldAlert, Code2, Cpu, BookOpen } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Zap, ShieldAlert, Code2, Cpu, BookOpen } from 'lucide-react';
 import { DEMO_FOOTER, CLUSTER_LABEL } from '../../lib/copy';
-import { DemoSidebar, DemoMobileNav, findDemo, findGroupOf, findNextDemo } from './DemoSidebar';
+import { DemoSidebar, DemoMobileNav, findDemo, findGroupOf, findNextDemo, sourceUrlFor } from './DemoSidebar';
 import { ChaosEngine } from '../system/ChaosEngine';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { CodeDrawer } from './CodeDrawer';
@@ -256,16 +256,39 @@ export function DemoHub() {
                      <p className="text-secondary text-lg font-medium leading-relaxed max-w-2xl pt-4">
                         {demo.desc}
                      </p>
-                     {demo.deepDiveSlug && (
-                        <a
-                          href={`/deep-dives/${demo.deepDiveSlug}`}
-                          className="inline-flex items-center gap-2 mt-4 px-3 py-2 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-accent-light hover:text-white transition-all group/link"
-                        >
-                           <BookOpen className="w-3 h-3" />
-                           <span>Read the spec</span>
-                           <ArrowRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
-                        </a>
-                     )}
+                     <div className="flex flex-wrap items-center gap-2 mt-4">
+                        {demo.deepDiveSlug && (
+                           <a
+                             href={`/deep-dives/${demo.deepDiveSlug}`}
+                             className="inline-flex items-center gap-2 px-3 py-2 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-accent-light hover:text-white transition-all group/link"
+                           >
+                              <BookOpen className="w-3 h-3" />
+                              <span>Read the spec</span>
+                              <ArrowRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+                           </a>
+                        )}
+                        {(() => {
+                           // Source link to the actual implementation file
+                           // on GitHub. Lets technical reviewers verify
+                           // the demo against the production code instead
+                           // of trusting the UI's claim. Built from the
+                           // demo's sourcePath; null if unmapped.
+                           const src = sourceUrlFor(demo);
+                           return src ? (
+                              <a
+                                href={src}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-all group/src"
+                                title={`View backing implementation: ${demo.sourcePath}`}
+                              >
+                                 <Code2 className="w-3 h-3" />
+                                 <span>View source</span>
+                                 <ArrowUpRight className="w-3 h-3 group-hover/src:translate-x-0.5 group-hover/src:-translate-y-0.5 transition-transform" />
+                              </a>
+                           ) : null;
+                        })()}
+                     </div>
                   </div>
                </div>
             </header>

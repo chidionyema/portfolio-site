@@ -265,6 +265,7 @@ export const LiveTopologyMap: React.FC = () => {
   const [snapshot, setSnapshot] = useState<HealthSnapshot | null>(null);
   const [chaos, setChaos] = useState<Record<string, ChaosTargetState>>({});
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [showHint, setShowHint] = useState(false);
   const [, setTick] = useState(0);
   const [recoveryRecords, setRecoveryRecords] = useState<
     Record<string, { ms: number; until: number }>
@@ -294,6 +295,32 @@ export const LiveTopologyMap: React.FC = () => {
     return () => clearInterval(id);
   }, []);
 
+  // One-time onboarding hint pointing at the service nodes. Shown 2s
+  // after first paint unless the visitor has dismissed it before. Auto-
+  // hides after 12s or on first interaction with the topology.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('topology-hint-dismissed')) return;
+    } catch {
+      // private mode etc — show the hint once
+    }
+    const showTimer = window.setTimeout(() => setShowHint(true), 2000);
+    const hideTimer = window.setTimeout(() => setShowHint(false), 14000);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, []);
+
+  const dismissHint = () => {
+    setShowHint(false);
+    try {
+      localStorage.setItem('topology-hint-dismissed', '1');
+    } catch {
+      // ignore
+    }
+  };
+
   // Fetch initial chaos state so the map shows already-paused nodes after
   // a hard refresh. After this, SignalR pushes keep us in sync.
   useEffect(() => {
@@ -315,6 +342,7 @@ export const LiveTopologyMap: React.FC = () => {
     const target = NODE_TO_CHAOS_TARGET[nodeId];
     if (!target) return;
     setActiveMenu(null);
+    dismissHint();
     try {
       await fetch(`${CONSOLE_HUB_URL}/api/demo/chaos/${target}/pause`, {
         method: 'POST',
@@ -635,8 +663,28 @@ export const LiveTopologyMap: React.FC = () => {
   return (
     <div
       className="relative w-full glass border border-white/10 rounded-2xl bg-black/40 overflow-hidden"
-      onClick={() => setActiveMenu(null)}
+      onClick={() => {
+        setActiveMenu(null);
+        dismissHint();
+      }}
     >
+      {/* One-time onboarding hint pointing at the service-row nodes.
+          Sits over the SVG so it doesn't push layout, dismissed on
+          any topology interaction or after a 12s window. */}
+      {showHint && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            dismissHint();
+          }}
+          className="absolute z-20 top-12 left-1/2 -translate-x-1/2 glass border border-accent/40 rounded-lg px-4 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.5)] animate-fade-in font-mono text-[11px] leading-relaxed text-primary text-left"
+          style={{ background: 'rgba(11,11,14,0.95)' }}
+        >
+          <span className="text-accent">↓</span>{' '}
+          <span className="font-bold">Click any service or infra node</span>{' '}
+          <span className="text-secondary">to pause it · auto-resume after 30s</span>
+        </button>
+      )}
       <div className="absolute top-3 left-4 right-4 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.2em] text-muted z-10">
         <div className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
