@@ -1,0 +1,42 @@
+---
+/**
+ * PanelHeader
+ *
+ * Single canonical section heading for the page's ops-console framing.
+ * Same shape across every section so they read as panels of one
+ * dashboard rather than five disconnected slabs.
+ *
+ * Layout:
+ *   ┌──────────────────────────────────────────────────┐
+ *   │ EYEBROW (mono uppercase, accent)                 │
+ *   │ Title in plain English                            │
+ *   │ Optional summary sentence in quiet secondary text │
+ *   └──────────────────────────────────────────────────┘
+ *
+ * Drops the prior all-caps-mono-everywhere section headings
+ * (`Console_Access // Infrastructure_Registry_v1.0`,
+ *  `Distributed_Topology`, `IDENTITY_SNAPSHOT`, etc).
+ */
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  summary?: string;
+}
+
+const { eyebrow, title, summary } = Astro.props;
+---
+
+<header class="mb-10 max-w-3xl">
+  <div class="font-mono text-[10px] uppercase tracking-[0.3em] text-accent mb-3 font-bold">
+    {eyebrow}
+  </div>
+  <h2 class="text-3xl md:text-4xl font-display font-black text-primary tracking-tighter leading-[1] mb-4">
+    {title}
+  </h2>
+  {summary && (
+    <p class="text-base text-secondary leading-relaxed">
+      {summary}
+    </p>
+  )}
+</header>

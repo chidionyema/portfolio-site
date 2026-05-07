@@ -68,7 +68,7 @@ export const HeroFingerprint: React.FC = () => {
 
   if (unreachable) {
     return (
-      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-error/70 mt-3 flex items-center gap-2">
+      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-error/70 flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
         backend unreachable · start the cluster:{' '}
         <code className="text-error/90">./scripts/aspire-up.sh</code>
@@ -78,7 +78,7 @@ export const HeroFingerprint: React.FC = () => {
 
   if (!identity) {
     return (
-      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted/50 mt-3 flex items-center gap-2">
+      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted/50 flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-muted/40 animate-pulse" />
         verifying backend…
       </div>
@@ -87,7 +87,7 @@ export const HeroFingerprint: React.FC = () => {
 
   return (
     <div
-      className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted/70 mt-3 flex flex-wrap items-center gap-x-3 gap-y-1"
+      className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted/70 flex flex-wrap items-center gap-x-3 gap-y-1"
       title={`BFF process started ${identity.processStartedAt}`}
     >
       <span className="flex items-center gap-2">
