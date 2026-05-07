@@ -21,12 +21,19 @@ const BUDGETS = [
   { match: /^DemoHubLite\..*\.js$/, maxGzip: 8_000,  label: 'demo hub layout' },
   { match: /^CommandPalette\..*\.js$/, maxGzip: 22_000, label: 'cmdk palette' },
   { match: /^HeroLite\..*\.js$/,    maxGzip: 4_000,  label: 'hero island' },
-  // Per-demo budget (any demo file).
-  { match: /^(Cache|Checkout|Circuit|Concurrency|EventFlow|Idempotency|RateLimiter|VaultRotation).*Demo\..*\.js$/, maxGzip: 4_000, label: 'individual demo' },
+  // Per-demo budget (any demo file). Bumped from 4KB to 8KB now that demos
+  // ship as individual islands on /lab (per-microservice sections) instead
+  // of being lazy-loaded inside DemoHubLite. CheckoutDemo, CircuitBreakerDemo
+  // and IdempotencyDemo each carry their own form/state machinery.
+  { match: /^(Cache|Checkout|Circuit|Concurrency|EventFlow|Idempotency|RateLimiter|VaultRotation).*Demo\..*\.js$/, maxGzip: 8_000, label: 'individual demo' },
 ];
 
 // Total JS budget (sum of all _astro/*.js gzipped).
-const TOTAL_JS_GZIP_BUDGET = 200_000;
+// Bumped to 215KB to fit the /chaos page split: ChaosTimelineStrip,
+// ChaosReceipts, ChaosDrillController, ArchitectureCanvas, SagaMessageFlow,
+// ResilienceScoreboard. Each is small (<3KB) but they add up. Tighten back
+// down once any panels get demolished.
+const TOTAL_JS_GZIP_BUDGET = 215_000;
 
 let failures = 0;
 let totalJsGzip = 0;
