@@ -11,7 +11,6 @@ import { DEMO_SECTION_HEADING, DEMO_SECTION_SUBHEAD, CLUSTER_LABEL } from '../li
 import { getMetricsSnapshot } from '../lib/api/demo-client';
 
 import { Scorecard } from '../components/quality/Scorecard';
-import { TopologyMap } from '../components/architecture/TopologyMap';
 import { GrafanaPanel } from '../components/metrics/GrafanaPanel';
 
 const initialMetrics = await getMetricsSnapshot().catch(() => undefined);
@@ -68,6 +67,14 @@ const deepDives = dd.map((e) => ({
     </section>
 
     <!-- Architecture Section -->
+    <!--
+      The Distributed_Topology section used to render a second LiveTopologyMap
+      here, but the hero now owns the live topology + chaos artifact. Two
+      mounts of the same component on one page double the SignalR
+      connection count and starve the browser's per-host pool. The
+      architecture section is now a tighter "what's this for" panel
+      flanked by Grafana metrics — the topology proof is above the fold.
+    -->
     <section id="architecture" class="py-24 bg-[#050505] border-t border-white/5">
       <div class="container mx-auto px-4" data-reveal>
         <div class="grid lg:grid-cols-[1fr_400px] gap-12 items-start">
@@ -77,10 +84,14 @@ const deepDives = dd.map((e) => ({
                 Distributed_Topology
               </h2>
               <p class="text-sm font-mono text-muted max-w-2xl uppercase tracking-widest leading-relaxed">
-                Real-time visualization of the .NET 9 microservices cluster and infrastructure nodes.
+                The cluster diagram in the hero is wired to the live
+                <span class="text-accent">/hubs/console</span> SignalR
+                stream. Each packet is a real HTTP request through the BFF;
+                replica badges populate as upstream X-Instance-Id headers
+                arrive. Click any service or infra node to fault-inject a
+                30-second pause and watch the demos below route around it.
               </p>
             </div>
-            <TopologyMap client:visible />
           </div>
 
           <div class="space-y-6 pt-12">

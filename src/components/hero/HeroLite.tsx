@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { GithubIcon } from '../../lib/brand-icons';
 import { HeroPreview, type HeroPreviewData } from './HeroPreview';
-import { EventMesh } from './EventMesh';
+import { LiveTopologyMap } from '../architecture/LiveTopologyMap';
 import { LiveMetricsRow } from '../metrics/LiveMetricsRow';
 import { HERO_PRIMARY_CTA, CLUSTER_LABEL } from '../../lib/copy';
 import type { LiveMetrics } from '../../lib/api/demo-client';
@@ -113,13 +113,16 @@ export function Hero({ preview, initialMetrics }: HeroProps) {
              </div>
           </div>
 
-          {/* Right: Live event mesh — pulses on ping + on real backend events. */}
+          {/* Right: Live cluster topology — real BFF event stream powers
+              packet animation; click any node for chaos pause. The hero
+              swap from a static EventMesh to LiveTopologyMap is the
+              "this is real" artifact above the fold. */}
           <div className="flex-1 w-full relative">
-             <div className="font-mono text-[9px] text-accent font-black uppercase tracking-[0.4em] mb-4 opacity-40 text-center lg:text-left">
-                [ LIVE_EVENT_MESH ]
+             <div className="font-mono text-[9px] text-accent font-black uppercase tracking-[0.4em] mb-4 opacity-60 text-center lg:text-left">
+                [ LIVE_CLUSTER · click a node to pause ]
              </div>
-             <div className="glass p-1 aspect-square max-w-[520px] mx-auto lg:mx-0">
-                <EventMesh pingTrigger={pingTrigger} />
+             <div className="w-full max-w-[680px] mx-auto lg:mx-0">
+                <LiveTopologyMap />
              </div>
           </div>
         </div>
