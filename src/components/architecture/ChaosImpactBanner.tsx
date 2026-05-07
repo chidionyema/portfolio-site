@@ -74,6 +74,8 @@ export function ChaosImpactBanner() {
   const resumeSessionsRef = useRef<ResumeSession[]>([]);
   const prevChaosRef = useRef<Record<string, 'paused' | 'running'>>({});
   const eventOffsetRef = useRef(0);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const hasScrolledForActiveSessionRef = useRef(false);
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 750);
@@ -157,12 +159,31 @@ export function ChaosImpactBanner() {
   );
   resumeSessionsRef.current = liveResumeSessions;
 
-  if (pausedSessions.length === 0 && liveResumeSessions.length === 0) {
+  // Auto-scroll into view the moment a paused session first becomes
+  // active. The visitor pauses something (typically clicking in the
+  // topology, which is below this banner) — without scroll-on-pause
+  // the cause/effect/recovery story is hidden above their viewport.
+  const hasActive = pausedSessions.length > 0 || liveResumeSessions.length > 0;
+  useEffect(() => {
+    if (hasActive && !hasScrolledForActiveSessionRef.current) {
+      hasScrolledForActiveSessionRef.current = true;
+      // Small delay so the panel paints before scrollIntoView measures its rect.
+      const id = window.setTimeout(() => {
+        rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+      return () => clearTimeout(id);
+    }
+    if (!hasActive) {
+      hasScrolledForActiveSessionRef.current = false;
+    }
+  }, [hasActive]);
+
+  if (!hasActive) {
     return null;
   }
 
   return (
-    <div className="space-y-3 mb-6">
+    <div ref={rootRef} className="space-y-3 mb-6 scroll-mt-24">
       {pausedSessions.map((s) => (
         <PausePanel key={s.target} session={s} now={now} />
       ))}
