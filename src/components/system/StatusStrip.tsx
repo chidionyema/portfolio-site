@@ -1,57 +1,56 @@
-import { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, ShieldCheck, Zap, Server, Database, ChevronRight } from 'lucide-react';
-import { useEventStream } from '../../hooks/useEventStream';
-import { getHealthStreamUrl, type HealthSnapshot, type ServiceHealth } from '../../lib/api/demo-client';
+import { useState } from 'react';
+import { ChevronRight } from 'lucide-react';
+import { useClusterState } from '../../hooks/useClusterState';
+import type { HealthSnapshot } from '../../lib/api/demo-client';
 import { StatusTray } from './StatusTray';
 
 interface StatusStripProps {
+  // Kept for backward compatibility with the Astro island prop —
+  // the cluster store handles initial fetch on its own.
   initialSnapshot?: HealthSnapshot;
 }
 
-export function StatusStrip({ initialSnapshot }: StatusStripProps) {
-  const [snapshot, setSnapshot] = useState<HealthSnapshot | undefined>(initialSnapshot);
+export function StatusStrip(_: StatusStripProps) {
   const [isTrayOpen, setIsTrayOpen] = useState(false);
-  const { events, isConnected, error } = useEventStream({
-    url: getHealthStreamUrl(),
-    mode: 'sse'
-  });
+  // One source of truth: the shared cluster store. When chaos pauses
+  // a target, `services[i].displayStatus` flips to 'offline' and
+  // `systemStatus` flips to 'degraded' regardless of what the
+  // underlying /health probe says — service-chaos is BFF-side fault
+  // injection so the raw health endpoint lies.
+  const { services, systemStatus, connectionState } = useClusterState();
 
-  // Update snapshot when new health events arrive
-  useEffect(() => {
-    if (events.length > 0) {
-      setSnapshot(events[0] as HealthSnapshot);
-    }
-  }, [events]);
-
-  const systemStatus = snapshot?.systemStatus || 'down';
-  
-  const statusColors = {
-    healthy: 'bg-success shadow-[0_0_10px_rgba(34,197,94,1)]',
-    degraded: 'bg-warning shadow-[0_0_10px_rgba(245,158,11,1)]',
-    down: 'bg-error shadow-[0_0_10px_rgba(239,68,68,1)]',
-    offline: 'bg-muted shadow-none'
-  };
+  // Map systemStatus → token. Anything outside healthy/degraded reads as down.
+  const statusKey: 'healthy' | 'degraded' | 'down' =
+    systemStatus === 'healthy'
+      ? 'healthy'
+      : systemStatus === 'degraded'
+        ? 'degraded'
+        : 'down';
 
   const labelColors = {
     healthy: 'text-success',
     degraded: 'text-warning',
     down: 'text-error',
-    offline: 'text-muted'
-  };
+  } as const;
 
-  const services = useMemo(() => {
-    if (snapshot?.services) return snapshot.services;
-    
-    // Default/Warming up state
-    return [
-      { id: 'edge', name: 'EDGE', status: 'online' as const, latencyMs: 0 },
-      { id: 'cluster', name: 'CLUSTER', status: 'online' as const, latencyMs: 0 },
-      { id: 'storage', name: 'STORAGE', status: 'online' as const, latencyMs: 0 },
-      { id: 'cache', name: 'CACHE', status: 'online' as const, latencyMs: 0 },
-      { id: 'messaging', name: 'MESSAGING', status: 'online' as const, latencyMs: 0 },
-    ];
-  }, [snapshot]);
+  // Topology pause shows up here without changing the snapshot itself.
+  const isConnected = connectionState === 'connected';
+  // Construct a snapshot-shaped payload for StatusTray (which still
+  // expects a HealthSnapshot). The services use the chaos-aware
+  // displayStatus so the tray agrees with the strip.
+  const snapshot: HealthSnapshot = {
+    services: services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      status: s.displayStatus,
+      latencyMs: s.latencyMs,
+      message: s.chaosPaused ? 'paused via topology' : s.message,
+    })),
+    systemStatus,
+    p99LatencyMs: 0,
+    availability: null,
+    timestamp: new Date().toISOString(),
+  };
 
   return (
     <>
@@ -66,73 +65,66 @@ export function StatusStrip({ initialSnapshot }: StatusStripProps) {
         }`} />
         
         <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-x-8 flex-nowrap overflow-x-auto no-scrollbar relative">
-          <div className="flex items-center gap-5 shrink-0">
+          <div className="flex items-center gap-4 shrink-0">
             <div className="flex items-center gap-2.5">
-              <span className="relative flex w-2.5 h-2.5">
+              <span className="relative flex w-2 h-2">
                 <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${
-                  systemStatus === 'healthy' ? 'bg-success' : systemStatus === 'degraded' ? 'bg-warning' : 'bg-error'
+                  statusKey === 'healthy' ? 'bg-success' : statusKey === 'degraded' ? 'bg-warning' : 'bg-error'
                 }`} />
-                <span className={`relative inline-flex rounded-full w-2.5 h-2.5 transition-colors duration-500 ${
-                  systemStatus === 'healthy' ? 'bg-success' : systemStatus === 'degraded' ? 'bg-warning' : 'bg-error'
+                <span className={`relative inline-flex rounded-full w-2 h-2 transition-colors duration-500 ${
+                  statusKey === 'healthy' ? 'bg-success' : statusKey === 'degraded' ? 'bg-warning' : 'bg-error'
                 }`} />
               </span>
-              <span className={`text-[11px] font-mono font-black uppercase tracking-[0.2em] whitespace-nowrap ${labelColors[systemStatus === 'healthy' ? 'healthy' : systemStatus === 'degraded' ? 'degraded' : 'down']}`}>
-                SYSTEM_PRODUCTION_{systemStatus.toUpperCase()}
+              <span className={`text-[11px] font-mono font-black uppercase tracking-[0.2em] whitespace-nowrap ${labelColors[statusKey]}`}>
+                {systemStatus === 'unknown' ? 'connecting…' : `cluster ${systemStatus}`}
               </span>
             </div>
             <div className="h-4 w-px bg-white/10" />
-            <div className="flex items-center gap-3">
-               <span className="text-[9px] font-mono text-muted uppercase tracking-tight">Kernel: <span className="text-secondary">.NET 9.0</span></span>
-               {isConnected ? (
-                  <span className="text-[9px] font-mono text-success uppercase tracking-widest flex items-center gap-1.5">
-                     <div className="w-1 h-1 bg-success rounded-full animate-pulse" />
-                     Live_WSS
-                  </span>
-               ) : (
-                  <span className="text-[9px] font-mono text-muted uppercase tracking-widest flex items-center gap-1.5">
-                     <div className="w-1 h-1 bg-white/20 rounded-full" />
-                     Telemetry_Polling
-                  </span>
-               )}
-            </div>
+            <span className="text-[9px] font-mono text-muted uppercase tracking-widest flex items-center gap-1.5">
+              <div className={`w-1 h-1 rounded-full ${isConnected ? 'bg-success animate-pulse' : 'bg-white/20'}`} />
+              {isConnected ? 'live · push' : 'reconnecting'}
+            </span>
           </div>
 
-          <div className="flex items-center gap-8">
-            {services.map(s => (
-              <div key={s.id} className="flex items-center gap-2.5 px-1 py-0.5 transition-all cursor-crosshair group/item">
+          <div className="flex items-center gap-6">
+            {services.length === 0 && (
+              <span className="text-[9px] font-mono text-muted/40 uppercase tracking-widest italic">
+                waiting for snapshot…
+              </span>
+            )}
+            {services.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center gap-2 px-1 py-0.5 group/item"
+                title={s.chaosPaused ? `${s.name} paused via topology` : s.message ?? `${s.name} ${s.displayStatus}`}
+              >
                 <div className={`w-1.5 h-1.5 rounded-[1px] transition-all duration-500 group-hover/item:scale-125 ${
-                  s.status === 'online' ? 'bg-success shadow-[0_0_5px_rgba(34,197,94,0.5)]' :
-                  s.status === 'degraded' ? 'bg-warning shadow-[0_0_5px_rgba(245,158,11,0.5)]' :
-                  'bg-error shadow-[0_0_5px_rgba(239,68,68,0.5)]'
+                  s.displayStatus === 'online'
+                    ? 'bg-success shadow-[0_0_5px_rgba(34,197,94,0.5)]'
+                    : s.displayStatus === 'degraded'
+                      ? 'bg-warning shadow-[0_0_5px_rgba(245,158,11,0.5)]'
+                      : 'bg-error shadow-[0_0_5px_rgba(239,68,68,0.5)]'
                 }`} />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-mono font-bold text-secondary leading-none uppercase tracking-tight group-hover/item:text-primary transition-colors">
+                <div className="flex flex-col leading-none">
+                  <span className="text-[10px] font-mono font-bold text-secondary uppercase tracking-tight group-hover/item:text-primary transition-colors">
                     {s.name}
                   </span>
-                  <span className="text-[8px] font-mono text-muted leading-tight opacity-70">
-                    {s.status === 'online' ? `${s.latencyMs || '??'}ms` : s.status.toUpperCase()}
+                  <span className={`text-[8px] font-mono leading-tight opacity-80 ${
+                    s.chaosPaused ? 'text-error' : 'text-muted'
+                  }`}>
+                    {s.chaosPaused
+                      ? 'paused'
+                      : s.displayStatus === 'online'
+                        ? `${s.latencyMs || '??'}ms`
+                        : s.displayStatus}
                   </span>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="flex items-center gap-6 shrink-0 border-l border-white/10 pl-6">
-            <div className="flex items-center gap-3">
-               <div className="flex flex-col items-end">
-                  <span className="text-[8px] font-mono text-muted uppercase tracking-tighter">Real-time P99</span>
-                  <span className={`text-[12px] font-mono font-bold leading-none ${snapshot?.p99LatencyMs && snapshot.p99LatencyMs > 100 ? 'text-warning' : 'text-success'}`}>
-                     {snapshot?.p99LatencyMs ? `${snapshot.p99LatencyMs.toFixed(1)}ms` : '42.4ms'}
-                  </span>
-               </div>
-               <div className="flex flex-col items-end">
-                  <span className="text-[8px] font-mono text-muted uppercase tracking-tighter">Availability</span>
-                  <span className="text-[12px] font-mono text-primary font-bold leading-none">
-                     {snapshot?.availability ? `${snapshot.availability.toFixed(3)}%` : '99.998%'}
-                  </span>
-               </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-1 transition-all" />
+          <div className="flex items-center gap-3 shrink-0 border-l border-white/10 pl-4 text-muted">
+            <ChevronRight className="w-4 h-4 group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </div>
       </div>
