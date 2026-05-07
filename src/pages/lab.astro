@@ -7,7 +7,7 @@ import { LabBackgroundProber } from '../components/architecture/LabBackgroundPro
 import { LabAutoRunners } from '../components/architecture/LabAutoRunners';
 import { LabRequestFeed } from '../components/architecture/LabRequestFeed';
 import { ChaosImpactBanner } from '../components/architecture/ChaosImpactBanner';
-import { GrafanaPanel } from '../components/metrics/GrafanaPanel';
+import { LiveSparklines } from '../components/architecture/LiveSparklines';
 import PanelHeader from '../components/system/PanelHeader.astro';
 ---
 
@@ -128,27 +128,22 @@ import PanelHeader from '../components/system/PanelHeader.astro';
       </div>
     </section>
 
-    <!-- Telemetry -->
-    <section class="py-16 lg:py-20 border-t border-border" data-reveal>
+    <!-- Telemetry — RPS bars + p99 line, computed from the live event
+         stream every second. Replaces the prior Grafana iframes which
+         were "Awaiting telemetry…" forever in dev because external
+         Grafana Cloud isn't wired locally. The data shown is the
+         actual traffic this visitor is generating against the
+         cluster — same source the runner cards and the wire feed
+         are reading from. -->
+    <section class="py-12 lg:py-16 border-t border-border" data-reveal>
       <PanelHeader
         eyebrow="Telemetry"
-        title="What the cluster is doing right now."
-        summary="Prometheus and OpenTelemetry through Grafana Cloud — the same dashboards an on-call engineer would watch. Embedded here because the demos above are what's generating the traffic."
+        title="Cluster signal, last 60 seconds."
+        summary="RPS bars and p99 latency line, computed live from every BFF request. Pause a service via the topology and watch the bars turn red and p99 spike inside this window."
       />
       <div class="container px-6 lg:px-8">
-        <div class="panel-dark p-6 md:p-10 grid md:grid-cols-2 gap-6 shadow-2xl">
-          <GrafanaPanel
-            panelId={1}
-            title="Requests per second"
-            height={240}
-            client:visible
-          />
-          <GrafanaPanel
-            panelId={2}
-            title="Response time (p99)"
-            height={240}
-            client:visible
-          />
+        <div class="panel-dark p-6 md:p-8 shadow-2xl">
+          <LiveSparklines client:load />
         </div>
       </div>
     </section>
