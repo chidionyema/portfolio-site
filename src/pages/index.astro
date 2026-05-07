@@ -41,7 +41,7 @@ const deepDives = dd.map((e) => ({
 
 
 
-    <!-- Quiet CTA pointing technical reviewers at the lab. -->
+    <!-- Quiet CTA pointing technical reviewers at the two proof pages. -->
     <section class="py-20 lg:py-24 border-t border-border" data-reveal>
       <div class="container-prose px-6 lg:px-8">
         <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-4">
@@ -52,19 +52,28 @@ const deepDives = dd.map((e) => ({
         </h2>
         <p class="text-lg text-secondary leading-relaxed mb-8 max-w-2xl">
           This site runs on a real .NET 9 cluster — Postgres, RabbitMQ,
-          Redis, Vault, five microservices coordinating via events. The
-          lab page lets you inspect the topology, fault-inject failures,
-          and watch the system recover. Each demo proxies to production
-          code, with a View source link to the file that handled it.
+          Redis, Vault, five microservices coordinating via events. Two
+          proof pages: the architecture canvas explains how it's built,
+          the chaos page lets you break it and watch it recover. Every
+          demo proxies to production code with a View source link to
+          the file that handled it.
         </p>
-        <a
-          href="/lab"
-          class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-base font-medium rounded-md hover:bg-secondary transition-colors"
-          style="color: rgb(var(--color-base))"
-        >
-          Open the lab
-          <span>→</span>
-        </a>
+        <div class="flex flex-wrap items-center gap-3">
+          <a
+            href="/chaos"
+            class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-base font-medium rounded-md hover:bg-secondary transition-colors"
+            style="color: rgb(var(--color-base))"
+          >
+            Pause anything · /chaos
+            <span>→</span>
+          </a>
+          <a
+            href="/lab"
+            class="inline-flex items-center gap-2 px-5 py-3 border border-border text-base font-medium text-primary rounded-md hover:border-accent/40 transition-colors"
+          >
+            How it's built · /lab
+          </a>
+        </div>
       </div>
     </section>
 
