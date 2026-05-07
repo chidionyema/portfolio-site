@@ -55,16 +55,50 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
     <!-- Fonts are self-hosted. See src/styles/global.css for the @fontsource imports. -->
 
 
-    <!-- Critical CSS inlined — tokens match src/styles/global.css. Theme-aware. -->
+    <!-- Critical CSS inlined. Light editorial palette: cream background,
+         warm-black text, deep-navy accent. The dark "operations console"
+         panels (topology, dock, demo cards) keep their own dark surface
+         scoped via the `.panel-dark` class so they read as embedded
+         device screens within the article-style layout. -->
     <style is:inline>
-      :root{--color-base:11 11 14;--color-surface:19 19 26;--color-accent:124 92 255;--color-text-primary:245 245 240;--hairline:1px solid rgb(255 255 255 / 0.08)}
+      :root{
+        --color-base: 250 250 247;
+        --color-surface: 255 255 255;
+        --color-surface-warm: 244 241 234;
+        --color-panel-dark: 11 11 14;
+        --color-accent: 91 63 214;
+        --color-text-primary: 20 17 15;
+        --color-text-secondary: 61 56 51;
+        --color-text-muted: 107 102 94;
+        --color-border: 232 229 222;
+        --hairline: 1px solid rgb(20 17 15 / 0.08);
+      }
       *,*::before,*::after{box-sizing:border-box}
       html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-      body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:rgb(var(--color-base));color:rgb(var(--color-text-primary));-webkit-font-smoothing:antialiased}
-      .container{width:100%;max-width:1280px;margin:0 auto}
-      .surface,.glass{background:rgb(var(--color-surface));border:var(--hairline);border-radius:1rem}
-      .font-display{font-family:Fraunces,ui-serif,Georgia,serif;letter-spacing:-0.02em}
-      .gradient-text{background:linear-gradient(to right,rgb(var(--color-accent)),rgb(167 139 250));-webkit-background-clip:text;background-clip:text;color:transparent}
+      body{
+        margin:0;
+        font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+        background:rgb(var(--color-base));
+        color:rgb(var(--color-text-primary));
+        -webkit-font-smoothing:antialiased;
+        font-feature-settings: "kern", "liga", "calt", "ss01";
+      }
+      .container{width:100%;max-width:1100px;margin:0 auto}
+      .container-prose{width:100%;max-width:760px;margin:0 auto}
+      .font-display{
+        font-family:"Fraunces Variable",Fraunces,ui-serif,Georgia,serif;
+        font-feature-settings: "ss01", "ss02";
+        letter-spacing:-0.02em;
+      }
+      .panel-dark{
+        background: rgb(var(--color-panel-dark));
+        color: rgb(245 245 240);
+        border-radius: 12px;
+        --color-text-primary: 245 245 240;
+        --color-text-secondary: 175 171 165;
+        --color-text-muted: 117 114 110;
+      }
+      .hairline{border-color: rgb(20 17 15 / 0.08)}
       @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
       .animate-fade-in{animation:fade-in 0.5s ease-out forwards}
     </style>

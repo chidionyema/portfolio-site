@@ -4,33 +4,42 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Deep background layer
-        base: '#050508',
-        surface: '#0d0d12',
-        elevated: '#16161d',
-        border: 'rgba(255, 255, 255, 0.08)',
+        // Light editorial palette. The dark dashboard look is reserved
+        // for the embedded "operations console" panel (live topology,
+        // dock, demo cards) which retains its own dark surface so it
+        // reads as a separate device embedded in the article.
+        base: '#FAFAF7',         // warm off-white page background
+        surface: '#FFFFFF',      // card surface
+        'surface-warm': '#F4F1EA', // slightly warmer secondary surface
+        'panel-dark': '#0B0B0E', // for the embedded ops console panel
+        border: '#E8E5DE',       // hairline borders on light surfaces
+        'border-strong': '#D9D4C8',
 
-        // States
-        success: '#22c55e',
-        info: '#3b82f6',
-        warning: '#f59e0b',
-        error: '#ef4444',
+        // States — readable on cream backgrounds
+        success: '#15803D',
+        info: '#1E40AF',
+        warning: '#B45309',
+        error: '#B91C1C',
 
-        // Premium Accent
+        // Accent — deep navy-purple, the only saturated colour on the
+        // editorial side. Dashboard sections use their own brighter
+        // neon tokens scoped to their dark surfaces.
         accent: {
-          DEFAULT: '#6366f1',
-          light: '#8b5cf6',
+          DEFAULT: '#3B2D87',
+          light: '#5B3FD6',
         },
 
-        // Text
-        primary: '#f8fafc',
-        secondary: '#94a3b8',
-        muted: '#64748b',
+        // Text — warm-black not pure-black, easier on cream
+        primary: '#14110F',
+        secondary: '#3D3833',
+        muted: '#6B665E',
       },
       fontFamily: {
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        // Display = Fraunces (variable serif already imported in
+        // BaseLayout). Body = Inter.
+        display: ['"Fraunces Variable"', 'Fraunces', 'ui-serif', 'Georgia', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       animation: {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
