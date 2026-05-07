@@ -61,8 +61,53 @@ endpoints — they're all `[AllowAnonymous]`.
 
 ## Deployment
 
+Auto-deploys to Cloudflare Pages via GitHub Actions on every push to `main`,
+gated on CI passing. Mirrors the backend's Fly auto-deploy pattern (see
+`ritualworks-platform/.github/workflows/deploy.yml`).
+
+### One-time setup
+
+1. Create the Cloudflare Pages project (any machine with `wrangler` logged
+   in to your Cloudflare account):
+
+   ```bash
+   npx wrangler login
+   npx wrangler pages project create chidionyema-dev --production-branch main
+   ```
+
+2. In **GitHub repo → Settings → Secrets and variables → Actions**:
+
+   **Secrets:**
+   - `CLOUDFLARE_API_TOKEN` — create at
+     [dash.cloudflare.com → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens),
+     template: *Edit Cloudflare Workers* (or custom token with
+     `Account → Cloudflare Pages → Edit`).
+   - `CLOUDFLARE_ACCOUNT_ID` — copy from any Cloudflare dashboard URL.
+
+   **Variables** (visible in build logs, easy to tweak):
+   - `CLOUDFLARE_PAGES_PROJECT` — `chidionyema-dev` (or whatever you
+     named it in step 1).
+   - `PUBLIC_API_URL` — production BFF URL, e.g.
+     `https://ritualworks-bffweb.fly.dev`.
+   - `PUBLIC_SIGNALR_URL` — same host, hub path, e.g.
+     `https://ritualworks-bffweb.fly.dev/hubs/demo`.
+   - `PUBLIC_CLUSTER_LABEL` — optional; defaults to `production`.
+
+3. In **Cloudflare dashboard → Pages → chidionyema-dev → Custom domains**,
+   add `chidionyema.dev` and follow the DNS instructions.
+
+That's it. After this, every merge to `main` triggers CI, and on success
+the deploy workflow runs `npm run build` with the production env vars
+and pushes the `dist/` to Cloudflare Pages.
+
+### Manual deploy
+
+For one-off emergency or first-deploy from a developer machine:
+
 ```bash
-# Deploy to Cloudflare Pages
+CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... \
+PUBLIC_API_URL=https://ritualworks-bffweb.fly.dev \
+PUBLIC_SIGNALR_URL=https://ritualworks-bffweb.fly.dev/hubs/demo \
 npm run deploy
 ```
 

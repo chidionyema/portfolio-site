@@ -1,0 +1,64 @@
+name: Deploy
+
+# Triggers:
+#   - workflow_run after CI finishes on main, gated on success
+#   - manual dispatch from the Actions tab
+#
+# Required repo secrets (set once in GitHub UI):
+#   CLOUDFLARE_API_TOKEN  — token with Pages:Edit scope
+#   CLOUDFLARE_ACCOUNT_ID — visible in Cloudflare dashboard URL
+#
+# Required repo variables (Settings → Secrets and variables → Actions → Variables):
+#   PUBLIC_API_URL        — e.g. https://ritualworks-bffweb.fly.dev
+#   PUBLIC_SIGNALR_URL    — e.g. https://ritualworks-bffweb.fly.dev/hubs/demo
+#   CLOUDFLARE_PAGES_PROJECT — e.g. chidionyema-dev
+# (variables instead of secrets so they're visible in build logs and easy to
+# tweak per environment without rotating a secret)
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build + deploy to Cloudflare Pages
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        env:
+          GIT_SHA: ${{ github.sha }}
+          PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+          PUBLIC_SIGNALR_URL: ${{ vars.PUBLIC_SIGNALR_URL }}
+          PUBLIC_CLUSTER_LABEL: ${{ vars.PUBLIC_CLUSTER_LABEL || 'production' }}
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main --commit-dirty=true
