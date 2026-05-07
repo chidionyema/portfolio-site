@@ -1,4 +1,13 @@
 ---
+// TODO(revisit): every island on /lab is `client:only="react"` to bypass SSR.
+// The cluster-store + useSyncExternalStore + signalR import chain triggers a
+// React "Invalid hook call" warning during SSR that ends up returning just
+// `<!DOCTYPE html>` (15 bytes) instead of the rendered tree. Symptoms:
+//   • /lab returns 15 bytes from `astro dev` and `astro build` SSR
+//   • /index renders fine — uses the same store but lighter component tree
+// Likely culprit: dual React copy at SSR time (lucide-react + signalr both
+// pulling React via different module paths under vite's optimizeDeps). Worth
+// investigating once Aspire is stable. For now `client:only` ships the page.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { DemoHub } from '../components/demo/DemoHubLite';
 import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
@@ -55,7 +64,7 @@ import PanelHeader from '../components/system/PanelHeader.astro';
          continuously exercised while the visitor watches. Pause a
          service and the metrics panel below reflects it within
          seconds, with no "click a demo to see what happens" step. -->
-    <LabBackgroundProber client:load />
+    <LabBackgroundProber client:only="react" />
 
     <!-- Resilience scoreboard — three live proofs (idempotency,
          saga atomicity, OCC concurrency) running continuously
@@ -73,20 +82,20 @@ import PanelHeader from '../components/system/PanelHeader.astro';
          explicit so the visitor doesn't have to scan 9 runner cards
          to find the one that's failing. -->
     <section class="container px-6 lg:px-8 pt-4">
-      <ChaosImpactBanner client:load />
+      <ChaosImpactBanner client:only="react" />
     </section>
 
     <!-- Live cluster — topology + metrics in one eyeline. -->
     <section class="py-12 lg:py-16" data-reveal>
       <div class="container px-6 lg:px-8 space-y-6">
         <div class="panel-dark p-6 md:p-10 shadow-2xl">
-          <LiveTopologyMap client:load />
+          <LiveTopologyMap client:only="react" />
         </div>
         <div class="panel-dark p-6 md:p-8 shadow-2xl">
           <div class="text-xs text-muted/70 uppercase tracking-[0.2em] mb-4">
             Live measurements · trailing 30 seconds
           </div>
-          <LiveMetricsPanel client:load />
+          <LiveMetricsPanel client:only="react" />
         </div>
       </div>
     </section>
@@ -102,7 +111,7 @@ import PanelHeader from '../components/system/PanelHeader.astro';
       />
       <div class="container px-6 lg:px-8">
         <div class="panel-dark p-6 md:p-8 shadow-2xl">
-          <LabAutoRunners client:load />
+          <LabAutoRunners client:only="react" />
         </div>
       </div>
     </section>
@@ -116,7 +125,7 @@ import PanelHeader from '../components/system/PanelHeader.astro';
       />
       <div class="container px-6 lg:px-8">
         <div class="panel-dark p-6 md:p-8 shadow-2xl">
-          <LabRequestFeed client:load />
+          <LabRequestFeed client:only="react" />
         </div>
       </div>
     </section>
@@ -132,7 +141,7 @@ import PanelHeader from '../components/system/PanelHeader.astro';
       />
       <div class="container px-6 lg:px-8">
         <div class="panel-dark p-6 md:p-10 shadow-2xl">
-          <DemoHub client:load />
+          <DemoHub client:only="react" />
         </div>
       </div>
     </section>
@@ -152,7 +161,7 @@ import PanelHeader from '../components/system/PanelHeader.astro';
       />
       <div class="container px-6 lg:px-8">
         <div class="panel-dark p-6 md:p-8 shadow-2xl">
-          <LiveSparklines client:load />
+          <LiveSparklines client:only="react" />
         </div>
       </div>
     </section>
