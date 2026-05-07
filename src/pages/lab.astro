@@ -8,6 +8,13 @@
 // Likely culprit: dual React copy at SSR time (lucide-react + signalr both
 // pulling React via different module paths under vite's optimizeDeps). Worth
 // investigating once Aspire is stable. For now `client:only` ships the page.
+//
+// Page architecture: three zones, shared containers, one timeline spine.
+//   WATCH   — lifecycle timeline + topology + chaos banner + request feed
+//   PROVE   — invariants (scoreboard) + pattern runners
+//   INSPECT — raw signals (metrics + sparklines) + interactive demos
+// Every panel currently kept; reorganization is grouping + hierarchy, not
+// demolition.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { DemoHub } from '../components/demo/DemoHubLite';
 import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
@@ -18,6 +25,7 @@ import { LabRequestFeed } from '../components/architecture/LabRequestFeed';
 import { ChaosImpactBanner } from '../components/architecture/ChaosImpactBanner';
 import { LiveSparklines } from '../components/architecture/LiveSparklines';
 import { ResilienceScoreboard } from '../components/architecture/ResilienceScoreboard';
+import { ChaosTimelineStrip } from '../components/architecture/ChaosTimelineStrip';
 import PanelHeader from '../components/system/PanelHeader.astro';
 ---
 
@@ -26,143 +34,118 @@ import PanelHeader from '../components/system/PanelHeader.astro';
   description="Live cluster: real .NET 9 microservices, real Postgres / RabbitMQ / Redis / Vault, real chaos controls. Inspect the patterns from chidionyema.dev."
 >
   <main>
-    <!-- Lab header — frames the page for visitors who arrived here from
-         the home-page CTA. Plain English: this is the live cluster, here's
-         what to do with it. -->
-    <section class="py-20 lg:py-28 border-b border-border">
+    <!-- Lab header — short. The page's job is to be the proof; the prose
+         is just enough to frame what follows. -->
+    <section class="py-16 lg:py-20 border-b border-border">
       <div class="container-prose px-6 lg:px-8">
         <a
           href="/"
-          class="inline-flex items-center gap-2 text-sm text-muted hover:text-primary transition-colors mb-10"
+          class="inline-flex items-center gap-2 text-sm text-muted hover:text-primary transition-colors mb-8"
         >
           ← Back home
         </a>
         <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-4">
           Lab
         </div>
-        <h1 class="font-display text-4xl md:text-5xl lg:text-6xl text-primary font-semibold leading-[1.05] tracking-tight mb-6">
+        <h1 class="font-display text-4xl md:text-5xl lg:text-6xl text-primary font-semibold leading-[1.05] tracking-tight mb-5">
           The live cluster.
         </h1>
-        <p class="text-lg text-secondary leading-relaxed max-w-2xl mb-4">
-          Everything below is real. The topology shows what's actually
-          running on the .NET 9 cluster behind this site — Postgres,
-          RabbitMQ, Redis, Vault, and five microservices coordinating via
-          MassTransit events.
-        </p>
         <p class="text-lg text-secondary leading-relaxed max-w-2xl">
-          Click any service or infra node to fault-inject a 30-second
-          pause and watch the dependent demos start failing. The page
-          self-recovers. Every demo below proxies to a real backend —
-          the View source link on each one points at the production code
-          on GitHub.
+          Real .NET 9 microservices, Postgres, RabbitMQ, Redis, Vault.
+          Click any node to fault-inject a 30-second pause and watch the
+          cluster survive and recover. The page does not narrate — it
+          shows.
         </p>
       </div>
     </section>
 
-    <!-- Background prober — invisible. Fires real GETs across the
-         safe read-only demo paths every 1.5s so the cluster is being
-         continuously exercised while the visitor watches. Pause a
-         service and the metrics panel below reflects it within
-         seconds, with no "click a demo to see what happens" step. -->
+    <!-- Background prober — invisible. Continuously fires safe GETs so
+         the cluster has traffic for the watcher to observe even when
+         the visitor is idle. -->
     <LabBackgroundProber client:only="react" />
 
-    <!-- Chaos impact banner — only renders while a target is paused
-         or briefly after resume. Names the paused target, features the
-         most recent failing request with its hop chain + plain-English
-         narration. Goes FIRST under the header so the moment you pause,
-         the cause/effect/recovery story is the dominant element on
-         the page (auto-scrolls into view too). -->
-    <section class="container px-6 lg:px-8 pt-4">
-      <ChaosImpactBanner client:only="react" />
-    </section>
-
-    <!-- Resilience scoreboard — three live invariant proofs
-         (idempotency, saga atomicity, OCC concurrency). Sits below
-         the chaos banner because it's the steady-state "is the system
-         provably correct" view; the banner is the "what just broke"
-         view. Each row turns amber when a dependency is paused,
-         green when it recovers. -->
-    <section class="container px-6 lg:px-8 pt-4">
-      <ResilienceScoreboard client:only="react" />
-    </section>
-
-    <!-- Live cluster — topology + metrics in one eyeline. -->
-    <section class="py-12 lg:py-16" data-reveal>
-      <div class="container px-6 lg:px-8 space-y-6">
-        <div class="panel-dark p-6 md:p-10 shadow-2xl">
+    <!-- ─────────────────────────────────────────────────────────────
+         ZONE 1 — WATCH the live cluster
+         Timeline spine + topology + chaos banner + request feed in
+         one shared container. Single time signature for all four.
+         ───────────────────────────────────────────────────────────── -->
+    <section class="py-12 lg:py-14" data-reveal>
+      <PanelHeader
+        eyebrow="Watch"
+        title="The live cluster, right now."
+        summary="Pause anything in the topology — the lifecycle timeline names every phase as it happens, the banner identifies the failing request, the wire feed scrolls the actual /api/* traffic. One time signature."
+      />
+      <div class="container px-6 lg:px-8">
+        <div class="panel-dark p-6 md:p-10 shadow-2xl space-y-6">
+          <ChaosTimelineStrip client:only="react" />
           <LiveTopologyMap client:only="react" />
-        </div>
-        <div class="panel-dark p-6 md:p-8 shadow-2xl">
-          <div class="text-xs text-muted/70 uppercase tracking-[0.2em] mb-4">
-            Live measurements · trailing 30 seconds
+          <ChaosImpactBanner client:only="react" />
+          <div class="border-t border-white/[0.06] pt-6">
+            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+              Wire feed · every /api/* the BFF handled
+            </div>
+            <LabRequestFeed client:only="react" />
           </div>
-          <LiveMetricsPanel client:only="react" />
         </div>
       </div>
     </section>
 
-    <!-- Continuous runners — every pattern firing real requests on its
-         own cadence. Pause a service via the topology and the affected
-         runners' failure counters start climbing without any clicks. -->
-    <section id="runners" class="py-12 lg:py-16 border-t border-border" data-reveal>
+    <!-- ─────────────────────────────────────────────────────────────
+         ZONE 2 — PROVE invariants over time
+         Scoreboard + pattern runners share one container. They answer
+         the same question (is the system provably correct?) at two
+         granularities: invariant claims + per-pattern traffic.
+         ───────────────────────────────────────────────────────────── -->
+    <section id="runners" class="py-12 lg:py-14 border-t border-border" data-reveal>
       <PanelHeader
-        eyebrow="Pattern runners"
-        title="Every pattern is firing real traffic right now."
-        summary="Nine independent loops, each calling the BFF endpoint that drives one production pattern. Watch the runs, runs failed, last status, last latency. Pause something via the topology — the affected cards turn red within seconds because traffic is already in flight."
+        eyebrow="Prove"
+        title="Continuous invariants under load and under chaos."
+        summary="Three live invariant proofs running real loops, plus nine pattern runners firing real traffic. Pause a dependency — the affected ones turn red, but the invariants do not violate."
       />
       <div class="container px-6 lg:px-8">
-        <div class="panel-dark p-6 md:p-8 shadow-2xl">
-          <LabAutoRunners client:only="react" />
+        <div class="panel-dark p-6 md:p-8 shadow-2xl space-y-6">
+          <ResilienceScoreboard client:only="react" />
+          <div class="border-t border-white/[0.06] pt-6">
+            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+              Pattern runners · each loop fires its own real traffic
+            </div>
+            <LabAutoRunners client:only="react" />
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Live request feed — the wire. -->
-    <section class="py-12 lg:py-16 border-t border-border" data-reveal>
+    <!-- ─────────────────────────────────────────────────────────────
+         ZONE 3 — INSPECT raw signals & drive it yourself
+         Quieter chrome. Live metrics + sparklines side by side, then
+         the interactive demo hub for visitors who want to drive a
+         single pattern by hand.
+         ───────────────────────────────────────────────────────────── -->
+    <section id="demo" class="py-12 lg:py-14 border-t border-border" data-reveal>
       <PanelHeader
-        eyebrow="The wire"
-        title="Every BFF request as it lands."
-        summary="Same data the corner dock streams, surfaced inline. Each row is one /api/* request the BFF actually handled — timestamp, status, method, path, latency, upstream replica."
+        eyebrow="Inspect"
+        title="Raw signals & drive it yourself."
+        summary="Live measurements on the left, RPS + p99 sparklines on the right. Below: interactive demos for visitors who want to pick scenarios one at a time."
       />
-      <div class="container px-6 lg:px-8">
-        <div class="panel-dark p-6 md:p-8 shadow-2xl">
-          <LabRequestFeed client:only="react" />
+      <div class="container px-6 lg:px-8 space-y-6">
+        <div class="panel-dark p-5 md:p-6 shadow-2xl">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+                Live measurements · trailing 30s
+              </div>
+              <LiveMetricsPanel client:only="react" />
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+                RPS + p99 · trailing 60s
+              </div>
+              <LiveSparklines client:only="react" />
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Demos — the original interactive surface for visitors who want
-         to drive a specific pattern by hand rather than watch the
-         continuous loop. -->
-    <section id="demo" class="py-12 lg:py-16 border-t border-border" data-reveal>
-      <PanelHeader
-        eyebrow="Drive it yourself"
-        title="Interactive pattern demos."
-        summary="Same patterns as the runners above, but click-driven so you can pick scenarios and inspect each result. View source on each demo points at the production code that handled it."
-      />
-      <div class="container px-6 lg:px-8">
         <div class="panel-dark p-6 md:p-10 shadow-2xl">
           <DemoHub client:only="react" />
-        </div>
-      </div>
-    </section>
-
-    <!-- Telemetry — RPS bars + p99 line, computed from the live event
-         stream every second. Replaces the prior Grafana iframes which
-         were "Awaiting telemetry…" forever in dev because external
-         Grafana Cloud isn't wired locally. The data shown is the
-         actual traffic this visitor is generating against the
-         cluster — same source the runner cards and the wire feed
-         are reading from. -->
-    <section class="py-12 lg:py-16 border-t border-border" data-reveal>
-      <PanelHeader
-        eyebrow="Telemetry"
-        title="Cluster signal, last 60 seconds."
-        summary="RPS bars and p99 latency line, computed live from every BFF request. Pause a service via the topology and watch the bars turn red and p99 spike inside this window."
-      />
-      <div class="container px-6 lg:px-8">
-        <div class="panel-dark p-6 md:p-8 shadow-2xl">
-          <LiveSparklines client:only="react" />
         </div>
       </div>
     </section>
