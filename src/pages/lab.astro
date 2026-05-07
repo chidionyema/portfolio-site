@@ -4,6 +4,8 @@ import { DemoHub } from '../components/demo/DemoHubLite';
 import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
 import { LiveMetricsPanel } from '../components/architecture/LiveMetricsPanel';
 import { LabBackgroundProber } from '../components/architecture/LabBackgroundProber';
+import { LabAutoRunners } from '../components/architecture/LabAutoRunners';
+import { LabRequestFeed } from '../components/architecture/LabRequestFeed';
 import { GrafanaPanel } from '../components/metrics/GrafanaPanel';
 import PanelHeader from '../components/system/PanelHeader.astro';
 ---
@@ -53,10 +55,8 @@ import PanelHeader from '../components/system/PanelHeader.astro';
          seconds, with no "click a demo to see what happens" step. -->
     <LabBackgroundProber client:load />
 
-    <!-- Live cluster + live metrics. The metrics panel sits directly
-         below the topology so chaos -> visible response is in one
-         eyeline: pause a node, watch its tile go red. -->
-    <section class="py-16 lg:py-20" data-reveal>
+    <!-- Live cluster — topology + metrics in one eyeline. -->
+    <section class="py-12 lg:py-16" data-reveal>
       <div class="container px-6 lg:px-8 space-y-6">
         <div class="panel-dark p-6 md:p-10 shadow-2xl">
           <LiveTopologyMap client:load />
@@ -70,12 +70,44 @@ import PanelHeader from '../components/system/PanelHeader.astro';
       </div>
     </section>
 
-    <!-- Demos -->
-    <section id="demo" class="py-16 lg:py-20 border-t border-border" data-reveal>
+    <!-- Continuous runners — every pattern firing real requests on its
+         own cadence. Pause a service via the topology and the affected
+         runners' failure counters start climbing without any clicks. -->
+    <section id="runners" class="py-12 lg:py-16 border-t border-border" data-reveal>
       <PanelHeader
-        eyebrow="Patterns"
-        title="Working demos."
-        summary="Each one proxies to a real backend service. Press Send and the BFF makes a real HTTP / RabbitMQ / Postgres round-trip; click View source to read the production code that handled it."
+        eyebrow="Pattern runners"
+        title="Every pattern is firing real traffic right now."
+        summary="Nine independent loops, each calling the BFF endpoint that drives one production pattern. Watch the runs, runs failed, last status, last latency. Pause something via the topology — the affected cards turn red within seconds because traffic is already in flight."
+      />
+      <div class="container px-6 lg:px-8">
+        <div class="panel-dark p-6 md:p-8 shadow-2xl">
+          <LabAutoRunners client:load />
+        </div>
+      </div>
+    </section>
+
+    <!-- Live request feed — the wire. -->
+    <section class="py-12 lg:py-16 border-t border-border" data-reveal>
+      <PanelHeader
+        eyebrow="The wire"
+        title="Every BFF request as it lands."
+        summary="Same data the corner dock streams, surfaced inline. Each row is one /api/* request the BFF actually handled — timestamp, status, method, path, latency, upstream replica."
+      />
+      <div class="container px-6 lg:px-8">
+        <div class="panel-dark p-6 md:p-8 shadow-2xl">
+          <LabRequestFeed client:load />
+        </div>
+      </div>
+    </section>
+
+    <!-- Demos — the original interactive surface for visitors who want
+         to drive a specific pattern by hand rather than watch the
+         continuous loop. -->
+    <section id="demo" class="py-12 lg:py-16 border-t border-border" data-reveal>
+      <PanelHeader
+        eyebrow="Drive it yourself"
+        title="Interactive pattern demos."
+        summary="Same patterns as the runners above, but click-driven so you can pick scenarios and inspect each result. View source on each demo points at the production code that handled it."
       />
       <div class="container px-6 lg:px-8">
         <div class="panel-dark p-6 md:p-10 shadow-2xl">
