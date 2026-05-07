@@ -152,20 +152,30 @@ interface DemoDependency {
   paths: string[];
   deps: string[];
   anchorId?: string;
+  /**
+   * If set, an auto-prober will hit this URL while ANY of `deps` is
+   * paused. Must be a side-effect-free GET — the prober fires up to
+   * one request every 3s per affected demo so the visitor sees real
+   * 503s land instead of inferring failure from a static dep map.
+   */
+  probePath?: string;
 }
 
 const DEMOS: DemoDependency[] = [
   { id: 'idempotency',  name: 'Idempotency',     paths: ['/api/demo/idempotency/'],    deps: [],                                       anchorId: 'demo-idempotency' },
   { id: 'checkout',     name: 'Saga checkout',   paths: ['/api/demo/saga/', '/api/checkout/'], deps: ['catalog','orders','payments','rabbitmq','postgres'], anchorId: 'demo-checkout' },
   { id: 'ratelimit',    name: 'Rate limit',      paths: ['/api/demo/ratelimit/'],      deps: [],                                       anchorId: 'demo-ratelimit' },
-  { id: 'vault',        name: 'Vault rotation',  paths: ['/api/demo/vault/'],          deps: ['vault','identity'],                     anchorId: 'demo-vault' },
+  // Vault, cache, and events have safe read-only endpoints we can
+  // probe automatically while chaos is active — fires the actual
+  // backend round-trip so the visitor sees real failures land.
+  { id: 'vault',        name: 'Vault rotation',  paths: ['/api/demo/vault/'],          deps: ['vault','identity'],                     anchorId: 'demo-vault',       probePath: '/api/demo/vault/status' },
   { id: 'stampede',     name: 'Cache stampede',  paths: ['/api/demo/cache/stampede'],  deps: ['catalog','redis'],                      anchorId: 'demo-stampede' },
-  // Note: id matches DemoHubLite's switch case ('cache') so the
-  // dispatch event below selects the right demo card.
-  { id: 'cache',        name: 'Cache invalidation', paths: ['/api/demo/cache/product/', '/api/demo/cache/seed-demo-product'], deps: ['catalog','redis'], anchorId: 'demo-cache' },
+  // id matches DemoHubLite's switch case ('cache') so the dispatch
+  // event below selects the right demo card.
+  { id: 'cache',        name: 'Cache invalidation', paths: ['/api/demo/cache/product/', '/api/demo/cache/seed-demo-product'], deps: ['catalog','redis'], anchorId: 'demo-cache', probePath: '/api/demo/cache/product/demo' },
   { id: 'concurrency',  name: 'Concurrency',     paths: ['/api/demo/inventory/'],      deps: ['catalog','postgres'],                   anchorId: 'demo-concurrency' },
   { id: 'circuit',      name: 'Circuit breaker', paths: ['/api/demo/circuit/'],        deps: ['catalog'],                              anchorId: 'demo-circuit' },
-  { id: 'events',       name: 'Event flow',      paths: ['/api/demo/events/'],         deps: ['payments','rabbitmq','postgres'],       anchorId: 'demo-events' },
+  { id: 'events',       name: 'Event flow',      paths: ['/api/demo/events/'],         deps: ['payments','rabbitmq','postgres'],       anchorId: 'demo-events',      probePath: '/api/demo/events/relay-status' },
   { id: 'tracing',      name: 'Tracing',         paths: ['/api/demo/tracing/'],        deps: ['catalog','orders','payments'],          anchorId: 'demo-tracing' },
 ];
 
@@ -183,6 +193,7 @@ function demoFromPath(path: string): string | null {
 
 const COUNT_WINDOW_MS = 60_000;
 const RECOVERY_DISPLAY_MS = 8_000;
+const PROBE_INTERVAL_MS = 3_000;
 
 function infraTargetForPath(serviceNodeId: string, path: string): string | null {
   const p = path.toLowerCase();
@@ -252,6 +263,10 @@ export const LiveTopologyMap: React.FC = () => {
   const recoveryWatchRef = useRef<Record<string, number>>({});
   // Previous chaos snapshot so we can detect paused → running transitions.
   const prevChaosRef = useRef<Record<string, ChaosTargetState>>({});
+  // Per-demo timestamp of the most recent chaos session start (when the
+  // demo first gained a paused dependency). Used to determine whether a
+  // failure "counts" as evidence for the verified-broken state.
+  const chaosSessionStartRef = useRef<Record<string, number>>({});
 
   // 1Hz tick so the paused countdown updates without other state changes.
   useEffect(() => {
@@ -327,25 +342,74 @@ export const LiveTopologyMap: React.FC = () => {
 
   // Detect chaos transitions: when a previously-paused target flips back
   // to running, every demo that depends on it enters a recovery watch.
-  // The next successful event for that demo records "recovered in Xms"
-  // for the impact ribbon.
+  // Conversely, when something newly pauses, the auto-prober kicks in.
   useEffect(() => {
     const prev = prevChaosRef.current;
     const justResumed = Object.keys(chaos).filter(
       (k) => prev[k]?.status === 'paused' && chaos[k].status === 'running',
     );
+    const justPaused = Object.keys(chaos).filter(
+      (k) => prev[k]?.status !== 'paused' && chaos[k].status === 'paused',
+    );
+
+    const now = performance.now();
     if (justResumed.length > 0) {
-      const now = performance.now();
       DEMOS.forEach((demo) => {
         if (demo.deps.some((d) => justResumed.includes(d))) {
-          // Don't overwrite an in-flight watch.
           if (recoveryWatchRef.current[demo.id] === undefined) {
             recoveryWatchRef.current[demo.id] = now;
           }
         }
       });
     }
+    if (justPaused.length > 0) {
+      // Mark a fresh chaos session for any newly-affected demo. The ribbon
+      // uses these timestamps to distinguish "claimed broken" (dep paused,
+      // zero events since this session began) from "verified broken"
+      // (≥1 actual failure recorded after this timestamp).
+      DEMOS.forEach((demo) => {
+        if (demo.deps.some((d) => justPaused.includes(d))) {
+          chaosSessionStartRef.current[demo.id] = now;
+        }
+      });
+    }
     prevChaosRef.current = chaos;
+  }, [chaos]);
+
+  // Auto-prober: while ANY chaos target is paused, fire safe GET probes
+  // against every demo with a probePath whose deps include that target.
+  // The probes are real BFF round-trips that hit ChaosFaultInjectionHandler
+  // and return real 503s — the visitor sees actual failures stream in,
+  // not a hardcoded "broken" badge. Disabled when nothing is paused.
+  useEffect(() => {
+    const pausedTargets = new Set(
+      Object.entries(chaos)
+        .filter(([, s]) => s.status === 'paused')
+        .map(([k]) => k),
+    );
+    if (pausedTargets.size === 0) return;
+
+    const affectedProbeable = DEMOS.filter(
+      (d) => d.probePath && d.deps.some((dep) => pausedTargets.has(dep)),
+    );
+    if (affectedProbeable.length === 0) return;
+
+    const fire = () => {
+      affectedProbeable.forEach((demo) => {
+        // cache:no-store guarantees the request hits the BFF every time
+        // rather than being served from any HTTP cache; auto-probes are
+        // fire-and-forget so we don't await them.
+        fetch(`${CONSOLE_HUB_URL}${demo.probePath!}`, {
+          method: 'GET',
+          cache: 'no-store',
+          headers: { 'X-Demo-Session': 'auto-probe' },
+        }).catch(() => undefined);
+      });
+    };
+
+    fire();
+    const id = window.setInterval(fire, PROBE_INTERVAL_MS);
+    return () => clearInterval(id);
   }, [chaos]);
 
   const handleEvent = (ev: ConsoleEvent) => {
@@ -777,6 +841,7 @@ export const LiveTopologyMap: React.FC = () => {
         chaos={chaos}
         events={demoEventsRef.current}
         recoveryRecords={recoveryRecords}
+        chaosSessionStarts={chaosSessionStartRef.current}
       />
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 text-[10px] font-mono uppercase tracking-widest text-muted/70">
@@ -791,12 +856,20 @@ interface ImpactRibbonProps {
   chaos: Record<string, ChaosTargetState>;
   events: Record<string, Array<{ ts: number; ok: boolean }>>;
   recoveryRecords: Record<string, { ms: number; until: number }>;
+  /**
+   * Per-demo timestamp of the most recent chaos session start. A failure
+   * counted within `events` only proves "verified broken" if its `ts` is
+   * after the session start — otherwise it's stale residue from before
+   * this pause and the card stays in "claimed broken" (theoretical) state.
+   */
+  chaosSessionStarts: Record<string, number>;
 }
 
 const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
   chaos,
   events,
   recoveryRecords,
+  chaosSessionStarts,
 }) => {
   const now = performance.now();
   const pausedTargets = new Set(
@@ -814,52 +887,81 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
     const success = log.filter((e) => e.ok).length;
     const failed = log.length - success;
     const blockingDeps = demo.deps.filter((d) => pausedTargets.has(d));
-    const broken = blockingDeps.length > 0;
+    const claimedBroken = blockingDeps.length > 0;
+    // "verified" = at least one real failed event observed after the
+    // current chaos session began. Without this, the broken status is
+    // a theoretical claim from the dep map. With it, we have evidence.
+    const sessionStart = chaosSessionStarts[demo.id] ?? 0;
+    const verifiedFailures = log.filter((e) => !e.ok && e.ts >= sessionStart).length;
+    const verified = verifiedFailures > 0;
     const recovery = recoveryRecords[demo.id];
     const recovering = recovery && recovery.until > now;
 
-    let status: 'broken' | 'recovering' | 'healthy';
-    if (broken) status = 'broken';
+    let status: 'verified-broken' | 'claimed-broken' | 'recovering' | 'healthy';
+    if (claimedBroken && verified) status = 'verified-broken';
+    else if (claimedBroken) status = 'claimed-broken';
     else if (recovering) status = 'recovering';
     else status = 'healthy';
 
-    return { demo, status, success, failed, blockingDeps, recovery };
+    return {
+      demo,
+      status,
+      success,
+      failed,
+      blockingDeps,
+      recovery,
+      verifiedFailures,
+    };
   });
 
-  const brokenCount = cards.filter((c) => c.status === 'broken').length;
+  const verifiedCount = cards.filter((c) => c.status === 'verified-broken').length;
+  const claimedCount = cards.filter((c) => c.status === 'claimed-broken').length;
 
   return (
     <div className="px-4 py-3 border-t border-white/10 font-mono">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] uppercase tracking-[0.2em] text-muted/70">
-          impact · per-demo
+          impact · per-demo · auto-probing while paused
         </span>
         <span
           className={`text-[10px] uppercase tracking-[0.2em] ${
-            brokenCount > 0 ? 'text-error' : 'text-muted/70'
+            verifiedCount > 0
+              ? 'text-error'
+              : claimedCount > 0
+                ? 'text-warning'
+                : 'text-muted/70'
           }`}
         >
-          {brokenCount > 0
-            ? `${brokenCount} demo${brokenCount === 1 ? '' : 's'} broken`
-            : 'all demos healthy'}
+          {verifiedCount > 0
+            ? `${verifiedCount} verified · ${claimedCount} claimed`
+            : claimedCount > 0
+              ? `${claimedCount} at risk · proving…`
+              : 'all demos healthy'}
         </span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-        {cards.map(({ demo, status, success, failed, blockingDeps, recovery }) => {
+        {cards.map(({ demo, status, success, failed, blockingDeps, recovery, verifiedFailures }) => {
           const ringColor =
-            status === 'broken'
-              ? 'border-error/40 bg-error/[0.06]'
-              : status === 'recovering'
-                ? 'border-warning/40 bg-warning/[0.06]'
-                : failed > 0
-                  ? 'border-warning/20 bg-white/[0.02]'
-                  : 'border-white/5';
+            status === 'verified-broken'
+              ? 'border-error/50 bg-error/[0.08]'
+              : status === 'claimed-broken'
+                // Dashed amber border = "we believe this is broken but
+                // haven't proven it with a real failure yet". Proves
+                // honest about what's measured vs claimed.
+                ? 'border-warning/30 bg-warning/[0.04] border-dashed'
+                : status === 'recovering'
+                  ? 'border-success/40 bg-success/[0.04]'
+                  : failed > 0
+                    ? 'border-warning/20 bg-white/[0.02]'
+                    : 'border-white/5';
           const dotColor =
-            status === 'broken'
+            status === 'verified-broken'
               ? 'bg-error'
-              : status === 'recovering'
+              : status === 'claimed-broken'
                 ? 'bg-warning'
-                : 'bg-success';
+                : status === 'recovering'
+                  ? 'bg-success'
+                  : 'bg-success';
           const onClick = () => {
             // Tell DemoHubLite to select this demo, then scroll the
             // demo section into view. DemoHubLite listens for the
@@ -878,24 +980,31 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
               onClick={onClick}
               className={`flex items-center gap-2 px-2 py-1.5 rounded border ${ringColor} text-left hover:bg-white/[0.04] transition-colors`}
               title={
-                blockingDeps.length
-                  ? `Broken via paused: ${blockingDeps.join(', ')}`
-                  : recovery
-                    ? `Recovered ${recovery.ms}ms after resume`
-                    : 'No dependency on currently-paused targets'
+                status === 'verified-broken'
+                  ? `Verified broken: ${verifiedFailures} real failure(s) observed since pause (${blockingDeps.join(', ')})`
+                  : status === 'claimed-broken'
+                    ? `Claimed broken via paused: ${blockingDeps.join(', ')}. ${demo.probePath ? 'Auto-probe firing — failures will appear here.' : 'No probe — press the demo button to verify.'}`
+                    : recovery
+                      ? `Recovered ${recovery.ms}ms after resume`
+                      : 'No dependency on currently-paused targets'
               }
             >
               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
               <span className="text-[10.5px] text-primary truncate flex-1">
                 {demo.name}
               </span>
-              {status === 'broken' && (
-                <span className="text-[9px] text-error/90 uppercase tracking-widest shrink-0">
+              {status === 'verified-broken' && (
+                <span className="text-[9px] text-error uppercase tracking-widest shrink-0 font-bold">
                   broken
                 </span>
               )}
+              {status === 'claimed-broken' && (
+                <span className="text-[9px] text-warning/90 uppercase tracking-widest shrink-0">
+                  {demo.probePath ? 'proving…' : 'at risk'}
+                </span>
+              )}
               {status === 'recovering' && recovery && (
-                <span className="text-[9px] text-warning uppercase tracking-widest shrink-0">
+                <span className="text-[9px] text-success uppercase tracking-widest shrink-0 font-bold">
                   recovered {recovery.ms}ms
                 </span>
               )}
