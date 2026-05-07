@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Shield, Activity, RefreshCw, Key, Database, ArrowRightLeft, AlertCircle } from 'lucide-react';
+import { Shield, Activity, RefreshCw, Key, Database, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import type { VaultRotationEvent } from '../../lib/api/signalr';
 import { RequestReceiptHistory } from './RequestReceipt';
@@ -23,24 +23,33 @@ export function VaultRotationDemo() {
   const [credential, setCredential] = useState<Credential | null>(null);
   const [localLogs, setLocalLogs] = useState<LogEntry[]>([]);
   const [requests, setRequests] = useState<boolean[]>([]);
-  const [showPassword, setShowPassword] = useState(false);
   const [ttlProgress, setTtlProgress] = useState(100);
   const [isRotating, setIsRotating] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
   const { executeCommand, events } = useDemoSession('vault');
 
-  // Initial load
+  // Initial load — reads the real /api/demo/vault/status which proxies
+  // to identity-svc, which makes a live HTTP probe to vault's
+  // /v1/sys/health on every call (no fallback / no static state).
+  // Response shape: { status, roleName, leaseTtlSeconds, leaseExpiry,
+  // vaultStatusCode, vaultBody }. A 503 here means the vault container
+  // is paused or unreachable — let the credential stay null so the
+  // card shows "Initializing…" instead of inventing values.
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'}/api/demo/vault/status`);
+        if (!response.ok) return;
         const data = await response.json();
+        const ttl = typeof data.leaseTtlSeconds === 'number' && data.leaseTtlSeconds > 0
+          ? data.leaseTtlSeconds
+          : 60; // No lease issued yet — show a 60s placeholder window
         setCredential({
-          id: data.sessionId,
-          username: `v-app-role-${data.currentVersion}`,
+          id: data.roleName ?? 'haworks-identity',
+          username: data.roleName ?? 'haworks-identity',
           issuedAt: new Date(),
-          expiresAt: new Date(Date.now() + (data.ttlSeconds * 1000))
+          expiresAt: new Date(Date.now() + ttl * 1000),
         });
       } catch (err) {}
     };
@@ -161,17 +170,11 @@ export function VaultRotationDemo() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">Access token</label>
-                  <div className="flex gap-2">
-                    <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex-1 text-muted tracking-[0.4em] font-black font-mono overflow-hidden truncate">
-                      {showPassword ? 'sha256:a9f2b48c1e...' : '••••••••••••••••'}
-                    </div>
-                    <button 
-                      onClick={() => setShowPassword(!showPassword)} 
-                      className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors text-muted hover:text-primary"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
+                  <label className="text-[10px] uppercase tracking-[0.4em] font-black text-muted/60">
+                    Vault role
+                  </label>
+                  <div className="text-sm bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex-1 text-muted tracking-widest font-mono overflow-hidden truncate">
+                    {credential.id} · dynamic Postgres credentials issued on demand
                   </div>
                 </div>
               </div>

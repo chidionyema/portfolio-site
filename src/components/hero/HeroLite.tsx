@@ -116,12 +116,13 @@ export function Hero({ preview, initialMetrics }: HeroProps) {
           {/* Right: Live cluster topology — real BFF event stream powers
               packet animation; click any node for chaos pause. The hero
               swap from a static EventMesh to LiveTopologyMap is the
-              "this is real" artifact above the fold. */}
-          <div className="flex-1 w-full relative">
+              "this is real" artifact above the fold. Wider on desktop
+              so the 1000×540 viewBox doesn't cramp node labels. */}
+          <div className="flex-1 w-full relative min-w-0">
              <div className="font-mono text-[9px] text-accent font-black uppercase tracking-[0.4em] mb-4 opacity-60 text-center lg:text-left">
                 [ LIVE_CLUSTER · click a node to pause ]
              </div>
-             <div className="w-full max-w-[680px] mx-auto lg:mx-0">
+             <div className="w-full lg:max-w-[820px] mx-auto lg:mx-0">
                 <LiveTopologyMap />
              </div>
           </div>
