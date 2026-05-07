@@ -2,6 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { DemoHub } from '../components/demo/DemoHubLite';
 import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
+import { LiveMetricsPanel } from '../components/architecture/LiveMetricsPanel';
+import { LabBackgroundProber } from '../components/architecture/LabBackgroundProber';
 import { GrafanaPanel } from '../components/metrics/GrafanaPanel';
 import PanelHeader from '../components/system/PanelHeader.astro';
 ---
@@ -44,11 +46,26 @@ import PanelHeader from '../components/system/PanelHeader.astro';
       </div>
     </section>
 
-    <!-- Live topology + chaos panel -->
+    <!-- Background prober — invisible. Fires real GETs across the
+         safe read-only demo paths every 1.5s so the cluster is being
+         continuously exercised while the visitor watches. Pause a
+         service and the metrics panel below reflects it within
+         seconds, with no "click a demo to see what happens" step. -->
+    <LabBackgroundProber client:load />
+
+    <!-- Live cluster + live metrics. The metrics panel sits directly
+         below the topology so chaos -> visible response is in one
+         eyeline: pause a node, watch its tile go red. -->
     <section class="py-16 lg:py-20" data-reveal>
-      <div class="container px-6 lg:px-8">
+      <div class="container px-6 lg:px-8 space-y-6">
         <div class="panel-dark p-6 md:p-10 shadow-2xl">
           <LiveTopologyMap client:load />
+        </div>
+        <div class="panel-dark p-6 md:p-8 shadow-2xl">
+          <div class="text-xs text-muted/70 uppercase tracking-[0.2em] mb-4">
+            Live measurements · trailing 30 seconds
+          </div>
+          <LiveMetricsPanel client:load />
         </div>
       </div>
     </section>
