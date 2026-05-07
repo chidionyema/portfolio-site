@@ -195,6 +195,19 @@ function demoFromPath(path: string): string | null {
 const COUNT_WINDOW_MS = 60_000;
 const RECOVERY_DISPLAY_MS = 8_000;
 const PROBE_INTERVAL_MS = 3_000;
+// Replica dots are evicted after this long without observing the
+// instance id in the event stream. Without this, ids from a previous
+// Aspire run accumulate as dead dots over the node forever.
+const REPLICA_TTL_MS = 60_000;
+// After a chaos resume, downstream connection pools (EF/MassTransit/
+// Redis client) take a few seconds to re-establish. Failures during
+// this window aren't fresh chaos — surface them as "warming" instead
+// of "broken" so the visitor doesn't think resume failed.
+const RECOVERY_WARMING_MS = 12_000;
+// Debounce: ignore status flips that arrive within this window of
+// the previous flip. Prevents the ribbon from strobing when chaos is
+// toggled rapidly.
+const STATUS_DEBOUNCE_MS = 1_500;
 
 function infraTargetForPath(serviceNodeId: string, path: string): string | null {
   const p = path.toLowerCase();
@@ -244,7 +257,10 @@ function healthColor(status: string | undefined) {
 
 export const LiveTopologyMap: React.FC = () => {
   const [packets, setPackets] = useState<Packet[]>([]);
-  const [replicas, setReplicas] = useState<Record<string, Set<string>>>({});
+  // Per-node map of instanceId -> lastSeenAt (performance.now()). Pruned
+  // on every render via REPLICA_TTL_MS so stale ids from prior Aspire
+  // runs disappear instead of accumulating as dead dots.
+  const [replicas, setReplicas] = useState<Record<string, Record<string, number>>>({});
   const [eventsPerSec, setEventsPerSec] = useState(0);
   const [snapshot, setSnapshot] = useState<HealthSnapshot | null>(null);
   const [chaos, setChaos] = useState<Record<string, ChaosTargetState>>({});
@@ -268,6 +284,9 @@ export const LiveTopologyMap: React.FC = () => {
   // demo first gained a paused dependency). Used to determine whether a
   // failure "counts" as evidence for the verified-broken state.
   const chaosSessionStartRef = useRef<Record<string, number>>({});
+  // Per-demo "warming until" timestamp set when a chaos resume starts a
+  // recovery watch. Cleared on the first real success.
+  const warmingUntilRef = useRef<Record<string, number>>({});
 
   // 1Hz tick so the paused countdown updates without other state changes.
   useEffect(() => {
@@ -360,6 +379,12 @@ export const LiveTopologyMap: React.FC = () => {
           if (recoveryWatchRef.current[demo.id] === undefined) {
             recoveryWatchRef.current[demo.id] = now;
           }
+          // Connection-pool warming window. EF/MassTransit/Redis client
+          // connections take a few seconds to re-establish after the
+          // underlying container un-pauses; failures during this window
+          // are honest but not "fresh chaos". Tag them as "warming"
+          // until either a real success lands or the window expires.
+          warmingUntilRef.current[demo.id] = now + RECOVERY_WARMING_MS;
         }
       });
     }
@@ -426,11 +451,13 @@ export const LiveTopologyMap: React.FC = () => {
       while (log.length > 0 && log[0].ts < now - COUNT_WINDOW_MS) log.shift();
       demoEventsRef.current[demoId] = log;
 
-      // First success after a recovery watch → record elapsed.
+      // First success after a recovery watch → record elapsed and clear
+      // the warming flag so the card flips to recovering / healthy.
       const watchStart = recoveryWatchRef.current[demoId];
       if (watchStart !== undefined && ok) {
         const elapsed = Math.round(now - watchStart);
         delete recoveryWatchRef.current[demoId];
+        delete warmingUntilRef.current[demoId];
         setRecoveryRecords((prev) => ({
           ...prev,
           [demoId]: { ms: elapsed, until: now + RECOVERY_DISPLAY_MS },
@@ -438,17 +465,19 @@ export const LiveTopologyMap: React.FC = () => {
       }
     }
 
-    // 1. Replica tracking. Each event tells us about the BFF that handled
-    //    it and zero-or-more upstream replicas.
+    // 1. Replica tracking. Stamp lastSeenAt for the BFF replica that
+    //    handled this event plus every upstream replica it called.
+    //    Pruning happens on render (REPLICA_TTL_MS).
+    const seenAt = performance.now();
     setReplicas((prev) => {
       const next = { ...prev };
       const recordReplica = (service: string, instanceId: string) => {
         const key =
           service === 'bff-web' ? 'bff' : SERVICE_NAME_TO_NODE[service] ?? null;
         if (!key) return;
-        const set = new Set(next[key] ?? []);
-        set.add(instanceId);
-        next[key] = set;
+        const nodeMap = { ...(next[key] ?? {}) };
+        nodeMap[instanceId] = seenAt;
+        next[key] = nodeMap;
       };
       recordReplica(ev.service, ev.instanceId);
       ev.upstreams.forEach((u) => recordReplica(u.service, u.instanceId));
@@ -684,8 +713,13 @@ export const LiveTopologyMap: React.FC = () => {
           {Object.values(NODES).map((node) => {
             const colour = nodeStatusColor(node);
             const isService = node.kind === 'service';
-            const replicaSet = replicas[node.id];
-            const replicaCount = replicaSet?.size ?? 0;
+            // Active replicas = those seen within REPLICA_TTL_MS. The
+            // 1Hz tick is what re-renders to evict stale ids.
+            const liveCutoff = performance.now() - REPLICA_TTL_MS;
+            const replicaIds = Object.entries(replicas[node.id] ?? {})
+              .filter(([, ts]) => ts >= liveCutoff)
+              .map(([id]) => id);
+            const replicaCount = replicaIds.length;
             const paused = isPaused(node.id);
             const targetable = NODE_TO_CHAOS_TARGET[node.id] !== undefined;
             const remaining = remainingSec(node.id);
@@ -802,7 +836,7 @@ export const LiveTopologyMap: React.FC = () => {
                     instance id. Up to 4 visible; 5+ collapses to "+N". */}
                 {isService && replicaCount > 0 && (
                   <g>
-                    {Array.from(replicaSet ?? []).slice(0, 4).map((rid, i) => (
+                    {replicaIds.slice(0, 4).map((rid, i) => (
                       <circle
                         key={rid}
                         cx={node.x - ((Math.min(replicaCount, 4) - 1) * 6) + i * 12}
@@ -843,11 +877,19 @@ export const LiveTopologyMap: React.FC = () => {
         events={demoEventsRef.current}
         recoveryRecords={recoveryRecords}
         chaosSessionStarts={chaosSessionStartRef.current}
+        warmingUntil={warmingUntilRef.current}
       />
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 text-[10px] font-mono uppercase tracking-widest text-muted/70">
         <span>click any node to pause it · auto-resume after 30s</span>
-        <span>{Object.values(replicas).reduce((s, set) => s + set.size, 0)} replicas seen</span>
+        <span>{(() => {
+          const cutoff = performance.now() - REPLICA_TTL_MS;
+          const total = Object.values(replicas).reduce(
+            (s, m) => s + Object.values(m).filter((ts) => ts >= cutoff).length,
+            0,
+          );
+          return `${total} replica${total === 1 ? '' : 's'} live`;
+        })()}</span>
       </div>
     </div>
   );
@@ -864,6 +906,12 @@ interface ImpactRibbonProps {
    * this pause and the card stays in "claimed broken" (theoretical) state.
    */
   chaosSessionStarts: Record<string, number>;
+  /**
+   * Per-demo deadline (performance.now() + warming window) during which
+   * post-resume failures are tagged "warming" rather than "broken".
+   * Cleared on first real success.
+   */
+  warmingUntil: Record<string, number>;
 }
 
 const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
@@ -871,6 +919,7 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
   events,
   recoveryRecords,
   chaosSessionStarts,
+  warmingUntil,
 }) => {
   const now = performance.now();
   const pausedTargets = new Set(
@@ -898,14 +947,21 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
     const recovery = recoveryRecords[demo.id];
     const recovering = recovery && recovery.until > now;
 
-    // Honest evidence: the card only flips to "broken" once a real
-    // failed event has been observed since this chaos session started.
-    // Until then, the dot stays "probing" — connection is live, no
-    // failures yet (could be a slow probe, could be a target that
-    // hasn't been hit yet). Theory-only red is gone.
-    let status: 'broken' | 'probing' | 'recovering' | 'healthy';
+    // Honest states:
+    //  broken      — chaos active AND ≥1 real failure observed
+    //  probing     — chaos active, no failures yet
+    //  warming     — chaos cleared but recovery window still open and
+    //                no real success yet (ignore failures here as
+    //                connection-pool warmup, not fresh chaos)
+    //  recovering  — chaos cleared, first real success landed
+    //  healthy     — chaos clear, no recent failures
+    const warmDeadline = warmingUntil[demo.id];
+    const warming = !claimedBroken && warmDeadline !== undefined && warmDeadline > now;
+
+    let status: 'broken' | 'probing' | 'warming' | 'recovering' | 'healthy';
     if (claimedBroken && verified) status = 'broken';
     else if (claimedBroken) status = 'probing';
+    else if (warming) status = 'warming';
     else if (recovering) status = 'recovering';
     else status = 'healthy';
 
@@ -922,6 +978,7 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
 
   const brokenCount = cards.filter((c) => c.status === 'broken').length;
   const probingCount = cards.filter((c) => c.status === 'probing').length;
+  const warmingCount = cards.filter((c) => c.status === 'warming').length;
 
   return (
     <div className="px-4 py-3 border-t border-white/10 font-mono">
@@ -933,7 +990,7 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
           className={`text-[10px] uppercase tracking-[0.2em] ${
             brokenCount > 0
               ? 'text-error'
-              : probingCount > 0
+              : probingCount > 0 || warmingCount > 0
                 ? 'text-muted'
                 : 'text-muted/70'
           }`}
@@ -942,7 +999,9 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
             ? `${brokenCount} demo${brokenCount === 1 ? '' : 's'} verified broken`
             : probingCount > 0
               ? `probing ${probingCount}…`
-              : 'all demos healthy'}
+              : warmingCount > 0
+                ? `${warmingCount} warming up…`
+                : 'all demos healthy'}
         </span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
@@ -950,20 +1009,21 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
           const ringColor =
             status === 'broken'
               ? 'border-error/50 bg-error/[0.08]'
-              : status === 'recovering'
-                ? 'border-success/40 bg-success/[0.04]'
-                : failed > 0
-                  ? 'border-warning/20 bg-white/[0.02]'
-                  : 'border-white/5';
+              : status === 'warming'
+                ? 'border-warning/30 bg-warning/[0.04]'
+                : status === 'recovering'
+                  ? 'border-success/40 bg-success/[0.04]'
+                  : failed > 0
+                    ? 'border-warning/20 bg-white/[0.02]'
+                    : 'border-white/5';
           const dotColor =
             status === 'broken'
               ? 'bg-error'
               : status === 'probing'
-                // Steady amber pulse — connection is live, no evidence
-                // of failure yet (could be a slow probe, could mean the
-                // chaos wasn't disruptive after all).
                 ? 'bg-warning animate-pulse'
-                : 'bg-success';
+                : status === 'warming'
+                  ? 'bg-warning animate-pulse'
+                  : 'bg-success';
           const onClick = () => {
             // Tell DemoHubLite to select this demo, then scroll the
             // demo section into view. DemoHubLite listens for the
@@ -980,18 +1040,23 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
             <button
               key={demo.id}
               onClick={onClick}
-              className={`flex items-center gap-2 px-2 py-1.5 rounded border ${ringColor} text-left hover:bg-white/[0.04] transition-colors`}
+              // 300ms transition keeps the card from strobing when
+              // chaos is toggled rapidly — the colour interpolates
+              // rather than flashing through intermediate states.
+              className={`flex items-center gap-2 px-2 py-1.5 rounded border ${ringColor} text-left hover:bg-white/[0.04] transition-all duration-300`}
               title={
                 status === 'broken'
                   ? `Verified broken: ${verifiedFailures} real failure(s) observed since pause (${blockingDeps.join(', ')})`
                   : status === 'probing'
                     ? `Auto-probe firing against ${blockingDeps.join(', ')} dependency. No failures observed yet.`
-                    : recovery
-                      ? `Recovered ${recovery.ms}ms after resume`
-                      : 'No dependency on currently-paused targets'
+                    : status === 'warming'
+                      ? 'Connection pool re-establishing after resume; failures during this window are honest but not fresh chaos.'
+                      : recovery
+                        ? `Recovered ${recovery.ms}ms after resume`
+                        : 'No dependency on currently-paused targets'
               }
             >
-              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors duration-300 ${dotColor}`} />
               <span className="text-[10.5px] text-primary truncate flex-1">
                 {demo.name}
               </span>
@@ -1003,6 +1068,11 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
               {status === 'probing' && (
                 <span className="text-[9px] text-warning/80 uppercase tracking-widest shrink-0">
                   probing
+                </span>
+              )}
+              {status === 'warming' && (
+                <span className="text-[9px] text-warning/80 uppercase tracking-widest shrink-0">
+                  warming
                 </span>
               )}
               {status === 'recovering' && recovery && (
