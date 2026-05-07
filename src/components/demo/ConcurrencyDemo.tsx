@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Zap, Database, User, ShieldCheck, Save, ArrowRightLeft } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { RequestReceiptHistory } from './RequestReceipt';
+import { getDemoProduct } from '../../lib/api/demo-client';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 
 interface InventoryState {
@@ -28,6 +29,11 @@ export function ConcurrencyDemo() {
   });
   const [isRacing, setIsRacing] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  // Real product GUID for the demo. Resolved once via the idempotent
+  // /api/demo/cache/product/demo seed endpoint and re-resolved on 404
+  // (Aspire restart spawns a fresh PG; old id no longer exists).
+  const [productId, setProductId] = useState<string | null>(null);
+  const reseedingRef = useRef(false);
 
   const { executeCommand, events, isConnected } = useDemoSession('concurrency');
 
@@ -40,11 +46,30 @@ export function ConcurrencyDemo() {
      }
   }, [events]);
 
-  const fetchInventory = async (user?: 'A' | 'B') => {
+  const reseed = async (): Promise<string | null> => {
+    if (reseedingRef.current) return null;
+    reseedingRef.current = true;
+    try {
+      const data = await getDemoProduct();
+      setProductId(data.id);
+      return data.id;
+    } catch {
+      return null;
+    } finally {
+      reseedingRef.current = false;
+    }
+  };
+
+  const fetchInventory = async (user?: 'A' | 'B', idOverride?: string) => {
     const setUser = user === 'A' ? setUserA : user === 'B' ? setUserB : null;
     if (setUser) setUser(prev => ({ ...prev, status: 'reading', message: 'Fetching_State...' }));
+    let id = idOverride ?? productId;
+    if (!id) {
+      id = await reseed();
+      if (!id) return;
+    }
     try {
-      const result = await executeCommand('/inventory/demo-stock', {}, { method: 'GET' });
+      const result = await executeCommand(`/inventory/${id}`, {}, { method: 'GET' });
       setReceipts(prev => [result, ...prev].slice(0, 10));
       setInventory({ quantity: result.inventory.quantity, version: result.inventory.version });
       if (setUser) {
@@ -57,20 +82,38 @@ export function ConcurrencyDemo() {
             message: `Snapshot: v${result.inventory.version}`
          }));
       }
-    } catch (err) {}
+    } catch (err: any) {
+      // Stale id self-heal: re-seed once and retry.
+      const message = err?.message ?? '';
+      if (!idOverride && /404|not found/i.test(message)) {
+        const fresh = await reseed();
+        if (fresh) {
+          await fetchInventory(user, fresh);
+          return;
+        }
+      }
+    }
   };
 
-  useEffect(() => { fetchInventory(); }, []);
+  // Bootstrap: resolve real product id, then fetch its inventory.
+  useEffect(() => {
+    (async () => {
+      const id = await reseed();
+      if (id) await fetchInventory(undefined, id);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveInventory = async (user: 'A' | 'B') => {
     const userState = user === 'A' ? userA : userB;
     const setUser = user === 'A' ? setUserA : setUserB;
     if (userState.readVersion === null) return;
+    if (!productId) return;
     setUser(prev => ({ ...prev, status: 'saving', message: 'Committing...' }));
     try {
-      const result = await executeCommand('/inventory/demo-stock', 
+      const result = await executeCommand(`/inventory/${productId}`,
         { quantity: parseInt(userState.newQuantity) },
-        { 
+        {
           method: 'PUT',
           headers: { 'If-Match': `"${userState.readVersion}"` }
         }
