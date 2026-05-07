@@ -138,6 +138,52 @@ interface ChaosTargetState {
   remainingSeconds: number | null;
 }
 
+// Demo dependency map. Drives the impact ribbon: when a chaos target
+// goes red, every demo that depends on it lights up too. The path
+// prefixes let us match incoming console events back to the originating
+// demo for the live success/fail counters.
+//
+// `anchorId` is the DOM id of the demo card on the page so clicking a
+// ribbon row scrolls to it. The frontend demo components mount under
+// these ids today (see src/components/demo/DemoSidebar.tsx).
+interface DemoDependency {
+  id: string;
+  name: string;
+  paths: string[];
+  deps: string[];
+  anchorId?: string;
+}
+
+const DEMOS: DemoDependency[] = [
+  { id: 'idempotency',  name: 'Idempotency',     paths: ['/api/demo/idempotency/'],    deps: [],                                       anchorId: 'demo-idempotency' },
+  { id: 'checkout',     name: 'Saga checkout',   paths: ['/api/demo/saga/', '/api/checkout/'], deps: ['catalog','orders','payments','rabbitmq','postgres'], anchorId: 'demo-checkout' },
+  { id: 'ratelimit',    name: 'Rate limit',      paths: ['/api/demo/ratelimit/'],      deps: [],                                       anchorId: 'demo-ratelimit' },
+  { id: 'vault',        name: 'Vault rotation',  paths: ['/api/demo/vault/'],          deps: ['vault','identity'],                     anchorId: 'demo-vault' },
+  { id: 'stampede',     name: 'Cache stampede',  paths: ['/api/demo/cache/stampede'],  deps: ['catalog','redis'],                      anchorId: 'demo-stampede' },
+  // Note: id matches DemoHubLite's switch case ('cache') so the
+  // dispatch event below selects the right demo card.
+  { id: 'cache',        name: 'Cache invalidation', paths: ['/api/demo/cache/product/', '/api/demo/cache/seed-demo-product'], deps: ['catalog','redis'], anchorId: 'demo-cache' },
+  { id: 'concurrency',  name: 'Concurrency',     paths: ['/api/demo/inventory/'],      deps: ['catalog','postgres'],                   anchorId: 'demo-concurrency' },
+  { id: 'circuit',      name: 'Circuit breaker', paths: ['/api/demo/circuit/'],        deps: ['catalog'],                              anchorId: 'demo-circuit' },
+  { id: 'events',       name: 'Event flow',      paths: ['/api/demo/events/'],         deps: ['payments','rabbitmq','postgres'],       anchorId: 'demo-events' },
+  { id: 'tracing',      name: 'Tracing',         paths: ['/api/demo/tracing/'],        deps: ['catalog','orders','payments'],          anchorId: 'demo-tracing' },
+];
+
+const DEMO_LOOKUP: Record<string, DemoDependency> = Object.fromEntries(
+  DEMOS.map((d) => [d.id, d]),
+);
+
+function demoFromPath(path: string): string | null {
+  const p = path.toLowerCase();
+  for (const demo of DEMOS) {
+    if (demo.paths.some((prefix) => p.startsWith(prefix))) return demo.id;
+  }
+  return null;
+}
+
+const COUNT_WINDOW_MS = 60_000;
+const RECOVERY_DISPLAY_MS = 8_000;
+
 function infraTargetForPath(serviceNodeId: string, path: string): string | null {
   const p = path.toLowerCase();
   if (p.includes('/cache/')) return 'redis';
@@ -192,9 +238,20 @@ export const LiveTopologyMap: React.FC = () => {
   const [chaos, setChaos] = useState<Record<string, ChaosTargetState>>({});
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [, setTick] = useState(0);
+  const [recoveryRecords, setRecoveryRecords] = useState<
+    Record<string, { ms: number; until: number }>
+  >({});
   const packetIdRef = useRef(0);
   const eventTimestampsRef = useRef<number[]>([]);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+  // Per-demo windowed event log: each entry is { ts, ok }. Pruned to
+  // COUNT_WINDOW_MS on read so the ribbon shows trailing-window stats.
+  const demoEventsRef = useRef<Record<string, Array<{ ts: number; ok: boolean }>>>({});
+  // Demos awaiting their first success after a chaos clear. Resume timestamp
+  // by demo id; cleared when the recovery is recorded.
+  const recoveryWatchRef = useRef<Record<string, number>>({});
+  // Previous chaos snapshot so we can detect paused → running transitions.
+  const prevChaosRef = useRef<Record<string, ChaosTargetState>>({});
 
   // 1Hz tick so the paused countdown updates without other state changes.
   useEffect(() => {
@@ -268,7 +325,54 @@ export const LiveTopologyMap: React.FC = () => {
     };
   }, []);
 
+  // Detect chaos transitions: when a previously-paused target flips back
+  // to running, every demo that depends on it enters a recovery watch.
+  // The next successful event for that demo records "recovered in Xms"
+  // for the impact ribbon.
+  useEffect(() => {
+    const prev = prevChaosRef.current;
+    const justResumed = Object.keys(chaos).filter(
+      (k) => prev[k]?.status === 'paused' && chaos[k].status === 'running',
+    );
+    if (justResumed.length > 0) {
+      const now = performance.now();
+      DEMOS.forEach((demo) => {
+        if (demo.deps.some((d) => justResumed.includes(d))) {
+          // Don't overwrite an in-flight watch.
+          if (recoveryWatchRef.current[demo.id] === undefined) {
+            recoveryWatchRef.current[demo.id] = now;
+          }
+        }
+      });
+    }
+    prevChaosRef.current = chaos;
+  }, [chaos]);
+
   const handleEvent = (ev: ConsoleEvent) => {
+    // 0. Per-demo windowed event log + recovery-watch resolution.
+    const demoId = demoFromPath(ev.path);
+    if (demoId) {
+      const ok = ev.status < 400;
+      const log = demoEventsRef.current[demoId] ?? [];
+      const now = performance.now();
+      log.push({ ts: now, ok });
+      // Keep within the trailing window. Cheap because demo events arrive
+      // at human speeds (a few per second at most).
+      while (log.length > 0 && log[0].ts < now - COUNT_WINDOW_MS) log.shift();
+      demoEventsRef.current[demoId] = log;
+
+      // First success after a recovery watch → record elapsed.
+      const watchStart = recoveryWatchRef.current[demoId];
+      if (watchStart !== undefined && ok) {
+        const elapsed = Math.round(now - watchStart);
+        delete recoveryWatchRef.current[demoId];
+        setRecoveryRecords((prev) => ({
+          ...prev,
+          [demoId]: { ms: elapsed, until: now + RECOVERY_DISPLAY_MS },
+        }));
+      }
+    }
+
     // 1. Replica tracking. Each event tells us about the BFF that handled
     //    it and zero-or-more upstream replicas.
     setReplicas((prev) => {
@@ -664,9 +768,149 @@ export const LiveTopologyMap: React.FC = () => {
         </g>
       </svg>
 
+      {/* Impact ribbon — visible cause-and-effect for chaos actions.
+          Each card shows what depends on what's currently paused, the
+          live success/fail count from the trailing 60s window, and a
+          recovery time after resume. Without this, "pause catalog" is
+          a button-press without a visible consequence. */}
+      <ImpactRibbon
+        chaos={chaos}
+        events={demoEventsRef.current}
+        recoveryRecords={recoveryRecords}
+      />
+
       <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 text-[10px] font-mono uppercase tracking-widest text-muted/70">
         <span>click any node to pause it · auto-resume after 30s</span>
         <span>{Object.values(replicas).reduce((s, set) => s + set.size, 0)} replicas seen</span>
+      </div>
+    </div>
+  );
+};
+
+interface ImpactRibbonProps {
+  chaos: Record<string, ChaosTargetState>;
+  events: Record<string, Array<{ ts: number; ok: boolean }>>;
+  recoveryRecords: Record<string, { ms: number; until: number }>;
+}
+
+const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
+  chaos,
+  events,
+  recoveryRecords,
+}) => {
+  const now = performance.now();
+  const pausedTargets = new Set(
+    Object.entries(chaos)
+      .filter(([, s]) => s.status === 'paused')
+      .map(([k]) => k),
+  );
+
+  const cards = DEMOS.map((demo) => {
+    // Prune as we read so the displayed counts match the trailing window
+    // even if no fresh events have arrived for a while.
+    const log = (events[demo.id] ?? []).filter(
+      (e) => e.ts >= now - COUNT_WINDOW_MS,
+    );
+    const success = log.filter((e) => e.ok).length;
+    const failed = log.length - success;
+    const blockingDeps = demo.deps.filter((d) => pausedTargets.has(d));
+    const broken = blockingDeps.length > 0;
+    const recovery = recoveryRecords[demo.id];
+    const recovering = recovery && recovery.until > now;
+
+    let status: 'broken' | 'recovering' | 'healthy';
+    if (broken) status = 'broken';
+    else if (recovering) status = 'recovering';
+    else status = 'healthy';
+
+    return { demo, status, success, failed, blockingDeps, recovery };
+  });
+
+  const brokenCount = cards.filter((c) => c.status === 'broken').length;
+
+  return (
+    <div className="px-4 py-3 border-t border-white/10 font-mono">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] uppercase tracking-[0.2em] text-muted/70">
+          impact · per-demo
+        </span>
+        <span
+          className={`text-[10px] uppercase tracking-[0.2em] ${
+            brokenCount > 0 ? 'text-error' : 'text-muted/70'
+          }`}
+        >
+          {brokenCount > 0
+            ? `${brokenCount} demo${brokenCount === 1 ? '' : 's'} broken`
+            : 'all demos healthy'}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+        {cards.map(({ demo, status, success, failed, blockingDeps, recovery }) => {
+          const ringColor =
+            status === 'broken'
+              ? 'border-error/40 bg-error/[0.06]'
+              : status === 'recovering'
+                ? 'border-warning/40 bg-warning/[0.06]'
+                : failed > 0
+                  ? 'border-warning/20 bg-white/[0.02]'
+                  : 'border-white/5';
+          const dotColor =
+            status === 'broken'
+              ? 'bg-error'
+              : status === 'recovering'
+                ? 'bg-warning'
+                : 'bg-success';
+          const onClick = () => {
+            // Tell DemoHubLite to select this demo, then scroll the
+            // demo section into view. DemoHubLite listens for the
+            // `select-demo` custom event (handler added in this PR).
+            window.dispatchEvent(
+              new CustomEvent('select-demo', { detail: { demoId: demo.id } }),
+            );
+            document.getElementById('demo')?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            });
+          };
+          return (
+            <button
+              key={demo.id}
+              onClick={onClick}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded border ${ringColor} text-left hover:bg-white/[0.04] transition-colors`}
+              title={
+                blockingDeps.length
+                  ? `Broken via paused: ${blockingDeps.join(', ')}`
+                  : recovery
+                    ? `Recovered ${recovery.ms}ms after resume`
+                    : 'No dependency on currently-paused targets'
+              }
+            >
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+              <span className="text-[10.5px] text-primary truncate flex-1">
+                {demo.name}
+              </span>
+              {status === 'broken' && (
+                <span className="text-[9px] text-error/90 uppercase tracking-widest shrink-0">
+                  broken
+                </span>
+              )}
+              {status === 'recovering' && recovery && (
+                <span className="text-[9px] text-warning uppercase tracking-widest shrink-0">
+                  recovered {recovery.ms}ms
+                </span>
+              )}
+              <span
+                className={`text-[10px] tabular-nums shrink-0 ${
+                  failed > 0 ? 'text-error/90' : 'text-muted'
+                }`}
+              >
+                {success}
+                <span className="text-muted/40">/</span>
+                {failed}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

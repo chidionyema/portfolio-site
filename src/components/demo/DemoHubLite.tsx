@@ -68,6 +68,22 @@ function DemoContent({ id }: { id: string }) {
 
 export function DemoHub() {
   const [activeId, setActiveId] = useState(DEFAULT_DEMO);
+
+  // External demo-selection bridge: the impact ribbon in LiveTopologyMap
+  // dispatches `select-demo` when a visitor clicks a demo card. Lets
+  // chaos cause-and-effect link directly to the affected demo without
+  // routing through URL state.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail?.demoId === 'string') {
+        setActiveId(detail.demoId);
+      }
+    };
+    window.addEventListener('select-demo', handler);
+    return () => window.removeEventListener('select-demo', handler);
+  }, []);
+
   const [isChaosOpen, setIsChaosOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'live' | 'source'>('live');
   const { chaos, updateChaos, isConnected, error: connectionError, lastSuccessAt } = useDemoSession();
