@@ -622,12 +622,6 @@ export async function triggerChaos(scenario: string, durationSeconds: number) {
   return handleResponse<{ trace_id: string }>(response, start, path);
 }
 
-/**
- * Get trace by ID from Grafana Tempo (via Backend)
- */
-export async function getTrace(traceId: string) {
-  const start = performance.now();
-  const path = `/api/traces/${traceId}`;
-  const response = await fetch(`${API_URL}${path}`);
-  return handleResponse<Trace>(response, start, path);
-}
+// getTrace + /api/traces/{traceId} removed alongside the hardcoded
+// distributed-tracing demo. Real OTel + Tempo will land separately
+// before the surface returns.

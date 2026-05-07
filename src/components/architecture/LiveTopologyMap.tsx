@@ -176,7 +176,8 @@ const DEMOS: DemoDependency[] = [
   { id: 'concurrency',  name: 'Concurrency',     paths: ['/api/demo/inventory/'],      deps: ['catalog','postgres'],                   anchorId: 'demo-concurrency' },
   { id: 'circuit',      name: 'Circuit breaker', paths: ['/api/demo/circuit/'],        deps: ['catalog'],                              anchorId: 'demo-circuit' },
   { id: 'events',       name: 'Event flow',      paths: ['/api/demo/events/'],         deps: ['payments','rabbitmq','postgres'],       anchorId: 'demo-events',      probePath: '/api/demo/events/relay-status' },
-  { id: 'tracing',      name: 'Tracing',         paths: ['/api/demo/tracing/'],        deps: ['catalog','orders','payments'],          anchorId: 'demo-tracing' },
+  // Tracing removed pending real OTel + Tempo integration; previous
+  // entry pointed at /api/demo/tracing which served a hardcoded span tree.
 ];
 
 const DEMO_LOOKUP: Record<string, DemoDependency> = Object.fromEntries(

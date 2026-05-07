@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Flame, Timer, Loader2 } from 'lucide-react';
 import { triggerChaos } from '../../lib/api/demo-client';
-import { TraceViewer } from './TraceViewer';
+
+// Inline TraceViewer was here; removed alongside the hardcoded
+// distributed-tracing demo. Will return as part of real OTel + Tempo.
 
 interface ChaosButtonProps {
   scenario: string;
@@ -88,22 +90,12 @@ export const ChaosButton: React.FC<ChaosButtonProps> = ({
         )}
       </button>
 
-      <AnimatePresence>
-        {traceId && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border border-muted/50 bg-muted/5 p-4"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[9px] font-mono uppercase text-muted italic">Chaos Trace</span>
-              <span className="text-[9px] font-mono text-muted">{traceId}</span>
-            </div>
-            <TraceViewer traceId={traceId} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {traceId && (
+        <div className="px-3 py-2 border border-muted/50 bg-muted/5 font-mono text-[10px] flex items-center justify-between">
+          <span className="text-muted/60 uppercase tracking-widest">Chaos trace</span>
+          <span className="text-muted">{traceId}</span>
+        </div>
+      )}
     </div>
   );
 };
