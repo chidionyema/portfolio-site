@@ -12,6 +12,7 @@ import { getMetricsSnapshot } from '../lib/api/demo-client';
 
 import { Scorecard } from '../components/quality/Scorecard';
 import { GrafanaPanel } from '../components/metrics/GrafanaPanel';
+import PanelHeader from '../components/system/PanelHeader.astro';
 
 const initialMetrics = await getMetricsSnapshot().catch(() => undefined);
 const dd = await getCollection('deep-dives', ({ data }) => !data.draft);
@@ -45,154 +46,129 @@ const deepDives = dd.map((e) => ({
 
 
 
-    <!-- Demo Section - Only hydrates when visible -->
-    <section id="demo" class="py-24 bg-black border-t border-white/10">
+    <!-- Demo panels — each demo is one widget in the operations console.
+         Header is dashboard chrome: thin label, plain English title,
+         optional status pill on the right. Same shape used by the other
+         sections so the page reads as one panel grid, not five slabs. -->
+    <section id="demo" class="py-20 bg-black border-t border-white/10">
       <div class="container mx-auto px-4" data-reveal>
-        <div class="mb-12 flex items-center justify-between font-mono">
-           <div className="flex items-center gap-4">
-              <div className="px-3 py-1 bg-accent text-white font-black text-[10px] uppercase tracking-[0.2em]">
-                 Console_Access
-              </div>
-              <h2 class="text-xl text-primary uppercase font-black tracking-tighter">
-                Infrastructure_Registry_v1.0
-              </h2>
-           </div>
-           <div class="hidden md:flex items-center gap-2 text-[9px] text-muted uppercase font-bold tracking-widest">
-              <div class="w-1 h-1 bg-success animate-pulse" />
-              Cluster_Healthy // {CLUSTER_LABEL}
-           </div>
-        </div>
+        <PanelHeader
+          eyebrow="Operations"
+          title="Try the patterns"
+          summary="Nine working demos. Each is wired to real Postgres, RabbitMQ, Redis, Vault, or Stripe — not in-memory state. Click View source on any demo to verify against the production code."
+        />
         <DemoHub client:load />
       </div>
     </section>
 
-    <!-- Architecture Section -->
-    <!--
-      The Distributed_Topology section used to render a second LiveTopologyMap
-      here, but the hero now owns the live topology + chaos artifact. Two
-      mounts of the same component on one page double the SignalR
-      connection count and starve the browser's per-host pool. The
-      architecture section is now a tighter "what's this for" panel
-      flanked by Grafana metrics — the topology proof is above the fold.
-    -->
-    <section id="architecture" class="py-24 bg-[#050505] border-t border-white/5">
+    <!-- Metrics panel — Grafana throughput + p99 latency live from the
+         cluster. Sits between Operations and Runbooks because it's the
+         monitoring view of the same system the demos drove. -->
+    <section id="architecture" class="py-20 bg-[#050505] border-t border-white/5">
       <div class="container mx-auto px-4" data-reveal>
-        <div class="grid lg:grid-cols-[1fr_400px] gap-12 items-start">
-          <div class="space-y-8">
-            <div class="text-left border-l-2 border-accent pl-6">
-              <h2 class="font-mono text-display-md text-primary mb-4 uppercase font-black tracking-tighter">
-                Distributed_Topology
-              </h2>
-              <p class="text-sm font-mono text-muted max-w-2xl uppercase tracking-widest leading-relaxed">
-                The cluster diagram in the hero is wired to the live
-                <span class="text-accent">/hubs/console</span> SignalR
-                stream. Each packet is a real HTTP request through the BFF;
-                replica badges populate as upstream X-Instance-Id headers
-                arrive. Click any service or infra node to fault-inject a
-                30-second pause and watch the demos below route around it.
-              </p>
-            </div>
-          </div>
-
-          <div class="space-y-6 pt-12">
-            <GrafanaPanel panelId={1} title="Throughput (RPS)" height={220} client:visible />
-            <GrafanaPanel panelId={2} title="P99 Latency (ms)" height={220} client:visible />
-            <div class="p-6 glass-subtle border border-white/5 font-mono">
-              <p class="text-[10px] text-muted leading-relaxed uppercase tracking-widest italic">
-                Direct Grafana Cloud integration. Data source: Prometheus + OpenTelemetry.
-              </p>
-            </div>
-          </div>
+        <PanelHeader
+          eyebrow="Telemetry"
+          title="What the cluster is doing right now"
+          summary="Prometheus + OpenTelemetry through Grafana Cloud. Same data the on-call dashboard would show; embedded here because the demos above are what's generating it."
+        />
+        <div class="grid md:grid-cols-2 gap-6">
+          <GrafanaPanel panelId={1} title="Throughput (RPS)" height={240} client:visible />
+          <GrafanaPanel panelId={2} title="P99 Latency (ms)" height={240} client:visible />
         </div>
       </div>
     </section>
 
-    <!-- Deep Dives -->
-    <section id="deep-dives" class="py-24 bg-[#050505] border-t border-white/5">
+    <!-- Deep dives — the long-form runbooks behind specific patterns. -->
+    <section id="deep-dives" class="py-20 bg-[#050505] border-t border-white/5">
       <div class="container mx-auto px-4" data-reveal>
-        <div class="text-left mb-16 border-l-2 border-white/20 pl-6">
-          <h2 class="font-mono text-display-md text-primary mb-4 uppercase font-black tracking-tighter">
-            Technical_Specifications
-          </h2>
-          <p class="text-sm font-mono text-muted max-w-2xl uppercase tracking-widest leading-relaxed">
-            Long-form architectural analysis and pattern implementations.
-          </p>
-        </div>
+        <PanelHeader
+          eyebrow="Runbooks"
+          title="How each pattern is built"
+          summary="Long-form write-ups: the saga state machine, transactional outbox, Vault dynamic credentials. The depth a hiring reviewer wants after the demos."
+        />
         <DeepDivesGrid />
       </div>
     </section>
 
-    <!-- About section -->
-    <section id="about" class="py-32 bg-black border-t border-white/5">
-      <div class="container mx-auto px-4 max-w-5xl" data-reveal>
-        <div class="font-mono text-[10px] uppercase tracking-[0.4em] text-accent mb-8">
-          IDENTITY_SNAPSHOT // CHIDI_ONYEMA // {CLUSTER_LABEL}_NODE
-        </div>
-        
-        <div class="grid lg:grid-cols-[1fr_400px] gap-20">
-          <div>
-            <h2 class="font-mono text-display-md text-primary mb-12 uppercase font-black tracking-tighter leading-[0.9]">
-              Distributed .NET <br/> clusters, built <br/> for production.
-            </h2>
-
-            <p class="text-secondary font-mono text-sm leading-relaxed mb-16 max-w-xl opacity-80 uppercase tracking-tight">
-              Senior contractor for distributed systems that stay alive under load.
-              This platform is a live cluster: every module targets a .NET 9 kernel on Fly.io, 
-              backed by Neon PostgreSQL, Upstash Redis, and CloudAMQP. 
-              The telemetry you see is live SignalR traffic from the {CLUSTER_LABEL} region.
+    <!-- On call panel — operator card, replaces the prior multi-panel
+         about/availability/scorecard slab. One coherent panel that reads
+         as "who's on the other end of the pager". -->
+    <section id="about" class="py-20 bg-black border-t border-white/5">
+      <div class="container mx-auto px-4" data-reveal>
+        <PanelHeader
+          eyebrow="On call"
+          title="Who runs this cluster"
+          summary="Senior .NET engineering contractor. London-based. Open for engagements building or stabilising distributed systems at production scale."
+        />
+        <div class="grid lg:grid-cols-[1fr_360px] gap-10 items-start">
+          <div class="space-y-8">
+            <p class="text-secondary text-base leading-relaxed max-w-2xl">
+              I build distributed .NET systems that stay alive under load —
+              the kind where event-driven choreography, idempotency,
+              optimistic concurrency, and dynamic-credentials rotation
+              aren't whiteboard concepts but the actual production code.
+              The cluster above is a representative example: the same
+              patterns I've shipped to UK government services, security
+              platforms with 10m+ events/day, fintech, and healthtech
+              backends.
             </p>
 
-            <!-- Receipts. -->
-            <div class="border-t border-white/10 pt-10">
-              <div class="font-mono text-[10px] uppercase tracking-[0.3em] text-muted mb-8 font-black">
-                DEPLOYMENT_HISTORY
-              </div>
-              <ul class="space-y-6 text-[11px] font-mono text-secondary uppercase tracking-tight">
-                <li class="grid grid-cols-[140px_1fr] gap-6 border-b border-white/[0.03] pb-6">
-                  <span class="text-muted/60 font-black">2024 — 2026</span>
-                  <span><span class="text-primary font-black">[CONTRACT]</span> UK GOV SERVICES // LEGACY MIGRATION // EVENT_DRIVEN_REBUILDS</span>
-                </li>
-                <li class="grid grid-cols-[140px_1fr] gap-6 border-b border-white/[0.03] pb-6">
-                  <span class="text-muted/60 font-black">2022 — 2024</span>
-                  <span><span class="text-primary font-black">[LEAD]</span> SECURITY PLATFORM // 10M+ EVENTS_DAY // DISTRIBUTED_NOC</span>
-                </li>
-                <li class="grid grid-cols-[140px_1fr] gap-6">
-                <span class="text-muted/60 font-black">PRE_2022</span>
-                <span>FINTECH // HEALTHTECH // E-COMMERCE // .NET_STACK // ON_CALL_ROTATIONS</span>
-                </li>
-                </ul>
-                </div>
+            <ul class="space-y-4 text-sm text-secondary leading-relaxed">
+              <li class="grid grid-cols-[120px_1fr] gap-6 border-b border-white/5 pb-4">
+                <span class="text-muted font-mono text-[11px] uppercase tracking-widest">2024 — 2026</span>
+                <span><strong class="text-primary">Contract.</strong> UK government services. Legacy modernisation; event-driven rebuilds of critical services.</span>
+              </li>
+              <li class="grid grid-cols-[120px_1fr] gap-6 border-b border-white/5 pb-4">
+                <span class="text-muted font-mono text-[11px] uppercase tracking-widest">2022 — 2024</span>
+                <span><strong class="text-primary">Tech lead.</strong> Security platform handling 10m+ events/day. Distributed NOC, on-call rotation.</span>
+              </li>
+              <li class="grid grid-cols-[120px_1fr] gap-6">
+                <span class="text-muted font-mono text-[11px] uppercase tracking-widest">Before that</span>
+                <span><strong class="text-primary">Stints across</strong> fintech, healthtech, and e-commerce on .NET stacks; production on-call rotations throughout.</span>
+              </li>
+            </ul>
 
-                <!-- Quality Scorecard -->
-                <div class="mt-20">
-                <div class="font-mono text-[10px] uppercase tracking-[0.3em] text-muted mb-8 font-black">
-                QUALITY_ASSURANCE // LIGHTHOUSE_CI
-                </div>
-                <Scorecard client:visible />
-                </div>
-                </div>
-          <div class="space-y-6">
-             <div class="p-8 bg-[#050505] border border-white/10 shadow-2xl font-mono">
-                <div class="font-black text-primary text-xl mb-2 uppercase tracking-tighter">Availability</div>
-                <div class="text-sm text-secondary mb-8 opacity-60 uppercase tracking-widest">Open for contracts</div>
-                
-                <div class="space-y-4">
-                   <a href="mailto:hello@chidionyema.dev"
-                      class="block w-full py-4 bg-primary text-black text-center font-black text-xs uppercase tracking-[0.2em] hover:bg-white transition-colors">
-                     [ INITIATE_CONTACT ]
-                   </a>
-                   <div class="grid grid-cols-1 gap-2">
-                      <a href="/cv.pdf" download class="py-3 px-4 border border-white/10 text-[10px] font-black uppercase text-muted hover:text-primary hover:bg-white/5 transition-all text-center tracking-widest">CV_PDF_EXPORT</a>
-                      <a href="https://github.com/chidionyema" target="_blank" rel="noopener" class="py-3 px-4 border border-white/10 text-[10px] font-black uppercase text-muted hover:text-primary hover:bg-white/5 transition-all text-center tracking-widest">GITHUB_REPOSITORY</a>
-                      <a href="https://linkedin.com/in/chidionyema" target="_blank" rel="noopener" class="py-3 px-4 border border-white/10 text-[10px] font-black uppercase text-muted hover:text-primary hover:bg-white/5 transition-all text-center tracking-widest">LINKEDIN_PROFILE</a>
-                   </div>
-                </div>
-             </div>
-             
-             <div class="p-6 border border-white/5 font-mono text-[9px] text-muted/60 uppercase leading-relaxed tracking-widest">
-                System_Note: Deployment history is sanitized for security. Specific technical references available upon authenticated request.
-             </div>
+            <div class="pt-6 border-t border-white/5">
+              <div class="text-[10px] font-mono uppercase tracking-[0.3em] text-muted mb-4">Lighthouse audit · this site</div>
+              <Scorecard client:visible />
+            </div>
+
+            <p class="text-[10px] font-mono text-muted/60 leading-relaxed max-w-2xl uppercase tracking-widest italic">
+              Deployment history is sanitised for security. Specific technical references available on request.
+            </p>
           </div>
+
+          <aside class="space-y-4">
+            <div class="surface p-6 space-y-5">
+              <div>
+                <div class="text-[10px] font-mono uppercase tracking-[0.3em] text-success mb-1 flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                  Available
+                </div>
+                <div class="text-xl font-bold text-primary">Open for contracts</div>
+              </div>
+              <a
+                href="mailto:hello@chidionyema.dev"
+                class="block w-full py-3 bg-primary text-black text-center font-bold text-sm rounded-lg hover:bg-white transition-colors"
+              >
+                Get in touch
+              </a>
+              <div class="grid grid-cols-1 gap-2 text-[11px]">
+                <a href="/cv.pdf" download class="py-2.5 px-3 border border-white/10 text-muted hover:text-primary hover:bg-white/5 transition-all rounded-lg flex items-center justify-between">
+                  <span>CV (PDF)</span>
+                  <span class="text-muted/40">↓</span>
+                </a>
+                <a href="https://github.com/chidionyema" target="_blank" rel="noopener" class="py-2.5 px-3 border border-white/10 text-muted hover:text-primary hover:bg-white/5 transition-all rounded-lg flex items-center justify-between">
+                  <span>GitHub</span>
+                  <span class="text-muted/40">↗</span>
+                </a>
+                <a href="https://linkedin.com/in/chidionyema" target="_blank" rel="noopener" class="py-2.5 px-3 border border-white/10 text-muted hover:text-primary hover:bg-white/5 transition-all rounded-lg flex items-center justify-between">
+                  <span>LinkedIn</span>
+                  <span class="text-muted/40">↗</span>
+                </a>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
