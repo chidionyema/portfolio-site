@@ -897,9 +897,14 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
     const recovery = recoveryRecords[demo.id];
     const recovering = recovery && recovery.until > now;
 
-    let status: 'verified-broken' | 'claimed-broken' | 'recovering' | 'healthy';
-    if (claimedBroken && verified) status = 'verified-broken';
-    else if (claimedBroken) status = 'claimed-broken';
+    // Honest evidence: the card only flips to "broken" once a real
+    // failed event has been observed since this chaos session started.
+    // Until then, the dot stays "probing" — connection is live, no
+    // failures yet (could be a slow probe, could be a target that
+    // hasn't been hit yet). Theory-only red is gone.
+    let status: 'broken' | 'probing' | 'recovering' | 'healthy';
+    if (claimedBroken && verified) status = 'broken';
+    else if (claimedBroken) status = 'probing';
     else if (recovering) status = 'recovering';
     else status = 'healthy';
 
@@ -914,8 +919,8 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
     };
   });
 
-  const verifiedCount = cards.filter((c) => c.status === 'verified-broken').length;
-  const claimedCount = cards.filter((c) => c.status === 'claimed-broken').length;
+  const brokenCount = cards.filter((c) => c.status === 'broken').length;
+  const probingCount = cards.filter((c) => c.status === 'probing').length;
 
   return (
     <div className="px-4 py-3 border-t border-white/10 font-mono">
@@ -925,43 +930,39 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
         </span>
         <span
           className={`text-[10px] uppercase tracking-[0.2em] ${
-            verifiedCount > 0
+            brokenCount > 0
               ? 'text-error'
-              : claimedCount > 0
-                ? 'text-warning'
+              : probingCount > 0
+                ? 'text-muted'
                 : 'text-muted/70'
           }`}
         >
-          {verifiedCount > 0
-            ? `${verifiedCount} verified · ${claimedCount} claimed`
-            : claimedCount > 0
-              ? `${claimedCount} at risk · proving…`
+          {brokenCount > 0
+            ? `${brokenCount} demo${brokenCount === 1 ? '' : 's'} verified broken`
+            : probingCount > 0
+              ? `probing ${probingCount}…`
               : 'all demos healthy'}
         </span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
         {cards.map(({ demo, status, success, failed, blockingDeps, recovery, verifiedFailures }) => {
           const ringColor =
-            status === 'verified-broken'
+            status === 'broken'
               ? 'border-error/50 bg-error/[0.08]'
-              : status === 'claimed-broken'
-                // Dashed amber border = "we believe this is broken but
-                // haven't proven it with a real failure yet". Proves
-                // honest about what's measured vs claimed.
-                ? 'border-warning/30 bg-warning/[0.04] border-dashed'
-                : status === 'recovering'
-                  ? 'border-success/40 bg-success/[0.04]'
-                  : failed > 0
-                    ? 'border-warning/20 bg-white/[0.02]'
-                    : 'border-white/5';
+              : status === 'recovering'
+                ? 'border-success/40 bg-success/[0.04]'
+                : failed > 0
+                  ? 'border-warning/20 bg-white/[0.02]'
+                  : 'border-white/5';
           const dotColor =
-            status === 'verified-broken'
+            status === 'broken'
               ? 'bg-error'
-              : status === 'claimed-broken'
-                ? 'bg-warning'
-                : status === 'recovering'
-                  ? 'bg-success'
-                  : 'bg-success';
+              : status === 'probing'
+                // Steady amber pulse — connection is live, no evidence
+                // of failure yet (could be a slow probe, could mean the
+                // chaos wasn't disruptive after all).
+                ? 'bg-warning animate-pulse'
+                : 'bg-success';
           const onClick = () => {
             // Tell DemoHubLite to select this demo, then scroll the
             // demo section into view. DemoHubLite listens for the
@@ -980,10 +981,10 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
               onClick={onClick}
               className={`flex items-center gap-2 px-2 py-1.5 rounded border ${ringColor} text-left hover:bg-white/[0.04] transition-colors`}
               title={
-                status === 'verified-broken'
+                status === 'broken'
                   ? `Verified broken: ${verifiedFailures} real failure(s) observed since pause (${blockingDeps.join(', ')})`
-                  : status === 'claimed-broken'
-                    ? `Claimed broken via paused: ${blockingDeps.join(', ')}. ${demo.probePath ? 'Auto-probe firing — failures will appear here.' : 'No probe — press the demo button to verify.'}`
+                  : status === 'probing'
+                    ? `Auto-probe firing against ${blockingDeps.join(', ')} dependency. No failures observed yet.`
                     : recovery
                       ? `Recovered ${recovery.ms}ms after resume`
                       : 'No dependency on currently-paused targets'
@@ -993,14 +994,14 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
               <span className="text-[10.5px] text-primary truncate flex-1">
                 {demo.name}
               </span>
-              {status === 'verified-broken' && (
+              {status === 'broken' && (
                 <span className="text-[9px] text-error uppercase tracking-widest shrink-0 font-bold">
                   broken
                 </span>
               )}
-              {status === 'claimed-broken' && (
-                <span className="text-[9px] text-warning/90 uppercase tracking-widest shrink-0">
-                  {demo.probePath ? 'proving…' : 'at risk'}
+              {status === 'probing' && (
+                <span className="text-[9px] text-warning/80 uppercase tracking-widest shrink-0">
+                  probing
                 </span>
               )}
               {status === 'recovering' && recovery && (
