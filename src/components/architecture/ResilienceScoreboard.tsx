@@ -33,9 +33,9 @@ import { useClusterState } from '../../hooks/useClusterState';
  * BFF response confirms the invariant held (or an attempt was made).
  */
 
-const API_URL =
-  ((import.meta as any).env?.PUBLIC_API_URL?.replace(/\/$/, '')) ??
-  'http://localhost:5050';
+const API_URL = (
+  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+).replace(/\/$/, '');
 
 const SESSION_KEY_PREFIX = `lab-idemp-${Math.random().toString(36).slice(2, 8)}-${Date.now()}`;
 const RECOVERY_DISPLAY_MS = 8_000;

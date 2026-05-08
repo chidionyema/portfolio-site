@@ -13,9 +13,9 @@ import React, { useEffect, useState } from 'react';
  * to fake than a static badge.
  */
 
-const API_URL =
-  (import.meta as any).env?.PUBLIC_API_URL?.replace(/\/$/, '') ??
-  'http://localhost:5050';
+const API_URL = (
+  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+).replace(/\/$/, '');
 
 interface SystemIdentity {
   service: string;

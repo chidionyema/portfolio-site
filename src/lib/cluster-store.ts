@@ -28,9 +28,15 @@ import * as signalR from '@microsoft/signalr';
  * module graph — they all see the same `clusterStore` instance.
  */
 
-const API_URL =
-  ((import.meta as any).env?.PUBLIC_API_URL?.replace(/\/$/, '')) ??
-  'http://localhost:5050';
+// Vite needs to see the literal `import.meta.env.PUBLIC_API_URL` access
+// pattern to statically inline the value at build time. The earlier
+// `(import.meta as any).env?.PUBLIC_API_URL` form with the `as any` cast
+// + optional chaining defeated the static replacement and the deployed
+// bundle ended up calling localhost:5050 — see the production console
+// errors that surfaced after the single-page collapse.
+const API_URL = (
+  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+).replace(/\/$/, '');
 
 export interface UpstreamHop {
   service: string;

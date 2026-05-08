@@ -27,9 +27,11 @@ const WEB_BUILD_STARTED_AT: string =
  * came from the same backend. It's the proof that demos aren't simulated.
  */
 
-const CONSOLE_HUB_URL =
-  (import.meta as any).env?.PUBLIC_BFF_URL?.replace(/\/$/, '') ??
-  'http://localhost:5050';
+const CONSOLE_HUB_URL = (
+  import.meta.env.PUBLIC_API_URL ||
+  import.meta.env.PUBLIC_BFF_URL ||
+  'http://localhost:5050'
+).replace(/\/$/, '');
 const HUB_PATH = '/hubs/console';
 
 interface UpstreamHop {

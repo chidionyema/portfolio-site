@@ -20,9 +20,9 @@ import type { ConsoleEvent, ChaosTargetState } from '../../lib/cluster-store';
  */
 
 const SHOWN = 30;
-const API_URL =
-  ((import.meta as any).env?.PUBLIC_API_URL?.replace(/\/$/, '')) ??
-  'http://localhost:5050';
+const API_URL = (
+  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+).replace(/\/$/, '');
 
 /**
  * Maps a path prefix to the upstream chaos target(s) that path could

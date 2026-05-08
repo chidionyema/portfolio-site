@@ -19,9 +19,9 @@ import { Loader2, CheckCircle2, AlertCircle, Activity } from 'lucide-react';
  * real Vault probe for vault status, etc). No simulations.
  */
 
-const API_URL =
-  ((import.meta as any).env?.PUBLIC_API_URL?.replace(/\/$/, '')) ??
-  'http://localhost:5050';
+const API_URL = (
+  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+).replace(/\/$/, '');
 
 interface RunnerSpec {
   id: string;

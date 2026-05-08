@@ -18,9 +18,9 @@ import { useEffect } from 'react';
  * active. This component fires unconditionally while the lab page
  * is open, which is what makes the system feel alive.
  */
-const API_URL =
-  ((import.meta as any).env?.PUBLIC_API_URL?.replace(/\/$/, '')) ??
-  'http://localhost:5050';
+const API_URL = (
+  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+).replace(/\/$/, '');
 
 const PROBE_PATHS: string[] = [
   '/api/health/snapshot',

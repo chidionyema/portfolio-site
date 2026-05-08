@@ -29,9 +29,14 @@ import * as signalR from '@microsoft/signalr';
  * Out of scope (phase 2): chaos buttons (kill / inject 503 / pause).
  */
 
-const CONSOLE_HUB_URL =
-  (import.meta as any).env?.PUBLIC_BFF_URL?.replace(/\/$/, '') ??
-  'http://localhost:5050';
+// Vite needs the literal `import.meta.env.PUBLIC_API_URL` form to
+// statically inline the value. Falls back to the legacy PUBLIC_BFF_URL
+// for any older deploy that still sets it, then localhost for dev.
+const CONSOLE_HUB_URL = (
+  import.meta.env.PUBLIC_API_URL ||
+  import.meta.env.PUBLIC_BFF_URL ||
+  'http://localhost:5050'
+).replace(/\/$/, '');
 
 interface UpstreamHop {
   service: string;
