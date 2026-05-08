@@ -122,13 +122,16 @@ const RUNNERS: RunnerSpec[] = [
         body: JSON.stringify({ sessionId: null }),
       }),
   },
-  {
-    id: 'vault',
-    name: 'Vault status',
-    what: 'GET /vault/status · live /v1/sys/health probe',
-    intervalMs: 7000,
-    run: () => rawFetch('/api/demo/vault/status'),
-  },
+  // Vault runner disabled in prod: no Vault server provisioned, the
+  // endpoint always 503s, the failure rate alone trips the BFF's
+  // identity-svc circuit breaker. Re-enable once a real Vault is up.
+  // {
+  //   id: 'vault',
+  //   name: 'Vault status',
+  //   what: 'GET /vault/status · live /v1/sys/health probe',
+  //   intervalMs: 7000,
+  //   run: () => rawFetch('/api/demo/vault/status'),
+  // },
   {
     id: 'events',
     name: 'Event flow relay',

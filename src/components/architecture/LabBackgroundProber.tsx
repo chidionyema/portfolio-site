@@ -25,7 +25,11 @@ const API_URL = (
 const PROBE_PATHS: string[] = [
   '/api/health/snapshot',
   '/api/demo/cache/product/demo',
-  '/api/demo/vault/status',
+  // /api/demo/vault/status removed: no prod Vault server provisioned,
+  // so the call always 503s. Hammering it on a 1.5s tick was filling
+  // the BFF's resilience-handler failure window enough to trip the
+  // identity-svc circuit breaker, which then briefly fails *other*
+  // calls routed through identity. Add back once a real Vault is up.
   '/api/demo/events/relay-status',
   '/api/demo/ratelimit/request',
 ];
