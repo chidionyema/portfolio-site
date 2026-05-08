@@ -1,0 +1,7 @@
+# Cloudflare Pages redirects.
+# /lab and /chaos collapsed into / on 2026-05-08; preserve any inbound
+# links from earlier deploys.
+/lab        /#cluster   301
+/lab/*      /#cluster   301
+/chaos      /#cluster   301
+/chaos/*    /#cluster   301

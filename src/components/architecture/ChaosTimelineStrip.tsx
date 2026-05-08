@@ -225,25 +225,32 @@ function PhaseSegment({
   tone: 'ok' | 'warn' | 'err';
   elapsedMs: number | null;
 }) {
+  // Inactive phase pills: full state colour (no opacity reduction) so we
+  // clear WCAG AA on the dark surface. The inactive border alone signals
+  // "not the active phase."
   const baseColour =
     tone === 'ok'
-      ? 'text-success/70 border-success/40'
+      ? 'text-success border-success/40'
       : tone === 'warn'
-        ? 'text-warning/80 border-warning/40'
-        : 'text-error/80 border-error/40';
+        ? 'text-warning border-warning/40'
+        : 'text-error border-error/40';
+  // Higher bg opacity (was 0.12) + the text color stays the same, but on
+  // a more opaque colored background the relative contrast is cleaner.
+  // Cleaner still: punch the text to near-white on the active pill so the
+  // foreground/background contrast is unambiguous.
   const activeColour =
     tone === 'ok'
-      ? 'bg-success/[0.12] text-success'
+      ? 'bg-success/30 text-primary'
       : tone === 'warn'
-        ? 'bg-warning/[0.12] text-warning'
-        : 'bg-error/[0.14] text-error';
+        ? 'bg-warning/30 text-primary'
+        : 'bg-error/30 text-primary';
   const className = `relative rounded border ${active ? activeColour + ' border-current shadow-[0_0_0_1px_currentColor_inset]' : baseColour + ' bg-transparent'} px-3 py-2 transition-colors`;
   return (
     <div className={className}>
       <div className="text-[10.5px] uppercase tracking-[0.18em] font-bold">
         {label}
       </div>
-      <div className="text-[10px] tabular-nums text-muted/60 mt-0.5 h-4">
+      <div className="text-[10px] tabular-nums text-secondary mt-0.5 h-4">
         {active ? formatElapsed(elapsedMs ?? 0) : ''}
       </div>
       {active && (
@@ -262,7 +269,7 @@ function HumanInputPill({
 }) {
   if (!anyPaused) {
     return (
-      <span className="text-[10px] uppercase tracking-widest text-muted/60">
+      <span className="text-[10px] uppercase tracking-widest text-secondary">
         no human input · cluster steady
       </span>
     );

@@ -8,6 +8,20 @@ import { CommandPalette } from '../components/system/CommandPalette';
 import { GIT_SHA, BUILT_AT, sourceUrl } from '../lib/build-info';
 import { getMetricsSnapshot } from '../lib/api/demo-client';
 import PanelHeader from '../components/system/PanelHeader.astro';
+import { LabBackgroundProber } from '../components/architecture/LabBackgroundProber';
+import { ChaosTimelineStrip } from '../components/architecture/ChaosTimelineStrip';
+import { ChaosReceipts } from '../components/architecture/ChaosReceipts';
+import { JourneyCanvas } from '../components/architecture/JourneyCanvas';
+import { ChaosImpactBanner } from '../components/architecture/ChaosImpactBanner';
+import { LabRequestFeed } from '../components/architecture/LabRequestFeed';
+import { LabAutoRunners } from '../components/architecture/LabAutoRunners';
+import { LiveSparklines } from '../components/architecture/LiveSparklines';
+import { LiveMetricsPanel } from '../components/architecture/LiveMetricsPanel';
+import { ResilienceScoreboard } from '../components/architecture/ResilienceScoreboard';
+import { IdempotencyDemo } from '../components/demo/IdempotencyDemo';
+import { CheckoutDemo } from '../components/demo/CheckoutDemo';
+import { ConcurrencyDemo } from '../components/demo/ConcurrencyDemo';
+import TechnicalDetailDrawer from '../components/architecture/TechnicalDetailDrawer.astro';
 
 const initialMetrics = await getMetricsSnapshot().catch(() => undefined);
 const dd = await getCollection('deep-dives', ({ data }) => !data.draft);
@@ -32,51 +46,187 @@ const deepDives = dd.map((e) => ({
   description: e.data.description,
   iconKey: e.data.iconKey,
 }));
+
+const GH_REPO = 'https://github.com/chidionyema/ritualworks-platform';
 ---
 
 <BaseLayout>
   <main>
-    <!-- Hero - Critical, loads immediately but lightweight -->
+    <!-- Hero — name, headline, available pill, contact links. -->
     {heroPreview && <Hero preview={heroPreview} initialMetrics={initialMetrics} client:load />}
 
+    <!-- Background prober — invisible. Continuously fires safe GETs so the
+         cluster has traffic for the canvas to observe. -->
+    <LabBackgroundProber client:only="react" />
 
-
-    <!-- Quiet CTA pointing technical reviewers at the two proof pages. -->
-    <section class="py-20 lg:py-24 border-t border-border" data-reveal>
-      <div class="container-prose px-6 lg:px-8">
+    <!-- ─────────────────────────────────────────────────────────
+         The cluster, live.
+         Lifecycle timeline + receipts + JourneyCanvas (topology +
+         per-journey side panel cycling saga / idempotency / OCC) +
+         chaos lens. The dominant section of the page.
+         ───────────────────────────────────────────────────────── -->
+    <section id="cluster" class="py-20 lg:py-24 border-t border-border" data-reveal>
+      <div class="container-prose px-6 lg:px-8 mb-8">
         <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-4">
-          Inspect the work
+          The cluster
         </div>
         <h2 class="font-display text-3xl md:text-4xl text-primary font-semibold leading-[1.1] tracking-tight mb-5">
-          A live cluster, in your browser.
+          A live .NET 9 cluster, in your browser.
         </h2>
-        <p class="text-lg text-secondary leading-relaxed mb-8 max-w-2xl">
-          This site runs on a real .NET 9 cluster — Postgres, RabbitMQ,
-          Redis, Vault, five microservices coordinating via events. Two
-          proof pages: the architecture canvas explains how it's built,
-          the chaos page lets you break it and watch it recover. Every
-          demo proxies to production code with a View source link to
-          the file that handled it.
+        <p class="text-lg text-secondary leading-relaxed max-w-2xl">
+          The site itself runs on it. A canonical journey rotates through
+          the cluster every 20 seconds — saga across all five microservices,
+          idempotent retry storm, OCC race. Click any node in the topology
+          to fault-inject a 30-second pause; the canvas adapts in real
+          time and the receipts row records the recovery.
         </p>
-        <div class="flex flex-wrap items-center gap-3">
-          <a
-            href="/chaos"
-            class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-base font-medium rounded-md hover:bg-secondary transition-colors"
-            style="color: rgb(var(--color-base))"
-          >
-            Pause anything · /chaos
-            <span>→</span>
-          </a>
-          <a
-            href="/lab"
-            class="inline-flex items-center gap-2 text-base font-medium text-primary hover:text-accent transition-colors underline-offset-4 underline decoration-1 hover:decoration-2"
-          >
-            How it's built · /lab →
-          </a>
-        </div>
+      </div>
+
+      <div class="container px-6 lg:px-8 space-y-4 panel-dark p-4 md:p-6 rounded-2xl">
+        <ChaosTimelineStrip client:only="react" />
+        <ChaosReceipts client:only="react" />
+        <JourneyCanvas client:only="react" />
+        <ChaosImpactBanner client:only="react" />
+
+        <TechnicalDetailDrawer>
+          <div>
+            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+              Resilience scoreboard · invariants under load
+            </div>
+            <ResilienceScoreboard client:only="react" />
+          </div>
+          <div class="border-t border-white/[0.06] pt-5">
+            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+              Pattern runners · 9 background loops firing real traffic
+            </div>
+            <LabAutoRunners client:only="react" />
+          </div>
+          <div class="border-t border-white/[0.06] pt-5">
+            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+              Wire feed · every /api/* request the BFF handled
+            </div>
+            <LabRequestFeed client:only="react" />
+          </div>
+          <div class="border-t border-white/[0.06] pt-5 grid md:grid-cols-2 gap-6">
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+                Live measurements · trailing 30s
+              </div>
+              <LiveMetricsPanel client:only="react" />
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+                RPS + p99 · trailing 60s
+              </div>
+              <LiveSparklines client:only="react" />
+            </div>
+          </div>
+        </TechnicalDetailDrawer>
       </div>
     </section>
 
+    <!-- ─────────────────────────────────────────────────────────
+         Drive a pattern. Three click-driven demos picked from the
+         eight in /components/demo/. Idempotency + saga + OCC are
+         the three patterns the journey above already exercises;
+         these let the visitor drive each in isolation.
+         ───────────────────────────────────────────────────────── -->
+    <section id="demos" class="py-20 lg:py-24 border-t border-border" data-reveal>
+      <div class="container-prose px-6 lg:px-8 mb-8">
+        <div class="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-4">
+          Drive a pattern
+        </div>
+        <h2 class="font-display text-3xl md:text-4xl text-primary font-semibold leading-[1.1] tracking-tight mb-5">
+          Three patterns to break, by hand.
+        </h2>
+        <p class="text-lg text-secondary leading-relaxed max-w-2xl">
+          The continuous journey above runs each of these on a 20-second loop.
+          Below, drive each one yourself and inspect the result. View source
+          on each card points at the production code that handled it.
+        </p>
+      </div>
+
+      <div class="container px-6 lg:px-8 space-y-8">
+        <article class="panel-dark p-6 md:p-8 shadow-2xl">
+          <div class="flex flex-wrap items-baseline justify-between gap-3 mb-3">
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.22em] text-accent mb-1">
+                Idempotency
+              </div>
+              <h3 class="font-display text-xl md:text-2xl text-primary font-semibold">
+                Postgres <code class="font-mono text-accent">ON CONFLICT</code>: same key → same row.
+              </h3>
+            </div>
+            <a
+              href={`${GH_REPO}/blob/main/src/Orders/Orders.Api/Controllers/DemoIdempotencyController.cs`}
+              class="text-[11px] font-mono uppercase tracking-widest text-secondary hover:text-accent transition-colors"
+              target="_blank"
+              rel="noopener"
+            >
+              view on github →
+            </a>
+          </div>
+          <p class="text-secondary leading-relaxed mb-5 max-w-2xl">
+            <code class="font-mono text-accent">INSERT … ON CONFLICT (key) DO UPDATE … RETURNING claim_id, (xmax = 0) AS isWinner</code>.
+            First writer wins; every replay returns the same claim id without a transaction.
+          </p>
+          <IdempotencyDemo client:only="react" />
+        </article>
+
+        <article class="panel-dark p-6 md:p-8 shadow-2xl">
+          <div class="flex flex-wrap items-baseline justify-between gap-3 mb-3">
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.22em] text-accent mb-1">
+                Saga choreography
+              </div>
+              <h3 class="font-display text-xl md:text-2xl text-primary font-semibold">
+                MassTransit state machine: every saga reaches a terminal state.
+              </h3>
+            </div>
+            <a
+              href={`${GH_REPO}/tree/main/src/CheckoutOrchestrator/CheckoutOrchestrator.Application/Sagas`}
+              class="text-[11px] font-mono uppercase tracking-widest text-secondary hover:text-accent transition-colors"
+              target="_blank"
+              rel="noopener"
+            >
+              view on github →
+            </a>
+          </div>
+          <p class="text-secondary leading-relaxed mb-5 max-w-2xl">
+            <code class="font-mono text-accent">OrderCreated → StockReservationRequested → PaymentSessionRequested → PaymentCaptured → OrderCompleted</code>.
+            Every failure path has a named compensating event. Pick a scenario; watch the state machine resolve or compensate.
+          </p>
+          <CheckoutDemo client:only="react" />
+        </article>
+
+        <article class="panel-dark p-6 md:p-8 shadow-2xl">
+          <div class="flex flex-wrap items-baseline justify-between gap-3 mb-3">
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.22em] text-accent mb-1">
+                Optimistic concurrency
+              </div>
+              <h3 class="font-display text-xl md:text-2xl text-primary font-semibold">
+                Postgres <code class="font-mono text-accent">xmin</code>: exactly one writer wins.
+              </h3>
+            </div>
+            <a
+              href={`${GH_REPO}/blob/main/src/Catalog/Catalog.Api/Controllers/DemoConcurrencyController.cs`}
+              class="text-[11px] font-mono uppercase tracking-widest text-secondary hover:text-accent transition-colors"
+              target="_blank"
+              rel="noopener"
+            >
+              view on github →
+            </a>
+          </div>
+          <p class="text-secondary leading-relaxed mb-5 max-w-2xl">
+            EF Core uses Postgres' <code class="font-mono text-accent">xmin</code> shadow column as
+            the concurrency token. Five concurrent updates carrying the same xmin → exactly one
+            wins, the other four get 412 Precondition Failed.
+          </p>
+          <ConcurrencyDemo client:only="react" />
+        </article>
+      </div>
+    </section>
 
     <!-- Deep dives — long-form write-ups, editorial style. -->
     <section id="deep-dives" class="py-24 lg:py-32 border-t border-border" data-reveal>
@@ -90,9 +240,7 @@ const deepDives = dd.map((e) => ({
       </div>
     </section>
 
-    <!-- About — editorial. Reads like the closing paragraphs of a
-         personal essay, not a CV bullet list. The hero already did the
-         identity work; this is the longer voice. -->
+    <!-- About — editorial. -->
     <section id="about" class="py-24 lg:py-32 border-t border-border bg-surface-warm" data-reveal>
       <PanelHeader
         eyebrow="About"

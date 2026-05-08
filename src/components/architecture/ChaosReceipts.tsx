@@ -112,7 +112,7 @@ export function ChaosReceipts() {
   return (
     <div className="rounded-md border border-white/[0.08] bg-black/40 p-5 md:p-6">
       <div className="flex items-baseline justify-between mb-4">
-        <div className="text-[10px] uppercase tracking-[0.22em] text-muted/70">
+        <div className="text-[10px] uppercase tracking-[0.22em] text-secondary">
           {r ? `Last cycle · ${r.pausedTarget} paused` : 'Receipts · waiting for first cycle'}
         </div>
         <div className="text-[10px] tabular-nums text-muted/60">
@@ -174,7 +174,7 @@ function ReceiptTile({
         ? 'text-warning'
         : verdict === 'err'
           ? 'text-error'
-          : 'text-muted/50';
+          : 'text-secondary';
   const verdictColour =
     verdict === 'ok'
       ? 'text-success/80'
@@ -182,13 +182,13 @@ function ReceiptTile({
         ? 'text-warning/80'
         : verdict === 'err'
           ? 'text-error/80'
-          : 'text-muted/50';
+          : 'text-secondary';
   const tick =
     verdict === 'ok' ? '✓' : verdict === 'warn' ? '!' : verdict === 'err' ? '✗' : '·';
 
   return (
     <div className="rounded border border-white/[0.06] bg-black/30 px-4 py-3 font-mono">
-      <div className="text-[10px] uppercase tracking-widest text-muted/60 mb-1">
+      <div className="text-[10px] uppercase tracking-widest text-secondary mb-1">
         {label}
       </div>
       <div className={`text-2xl md:text-3xl tabular-nums font-bold ${valColour}`}>
