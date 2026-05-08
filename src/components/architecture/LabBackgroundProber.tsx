@@ -45,12 +45,14 @@ export function LabBackgroundProber() {
       // GET for the rest. cache:'no-store' so the BFF actually sees
       // the request rather than the browser short-circuiting.
       const isPost = path === '/api/demo/ratelimit/request';
+      // X-Demo-Session must parse as Guid? on the BFF (SessionRequest /
+      // [FromHeader] binding). Sending 'lab-bg' as plain string previously
+      // gave 400 Bad Request from ASP.NET's model binder. Omit the header
+      // and let the controller generate a session id when none is supplied.
       fetch(`${API_URL}${path}`, {
         method: isPost ? 'POST' : 'GET',
         cache: 'no-store',
-        headers: isPost
-          ? { 'Content-Type': 'application/json', 'X-Demo-Session': 'lab-bg' }
-          : { 'X-Demo-Session': 'lab-bg' },
+        headers: isPost ? { 'Content-Type': 'application/json' } : {},
         body: isPost ? JSON.stringify({ sessionId: null }) : undefined,
       }).catch(() => undefined);
     };

@@ -115,7 +115,9 @@ const RUNNERS: RunnerSpec[] = [
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Demo-Session': 'lab-runner',
+          // X-Demo-Session must parse as Guid? — 'lab-runner' was failing
+          // ASP.NET's model binding with 400. Omit and let the controller
+          // generate a fresh session id from the empty body.
         },
         body: JSON.stringify({ sessionId: null }),
       }),
