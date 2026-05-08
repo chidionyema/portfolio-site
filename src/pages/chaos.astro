@@ -1,19 +1,23 @@
 ---
-// /chaos — chaos engineering demonstration page.
+// /chaos — the always-on canvas.
 //
-// Two modes (toggle at top): Drill (auto-runs a 60s loop on a rotating
-// chaos target) and Drive-it-yourself (visitor clicks topology nodes
-// to pause manually). The headline element is the Receipts row at
-// the bottom — three big numbers + verdicts that update at the end
-// of every cycle (recovery time, data loss, sagas compensated).
+// The BFF's JourneyScheduler fires a rotating canonical journey every ~20s
+// (place-order saga / idempotent retry / OCC race). The JourneyCanvas
+// component locks onto each one via OnJourneyStart/OnJourneyEnd and renders
+// a per-journey side panel beside the live topology.
 //
-// Every island is `client:only="react"` to dodge the SSR break documented
-// in lab.astro. The chaos data plane (cluster-store + signalR) is
-// already ssr-safe behind a `typeof window === 'undefined'` guard but
-// the lucide-react / signalr import chain still throws under astro
-// build's react-renderer.
+// Above the canvas: the receipts row (recovery time / data loss / sagas
+// compensated) — the screenshot-survives moment.
+//
+// Below the canvas: a single collapsible "Show technical detail" drawer
+// containing the dense legacy panels (request feed, scoreboard, runners,
+// metrics, sparklines). Default closed; engineers can expand to inspect
+// raw signals.
+//
+// Every island is `client:only="react"` to bypass the SSR break documented
+// in lab.astro.
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { LiveTopologyMap } from '../components/architecture/LiveTopologyMap';
+import { JourneyCanvas } from '../components/architecture/JourneyCanvas';
 import { LabBackgroundProber } from '../components/architecture/LabBackgroundProber';
 import { LabAutoRunners } from '../components/architecture/LabAutoRunners';
 import { LabRequestFeed } from '../components/architecture/LabRequestFeed';
@@ -24,14 +28,15 @@ import { ResilienceScoreboard } from '../components/architecture/ResilienceScore
 import { ChaosTimelineStrip } from '../components/architecture/ChaosTimelineStrip';
 import { ChaosReceipts } from '../components/architecture/ChaosReceipts';
 import { ChaosDrillController } from '../components/architecture/ChaosDrillController';
+import TechnicalDetailDrawer from '../components/architecture/TechnicalDetailDrawer.astro';
 ---
 
 <BaseLayout
   title="Chaos — Chidi Onyema"
-  description="Pause anything in the cluster. Watch it heal. Real .NET 9 microservices surviving fault injection in real time, with recovery proof."
+  description="The .NET 9 cluster behind this site, watched end-to-end. A rotating canonical journey runs every 20s. Pause anything in the topology and the canvas adapts in real time."
 >
   <main>
-    <!-- Hero — short. The page proves the claim itself. -->
+    <!-- Hero. Short. The canvas does the talking. -->
     <section class="py-16 lg:py-20 border-b border-border">
       <div class="container-prose px-6 lg:px-8">
         <a
@@ -47,79 +52,72 @@ import { ChaosDrillController } from '../components/architecture/ChaosDrillContr
           Pause anything. Watch it heal.
         </h1>
         <p class="text-lg text-secondary leading-relaxed max-w-2xl">
-          The cluster behind this site, surviving real fault injection in
-          real time. Drill mode runs a 60-second loop on a rotating target
-          — catalog, postgres, rabbitmq, payments. Switch to Drive mode
-          to break things yourself.
+          A rotating canonical journey runs through the cluster every 20
+          seconds — place-order saga, idempotent retry, OCC race. Watch
+          the saga state machine resolve, the same idempotency key dedupe
+          across replays, five concurrent writes pick exactly one winner.
+          Click any node in the topology to fault-inject; the canvas
+          adapts in real time.
         </p>
       </div>
     </section>
 
-    <!-- Background prober — invisible. Continuously fires safe GETs so
-         the cluster has traffic for the watcher to observe. -->
+    <!-- Background prober — invisible. Ensures continuous baseline traffic. -->
     <LabBackgroundProber client:only="react" />
 
-    <!-- Mode toggle: drill vs drive. Drives the auto-loop. -->
+    <!-- Mode toggle (drill auto-loops chaos pauses, drive lets the visitor
+         click). The JourneyScheduler runs independently of either mode. -->
     <section class="container px-6 lg:px-8 pt-6 pb-2">
       <ChaosDrillController client:only="react" />
     </section>
 
-    <!-- The cluster, live, under attack. Topology + lifecycle timeline
-         + chaos lens + wire feed in one shared container. -->
+    <!-- Receipts row — recovery time, data loss, sagas compensated.
+         The screenshot-survives moment. Above the canvas because it's
+         the answer; the canvas is the evidence. -->
+    <section class="container px-6 lg:px-8 pt-4 pb-2" data-reveal>
+      <div class="text-[10px] uppercase tracking-[0.22em] text-accent mb-3">
+        Recovery proof · last cycle
+      </div>
+      <ChaosReceipts client:only="react" />
+    </section>
+
+    <!-- The canvas — topology + journey side panel + lifecycle timeline.
+         The dominant element of the page. -->
     <section class="py-8 lg:py-10" data-reveal>
-      <div class="container px-6 lg:px-8">
-        <div class="panel-dark p-6 md:p-10 shadow-2xl space-y-6">
-          <ChaosTimelineStrip client:only="react" />
-          <LiveTopologyMap client:only="react" />
-          <ChaosImpactBanner client:only="react" />
-          <div class="border-t border-white/[0.06] pt-6">
-            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
-              Wire feed · every /api/* the BFF handled
-            </div>
-            <LabRequestFeed client:only="react" />
-          </div>
-        </div>
+      <div class="container px-6 lg:px-8 space-y-4">
+        <ChaosTimelineStrip client:only="react" />
+        <JourneyCanvas client:only="react" />
+        <ChaosImpactBanner client:only="react" />
       </div>
     </section>
 
-    <!-- Receipts — the headline of /chaos. Three big numbers, three
-         verdicts. Updates at the end of every cycle. -->
+    <!-- Single collapsed drawer below the canvas. Engineers expand to
+         inspect raw wire feed + scoreboard + runners + sparklines. -->
     <section class="py-8 lg:py-10 border-t border-border" data-reveal>
       <div class="container px-6 lg:px-8">
-        <div class="text-[10px] uppercase tracking-[0.22em] text-accent mb-4">
-          Recovery proof · last cycle
-        </div>
-        <ChaosReceipts client:only="react" />
-      </div>
-    </section>
-
-    <!-- Continuous proof — invariants + pattern runners. The evidence
-         that the cluster is always under load, not just during drills. -->
-    <section class="py-12 lg:py-14 border-t border-border" data-reveal>
-      <div class="container px-6 lg:px-8">
-        <div class="text-[10px] uppercase tracking-[0.22em] text-accent mb-4">
-          Continuous proof · invariants under load
-        </div>
-        <div class="panel-dark p-6 md:p-8 shadow-2xl space-y-6">
-          <ResilienceScoreboard client:only="react" />
-          <div class="border-t border-white/[0.06] pt-6">
+        <TechnicalDetailDrawer>
+          <div>
             <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
-              Pattern runners · each loop fires its own real traffic
+              Resilience scoreboard · invariants under load
+            </div>
+            <ResilienceScoreboard client:only="react" />
+          </div>
+
+          <div class="border-t border-white/[0.06] pt-5">
+            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+              Pattern runners · 9 background loops firing real traffic
             </div>
             <LabAutoRunners client:only="react" />
           </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Raw signals — quieter chrome. Live metrics + sparklines. -->
-    <section class="py-12 lg:py-14 border-t border-border" data-reveal>
-      <div class="container px-6 lg:px-8">
-        <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-4">
-          Raw signals
-        </div>
-        <div class="panel-dark p-5 md:p-6 shadow-2xl">
-          <div class="grid md:grid-cols-2 gap-6">
+          <div class="border-t border-white/[0.06] pt-5">
+            <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
+              Wire feed · every /api/* request the BFF handled
+            </div>
+            <LabRequestFeed client:only="react" />
+          </div>
+
+          <div class="border-t border-white/[0.06] pt-5 grid md:grid-cols-2 gap-6">
             <div>
               <div class="text-[10px] uppercase tracking-[0.22em] text-muted/70 mb-3">
                 Live measurements · trailing 30s
@@ -133,11 +131,11 @@ import { ChaosDrillController } from '../components/architecture/ChaosDrillContr
               <LiveSparklines client:only="react" />
             </div>
           </div>
-        </div>
+        </TechnicalDetailDrawer>
       </div>
     </section>
 
-    <!-- Footer return. CTA + nav back to lab. -->
+    <!-- Footer return. -->
     <section class="py-16 border-t border-border" data-reveal>
       <div class="container-prose px-6 lg:px-8 text-center space-y-4">
         <a

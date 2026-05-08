@@ -89,6 +89,21 @@ export interface DerivedService extends ServiceHealth {
 
 export type ConnectionState = 'connecting' | 'connected' | 'disconnected';
 
+/**
+ * The three rotating canonical journeys the BFF's JourneyScheduler fires
+ * on a ~20s loop. Each one exercises distinct cluster patterns and the
+ * frontend canvas choreographs its topology animation around them.
+ */
+export type JourneyKind = 'place-order-saga' | 'idempotent-retry' | 'occ-race';
+
+export interface JourneySession {
+  journey: JourneyKind;
+  sessionId: string;
+  startedAt: string;
+  endedAt?: string;
+  ok?: boolean;
+}
+
 export interface ClusterState {
   events: ConsoleEvent[];
   identity: ConsoleHello | null;
@@ -98,6 +113,10 @@ export interface ClusterState {
   /** Aggregate status: degraded whenever any chaos target is paused. */
   systemStatus: string;
   connectionState: ConnectionState;
+  /** Active journey if one is currently running, null otherwise. */
+  currentJourney: JourneySession | null;
+  /** Last 5 completed journeys, newest first. */
+  recentJourneys: JourneySession[];
 }
 
 /**
@@ -122,6 +141,8 @@ const HEALTH_POLL_MS = 5_000;
 const CHAOS_POLL_MS = 10_000;
 const MAX_EVENTS = 200;
 
+const MAX_RECENT_JOURNEYS = 5;
+
 const SSR_SNAPSHOT: ClusterState = {
   events: [],
   identity: null,
@@ -130,6 +151,8 @@ const SSR_SNAPSHOT: ClusterState = {
   services: [],
   systemStatus: 'unknown',
   connectionState: 'connecting',
+  currentJourney: null,
+  recentJourneys: [],
 };
 
 class ClusterStore {
@@ -202,6 +225,25 @@ class ClusterStore {
       this.recomputeDerivedServices();
     });
 
+    conn.on('OnJourneyStart', (raw: any) => {
+      const j = this.normaliseJourney(raw);
+      if (!j) return;
+      this.update({ currentJourney: j });
+    });
+
+    conn.on('OnJourneyEnd', (raw: any) => {
+      const j = this.normaliseJourney(raw);
+      if (!j) return;
+      const next = [j, ...this.state.recentJourneys].slice(0, MAX_RECENT_JOURNEYS);
+      this.update({
+        currentJourney:
+          this.state.currentJourney?.sessionId === j.sessionId
+            ? null
+            : this.state.currentJourney,
+        recentJourneys: next,
+      });
+    });
+
     conn.onreconnecting(() => this.update({ connectionState: 'connecting' }));
     conn.onreconnected(() => this.update({ connectionState: 'connected' }));
     conn.onclose(() => this.update({ connectionState: 'disconnected' }));
@@ -235,6 +277,27 @@ class ClusterStore {
         }))
       : [],
   });
+
+  private normaliseJourney = (raw: any): JourneySession | null => {
+    if (!raw || typeof raw !== 'object') return null;
+    const journey = raw.journey;
+    const sessionId = raw.sessionId;
+    if (
+      journey !== 'place-order-saga' &&
+      journey !== 'idempotent-retry' &&
+      journey !== 'occ-race'
+    ) {
+      return null;
+    }
+    if (typeof sessionId !== 'string' || sessionId.length === 0) return null;
+    return {
+      journey,
+      sessionId,
+      startedAt: typeof raw.startedAt === 'string' ? raw.startedAt : new Date().toISOString(),
+      endedAt: typeof raw.endedAt === 'string' ? raw.endedAt : undefined,
+      ok: typeof raw.ok === 'boolean' ? raw.ok : undefined,
+    };
+  };
 
   private normaliseChaos = (raw: any): Record<string, ChaosTargetState> => {
     const out: Record<string, ChaosTargetState> = {};

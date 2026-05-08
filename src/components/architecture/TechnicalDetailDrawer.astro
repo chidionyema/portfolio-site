@@ -1,0 +1,20 @@
+---
+// TechnicalDetailDrawer — collapsible <details> wrapper that demotes the
+// dense legacy panels (request feed + scoreboard + runners + sparklines +
+// metrics tiles) to a "show technical detail" toggle below the canvas.
+//
+// Default: closed. The canvas (topology + journey side panel + receipts)
+// already carries the message; this drawer is for the engineer who wants
+// to inspect raw signals.
+//
+// Astro-native — uses <details>/<summary> so toggle works without JS.
+---
+<details class="rounded-lg border border-white/[0.08] bg-black/40 group">
+  <summary class="cursor-pointer select-none px-5 py-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.22em] text-muted/70 hover:text-primary transition-colors list-none [&::-webkit-details-marker]:hidden">
+    <span>Show technical detail · raw signals + per-pattern panels</span>
+    <span class="text-muted/50 group-open:rotate-90 transition-transform">›</span>
+  </summary>
+  <div class="px-5 pt-3 pb-5 space-y-6 border-t border-white/[0.06]">
+    <slot />
+  </div>
+</details>
