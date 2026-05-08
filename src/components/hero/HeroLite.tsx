@@ -109,7 +109,7 @@ export function Hero(_: HeroProps) {
         <div className="border-t border-border pt-8">
           <a
             href="#demo"
-            className="inline-flex items-center gap-3 text-sm text-muted hover:text-primary transition-colors group"
+            className="inline-flex items-center gap-3 text-sm text-secondary hover:text-primary transition-colors group"
           >
             <span className="w-8 h-px bg-border-strong group-hover:w-12 transition-all" />
             <span>
