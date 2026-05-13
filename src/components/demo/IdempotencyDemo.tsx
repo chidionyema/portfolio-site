@@ -13,8 +13,13 @@ import {
   Swords,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
-import { RequestReceiptHistory } from './RequestReceipt';
-import type { RequestMetadata } from '../../lib/api/demo-client';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Heading } from '../ui/Heading';
+import { Stack } from '../ui/Stack';
+import { Pill } from '../ui/Pill';
+import { Glass } from '../ui/Glass';
+import { cn } from '../../lib/utils';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 
@@ -56,9 +61,6 @@ const TTL_PRESETS = [10, 30, 120] as const;
 type TtlPreset = (typeof TTL_PRESETS)[number];
 
 export function IdempotencyDemo() {
-  // Empty during SSR; populated on mount. crypto.randomUUID() produces
-  // different values on the server and client, which would mismatch the
-  // hydrated HTML and tear down the demo's React subtree.
   const [idempotencyKey, setIdempotencyKey] = useState<string>('');
   const [logs, setLogs] = useState<RequestLog[]>([]);
   const [winnerOrderId, setWinnerOrderId] = useState<string | null>(null);
@@ -71,7 +73,6 @@ export function IdempotencyDemo() {
   const { sessionId } = useDemoSession('idempotency');
   const expiryDeadline = useRef<number>(0);
 
-  // Generate the first key on mount only (paired with empty SSR initial).
   useEffect(() => {
     setIdempotencyKey(crypto.randomUUID().split('-')[0].toUpperCase());
   }, []);
@@ -83,8 +84,6 @@ export function IdempotencyDemo() {
     setLastRace(null);
   };
 
-  // Tick down expiry from a wall-clock deadline so the countdown is honest
-  // even if the page was backgrounded or a Race ran for a few hundred ms.
   useEffect(() => {
     if (expiresInSeconds <= 0) return;
     const id = setInterval(() => {
@@ -128,7 +127,6 @@ export function IdempotencyDemo() {
         ].slice(0, 16),
       );
 
-      // Track first-known winner so we can detect "replay after expiry" later.
       if (!data.isDuplicate) {
         setWinnerOrderId(data.result.orderId);
       }
@@ -174,7 +172,6 @@ export function IdempotencyDemo() {
       expiryDeadline.current = Date.now() + data.ttlSeconds * 1000;
       setExpiresInSeconds(data.ttlSeconds);
 
-      // Each outcome becomes an audit-trail entry, preserving original order.
       const raceLogs: RequestLog[] = data.outcomes.map((o) => ({
         id: crypto.randomUUID(),
         timestamp: new Date(),
@@ -185,7 +182,7 @@ export function IdempotencyDemo() {
       }));
       setLogs((prev) => [...raceLogs, ...prev].slice(0, 16));
     } catch {
-      // ignore — UI shows previous state
+      // ignore
     } finally {
       setIsRacing(false);
     }
@@ -206,207 +203,212 @@ export function IdempotencyDemo() {
 
   return (
     <div className="grid lg:grid-cols-2 gap-8">
-      <div className="space-y-6">
+      <Stack gap={6}>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+          <Heading variant="caption" className="flex items-center gap-2.5">
             <Fingerprint className="w-4 h-4 text-accent" />
             Idempotency keys
-          </h3>
+          </Heading>
         </div>
 
-        <div className="surface p-8 shadow-2xl space-y-8 font-mono">
-          <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60">
-              Request_Header: X-Idempotency-Key
-            </label>
-            <div className="flex gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl">
-              <div className="flex-1 bg-black/40 px-6 py-4 rounded-xl font-mono text-base text-primary flex items-center justify-between shadow-inner">
-                <span className="font-bold tracking-widest">{idempotencyKey}</span>
-                <Key className="w-5 h-5 opacity-20" />
-              </div>
-              <button
-                onClick={generateKey}
-                disabled={isLoading || isRacing}
-                className="focus-ring p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-20"
-              >
-                <RefreshCcw className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          <details className="space-y-3 group/details">
-            <summary className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60 cursor-pointer hover:text-secondary transition-colors list-none flex items-center gap-2">
-              <span className="w-1 h-1 bg-accent rounded-full group-open/details:bg-success" />
-              Advanced: Cache TTL Configuration
-            </summary>
-            <div className="pt-4 space-y-3">
-              <div className="flex gap-2">
-                {TTL_PRESETS.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTtlPreset(t)}
-                    disabled={isLoading || isRacing}
-                    className={`focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
-                      ttlPreset === t
-                        ? 'bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]'
-                        : 'bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10'
-                    } disabled:opacity-30`}
-                  >
-                    {t}s
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted/60 leading-relaxed">
-                Lower TTL → replays after expiry produce a NEW order. Higher TTL → replays return the cached one.
-              </p>
-            </div>
-          </details>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={sendRequest}
-              disabled={isLoading || isRacing}
-              title="Sends a real order to the database. The system uses the key above to ensure we never bill you twice."
-              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-            >
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
-              Send request
-            </button>
-            <button
-              onClick={fireRace}
-              disabled={isLoading || isRacing}
-              title="Fires 4 concurrent requests with the same idempotency key. Exactly one wins; the others read the winner's response. Reversible — clears the entry first."
-              aria-label="Fire four concurrent requests with the same idempotency key"
-              className="focus-ring py-4 bg-warning/10 hover:bg-warning/15 border border-warning/30 text-warning font-black text-xs uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-            >
-              {isRacing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Swords className="w-4 h-4" />}
-              {isRacing ? 'Racing…' : 'Fire 4 in parallel'}
-            </button>
-          </div>
-
-          <div className="space-y-6 pt-6 border-t border-white/5">
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-3">
-                <Database className="w-4 h-4 text-muted/60" />
-                <span className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">
-                  Key cache
-                </span>
-              </div>
-              <AnimatePresence>
-                {expiresInSeconds > 0 && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-[10px] font-black text-success tracking-widest"
-                  >
-                    Key active
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="glass-subtle p-6 relative overflow-hidden min-h-[80px] flex flex-col justify-center">
-              {expiresInSeconds > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="space-y-4 relative z-10"
+        <Card variant="panel-dark" padding="lg">
+          <Stack gap={8} className="font-mono">
+            <Stack gap={4}>
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60">
+                Request_Header: X-Idempotency-Key
+              </label>
+              <div className="flex gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl">
+                <div className="flex-1 bg-black/40 px-6 py-4 rounded-xl font-mono text-base text-primary flex items-center justify-between shadow-inner">
+                  <span className="font-bold tracking-widest">{idempotencyKey}</span>
+                  <Key className="w-5 h-5 opacity-20" />
+                </div>
+                <button
+                  onClick={generateKey}
+                  disabled={isLoading || isRacing}
+                  className="focus-ring p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-20"
                 >
-                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
-                    <span className="text-secondary opacity-60">IDM_KEY: {idempotencyKey}</span>
-                    <span className="text-warning tabular-nums">{expiresInSeconds}S_TTL</span>
-                  </div>
-                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-success/60 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
-                      animate={{ width: `${Math.max(0, (expiresInSeconds / ttlPreset) * 100)}%` }}
-                      transition={{ duration: 0.25, ease: 'linear' }}
-                    />
-                  </div>
-                </motion.div>
-              ) : (
-                <div className="text-center text-[11px] text-muted/40 italic">
-                  Cache empty — first request will create a new entry.
-                </div>
-              )}
-            </div>
-          </div>
+                  <RefreshCcw className="w-5 h-5" />
+                </button>
+              </div>
+            </Stack>
 
-          <AnimatePresence>
-            {lastRace && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="surface p-5 border border-warning/20 space-y-4"
-              >
-                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.25em]">
-                  <span className="text-warning">Race outcome — {lastRace.count} concurrent</span>
-                  <span className="text-muted">key {lastRace.key}</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {lastRace.outcomes.map((o) => (
-                    <div
-                      key={o.requestIndex}
-                      className={`p-3 rounded-xl border ${
-                        o.isWinner
-                          ? 'border-success/40 bg-success/10'
-                          : 'border-white/5 bg-white/[0.02]'
-                      }`}
+            <details className="space-y-3 group/details">
+              <summary className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60 cursor-pointer hover:text-secondary transition-colors list-none flex items-center gap-2">
+                <span className="w-1 h-1 bg-accent rounded-full group-open/details:bg-success" />
+                Advanced: Cache TTL Configuration
+              </summary>
+              <div className="pt-4 space-y-3">
+                <div className="flex gap-2">
+                  {TTL_PRESETS.map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTtlPreset(t)}
+                      disabled={isLoading || isRacing}
+                      className={cn(
+                        "focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all disabled:opacity-30",
+                        ttlPreset === t
+                          ? "bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+                          : "bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10"
+                      )}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] uppercase tracking-widest text-muted/50">
-                          req {o.requestIndex}
-                        </span>
-                        {o.isWinner ? (
-                          <Trophy className="w-3 h-3 text-success" />
-                        ) : (
-                          <Copy className="w-3 h-3 text-muted/60" />
-                        )}
-                      </div>
-                      <div className="text-[10px] font-mono text-secondary truncate">
-                        {o.orderId.slice(0, 8)}…
-                      </div>
-                      <div className="text-[9px] text-muted/60 mt-1 tabular-nums">{o.latencyMs}ms</div>
-                    </div>
+                      {t}s
+                    </button>
                   ))}
                 </div>
                 <p className="text-[10px] text-muted/60 leading-relaxed">
-                  One request creates the order; the rest read the winner&apos;s response.
-                  Every loser&apos;s order id matches the winner&apos;s.
+                  Lower TTL → replays after expiry produce a NEW order. Higher TTL → replays return the cached one.
                 </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+            </details>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="primary"
+                onClick={sendRequest}
+                disabled={isLoading || isRacing}
+                className="w-full h-auto py-4 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2"
+                title="Sends a real order to the database. The system uses the key above to ensure we never bill you twice."
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
+                Send request
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={fireRace}
+                disabled={isLoading || isRacing}
+                className="w-full h-auto py-4 text-warning border-warning/30 hover:bg-warning/15 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2"
+                title="Fires 4 concurrent requests with the same idempotency key."
+              >
+                {isRacing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Swords className="w-4 h-4" />}
+                {isRacing ? 'Racing…' : 'Fire 4 in parallel'}
+              </Button>
+            </div>
+
+            <Stack gap={6} className="pt-6 border-t border-white/5">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-3">
+                  <Database className="w-4 h-4 text-muted/60" />
+                  <span className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">
+                    Key cache
+                  </span>
+                </div>
+                <AnimatePresence>
+                  {expiresInSeconds > 0 && (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-[10px] font-black text-success tracking-widest"
+                    >
+                      Key active
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <Glass intensity="low" className="p-6 min-h-[80px] flex flex-col justify-center border-none bg-white/5">
+                {expiresInSeconds > 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="space-y-4 relative z-10"
+                  >
+                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                      <span className="text-secondary opacity-60">IDM_KEY: {idempotencyKey}</span>
+                      <span className="text-warning tabular-nums">{expiresInSeconds}S_TTL</span>
+                    </div>
+                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-success/60 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                        animate={{ width: `${Math.max(0, (expiresInSeconds / ttlPreset) * 100)}%` }}
+                        transition={{ duration: 0.25, ease: 'linear' }}
+                      />
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="text-center text-[11px] text-muted/40 italic">
+                    Cache empty — first request will create a new entry.
+                  </div>
+                )}
+              </Glass>
+            </Stack>
+
+            <AnimatePresence>
+              {lastRace && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="p-5 rounded-2xl border border-warning/20 bg-warning/5 space-y-4"
+                >
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.25em]">
+                    <span className="text-warning">Race outcome — {lastRace.count} concurrent</span>
+                    <span className="text-muted">key {lastRace.key}</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {lastRace.outcomes.map((o) => (
+                      <div
+                        key={o.requestIndex}
+                        className={cn(
+                          "p-3 rounded-xl border",
+                          o.isWinner
+                            ? 'border-success/40 bg-success/10'
+                            : 'border-white/5 bg-white/[0.02]'
+                        )}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[9px] uppercase tracking-widest text-muted/50">
+                            req {o.requestIndex}
+                          </span>
+                          {o.isWinner ? (
+                            <Trophy className="w-3 h-3 text-success" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-muted/60" />
+                          )}
+                        </div>
+                        <div className="text-[10px] font-mono text-secondary truncate">
+                          {o.orderId.slice(0, 8)}…
+                        </div>
+                        <div className="text-[9px] text-muted/60 mt-1 tabular-nums">{o.latencyMs}ms</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted/60 leading-relaxed">
+                    One request creates the order; the rest read the winner&apos;s response.
+                    Every loser&apos;s order id matches the winner&apos;s.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Stack>
+        </Card>
 
         <div className="grid grid-cols-2 gap-6 font-mono">
-          <div className="surface p-6 flex flex-col items-center">
+          <Card variant="panel-dark" padding="md" className="flex flex-col items-center justify-center min-h-[120px]">
             <div className="text-3xl font-black text-primary tabular-nums tracking-tighter leading-none">
               {totalRequests.toString().padStart(2, '0')}
             </div>
-            <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-2">
+            <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-3">
               Total_Requests
             </div>
-          </div>
-          <div className="surface p-6 flex flex-col items-center">
+          </Card>
+          <Card variant="panel-dark" padding="md" className="flex flex-col items-center justify-center min-h-[120px]">
             <div className="text-3xl font-black text-success tabular-nums tracking-tighter leading-none">
               {uniqueOrders.toString().padStart(2, '0')}
             </div>
-            <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-2">
+            <div className="text-[9px] uppercase font-bold text-muted tracking-widest mt-3">
               Unique_Commits
             </div>
-          </div>
+          </Card>
         </div>
-      </div>
+      </Stack>
 
-      <div className="space-y-6">
-        <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+      <Stack gap={6}>
+        <Heading variant="caption" className="flex items-center gap-2.5">
           <Server className="w-4 h-4 text-muted" />
           Audit log
-        </h3>
+        </Heading>
 
-        <div className={`surface shadow-2xl h-[620px] flex flex-col overflow-hidden transition-all duration-500 ${isRacing ? 'border-error/40 ring-4 ring-error/5 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : ''}`}>
+        <Card variant="panel-dark" padding="none" className={cn("h-[620px] flex flex-col overflow-hidden transition-all duration-500", isRacing && "border-error/40 ring-4 ring-error/5 shadow-[0_0_30px_rgba(239,68,68,0.1)]")}>
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
             <span className="text-muted/60 tracking-widest uppercase font-black flex items-center gap-2">
               Recent requests 
@@ -458,13 +460,13 @@ export function IdempotencyDemo() {
             </table>
           </div>
 
-          <div className="p-6 glass-subtle border-t border-white/5 font-mono">
+          <div className="p-6 bg-white/5 border-t border-white/5 font-mono">
             <p className="text-[10px] text-muted/50 leading-relaxed uppercase tracking-widest text-center italic">
-              Atomic claim via ConcurrentDictionary.AddOrUpdate. TTL: {ttlPreset}s.
+              Atomic claim via Postgres UNIQUE constraint. TTL: {ttlPreset}s.
             </p>
           </div>
-        </div>
-      </div>
+        </Card>
+      </Stack>
     </div>
   );
 }
@@ -495,23 +497,13 @@ function StateBadge({ req }: { req: RequestLog }) {
   const isCacheHit = req.status === 'replay-cached' || req.status === 'race-loser';
   const isCommit = req.status === 'created' || req.status === 'race-winner' || req.status === 'replay-after-expiry';
 
-  const tone = isCacheHit
-    ? 'border-warning/30 bg-warning/10 text-warning'
-    : isCommit
-    ? 'border-success/30 bg-success/10 text-success'
-    : 'border-error/30 bg-error/10 text-error';
-  const label = isCacheHit
-    ? 'Cache hit'
-    : isCommit
-    ? 'DB write'
-    : 'Failure';
+  const variant = isCacheHit ? 'warning' : isCommit ? 'success' : 'status';
+  const label = isCacheHit ? 'Cache hit' : isCommit ? 'DB write' : 'Failure';
 
   return (
-    <span
-      className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-tighter ${tone}`}
-    >
+    <Pill variant={variant as any} className="text-[9px] px-2 py-0.5">
       {label}
       {req.latencyMs !== undefined && <span className="opacity-60 ml-2">{req.latencyMs}ms</span>}
-    </span>
+    </Pill>
   );
 }
