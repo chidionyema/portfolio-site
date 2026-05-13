@@ -17,7 +17,7 @@ export function Proof() {
               <Heading variant="caption" className="mb-4">
                 Evidence
               </Heading>
-              <Heading variant="section" className="mb-6">
+              <Heading variant="section" className="mb-6" level={2}>
                 A live .NET 9 cluster, running in your browser.
               </Heading>
               <p className="text-lg text-secondary leading-relaxed">

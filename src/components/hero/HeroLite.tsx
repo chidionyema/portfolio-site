@@ -30,25 +30,27 @@ export function Hero(_: HeroProps) {
       <div className="absolute top-6 right-6 z-30">
         <Pill variant="status" className="gap-2 px-3.5 py-1.5 backdrop-blur">
           <span
-            className={`w-1.5 h-1.5 rounded-full ${
+            className={cn(
+              "w-1.5 h-1.5 rounded-full",
               systemStatus === "healthy"
                 ? "bg-success"
                 : systemStatus === "degraded"
                   ? "bg-warning"
-                  : "bg-muted/40"
-            } ${systemStatus === "healthy" ? "animate-pulse" : ""}`}
+                  : "bg-muted/40",
+              systemStatus === "healthy" && "animate-pulse"
+            )}
           />
           <span className="font-medium">cluster: {systemStatus ?? "connecting"}</span>
         </Pill>
       </div>
 
-      <Container size="wide" className={`pt-32 pb-24 lg:pt-48 lg:pb-40 transition-opacity duration-1000 ${visible ? "opacity-100" : "opacity-0"}`}>
+      <Container size="wide" className={cn("pt-32 pb-24 lg:pt-48 lg:pb-40 transition-opacity duration-1000", visible ? "opacity-100" : "opacity-0")}>
         <Reveal delay={0.1}>
           <Stack gap={12}>
             <div className="max-w-4xl">
-              <Heading variant="caption" className="mb-8" level={2}>
+              <p className="text-sm text-muted font-medium mb-8 tracking-wide">
                 Senior .NET Engineer
-              </Heading>
+              </p>
 
               <Heading variant="display" level={1} className="mb-10">
                 I build distributed systems that survive&nbsp;production.

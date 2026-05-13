@@ -28,7 +28,7 @@ export function Dives({ dives }: DivesProps) {
               <Heading variant="caption" className="mb-4">
                 Architecture
               </Heading>
-              <Heading variant="section" className="mb-6">
+              <Heading variant="section" className="mb-6" level={2}>
                 Patterns for scale and reliability.
               </Heading>
               <p className="text-lg text-secondary leading-relaxed">
@@ -43,7 +43,7 @@ export function Dives({ dives }: DivesProps) {
                   <Card className="h-full hover:shadow-md transition-all group">
                     <Stack gap={4} className="h-full justify-between">
                       <div>
-                        <Heading variant="panel" className="mb-3 group-hover:text-secondary transition-colors">
+                        <Heading variant="panel" level={3} className="mb-3 group-hover:text-secondary transition-colors">
                           {dive.title}
                         </Heading>
                         <p className="text-sm text-secondary line-clamp-3">

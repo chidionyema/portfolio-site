@@ -12,9 +12,16 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
-import type { EventFlowEvent } from '../../lib/api/signalr';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Heading } from '../ui/Heading';
+import { Stack } from '../ui/Stack';
+import { Pill } from '../ui/Pill';
+import { Glass } from '../ui/Glass';
+import { cn } from '../../lib/utils';
 import { CLUSTER_LABEL } from '../../lib/copy';
 import { RequestReceiptHistory } from './RequestReceipt';
+import type { EventFlowEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
@@ -32,6 +39,7 @@ interface RelayStatus {
   isPaused: boolean;
   queuedCount: number;
 }
+
 export function EventFlowDemo() {
   const [outbox, setOutbox] = useState<OutboxMessage[]>([]);
   const [brokerQueue, setBrokerQueue] = useState<{ name: string; depth: number }[]>([
@@ -45,7 +53,6 @@ export function EventFlowDemo() {
 
   const { executeCommand, events } = useDemoSession('events');
 
-  // Initial relay status fetch — so a refresh while paused shows the right thing.
   useEffect(() => {
     let cancelled = false;
     fetch(`${API_URL}/api/demo/events/relay-status`)
@@ -59,7 +66,6 @@ export function EventFlowDemo() {
     };
   }, []);
 
-  // Bridge SignalR events into the outbox table view.
   const lastEventKeyRef = useRef<string>('');
   useEffect(() => {
     if (events.length === 0) return;
@@ -114,7 +120,6 @@ export function EventFlowDemo() {
         setRelay({ isPaused: true, queuedCount: result.queuedCount });
       }
     } catch {
-      /* surfaced via UI elsewhere */
     } finally {
       setIsProcessing(false);
     }
@@ -131,7 +136,6 @@ export function EventFlowDemo() {
         setRelay({ isPaused: !!result.isPaused, queuedCount: result.queuedCount ?? 0 });
       }
     } catch {
-      /* keep prior state */
     } finally {
       setIsToggling(false);
     }
@@ -146,154 +150,151 @@ export function EventFlowDemo() {
     });
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
-      <div className="space-y-6">
+    <div className="grid lg:grid-cols-2 gap-12">
+      <Stack gap={6}>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
+          <Heading variant="caption" className="flex items-center gap-2.5">
             <Database className="w-4 h-4 text-accent" />
             Transactional outbox
-          </h3>
-          <RelayPill relay={relay} />
+          </Heading>
+          <Pill variant={relay.isPaused ? 'warning' : 'success'}>
+            Relay {relay.isPaused ? `paused (${relay.queuedCount})` : 'live'}
+          </Pill>
         </div>
 
-        <div className="surface p-8 shadow-2xl space-y-8 font-mono">
-          <p className="text-secondary text-sm leading-relaxed max-w-md">
-            Atomic persistence for business events. <br />
-            Guarantees [At-Least-Once] delivery to RabbitMQ Cluster.
-          </p>
+        <Card variant="panel-dark" padding="lg">
+          <Stack gap={8} className="font-mono">
+            <p className="text-secondary text-sm leading-relaxed max-w-md">
+              Atomic persistence for business events. <br />
+              Guarantees [At-Least-Once] delivery to RabbitMQ Cluster.
+            </p>
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={triggerEvent}
-              disabled={isProcessing}
-              className="focus-ring py-4 bg-white text-black font-black text-xs uppercase rounded-2xl tracking-widest hover:bg-slate-100 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-            >
-              {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 fill-current" />}
-              Commit event
-            </button>
-            <button
-              onClick={toggleRelay}
-              disabled={isToggling}
-              title={
-                relay.isPaused
-                  ? 'Resumes the relay. Buffered events drain in FIFO order to the broker.'
-                  : 'Stops dispatching events to the broker. Triggers fire normally but stay in a local buffer until you resume.'
-              }
-              aria-label={relay.isPaused ? 'Resume relay and drain buffered events' : 'Pause relay and buffer new events locally'}
-              className={`focus-ring py-4 font-black text-xs uppercase tracking-widest rounded-2xl border transition-all disabled:opacity-30 flex items-center justify-center gap-2 ${
-                relay.isPaused
-                  ? 'bg-success/10 border-success/30 text-success hover:bg-success/15'
-                  : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/15'
-              }`}
-            >
-              {isToggling ? (
-                <RotateCw className="w-4 h-4 animate-spin" />
-              ) : relay.isPaused ? (
-                <Play className="w-4 h-4" />
-              ) : (
-                <Pause className="w-4 h-4" />
-              )}
-              {relay.isPaused ? 'Resume relay' : 'Pause relay'}
-            </button>
-          </div>
-
-          <RequestReceiptHistory receipts={receipts} />
-
-          <AnimatePresence>
-            {relay.isPaused && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="glass-subtle p-5 border border-warning/20 flex items-center gap-4"
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="primary"
+                onClick={triggerEvent}
+                disabled={isProcessing}
+                className="w-full h-auto py-4 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2"
               >
-                <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
-                <div className="flex-1 space-y-1">
-                  <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
-                    Relay paused
-                  </div>
-                  <div className="text-[10px] text-muted/80 leading-relaxed">
-                    The broker is unreachable. New events are buffered locally and
-                    will drain in FIFO order on resume.
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[9px] uppercase tracking-widest text-muted/60">Queued</div>
-                  <div className="text-2xl font-black text-warning tabular-nums">{relay.queuedCount}</div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
-              Outbox table
-            </label>
-            <div className="glass-subtle overflow-hidden min-h-[220px]">
-              <table className="w-full text-[10px] border-collapse">
-                <thead className="bg-white/5 border-b border-white/5 text-muted/60 uppercase tracking-widest">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-black">Event ID</th>
-                    <th className="px-4 py-3 text-left font-black">Status</th>
-                    <th className="px-4 py-3 text-right font-black">TS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.02]">
-                  <AnimatePresence initial={false}>
-                    {outbox.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="py-16 text-center text-muted/20 italic uppercase tracking-[0.4em]"
-                        >
-                          Fire a request from the controls above — this log will populate in real-time.
-                        </td>
-                      </tr>
-                    ) : (
-                      outbox.map((m) => (
-                        <motion.tr
-                          key={m.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="group hover:bg-white/[0.02] transition-colors"
-                        >
-                          <td className="px-4 py-3.5 text-secondary font-bold">{m.id.split('-')[0]}</td>
-                          <td className="px-4 py-3.5">
-                            <StatusPill status={m.status} />
-                          </td>
-                          <td className="px-4 py-3.5 text-right text-muted/60 tabular-nums">
-                            [{formatTime(m.timestamp)}]
-                          </td>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </tbody>
-              </table>
+                {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Commit event
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={toggleRelay}
+                disabled={isToggling}
+                className={cn(
+                  "w-full h-auto py-4 font-black text-xs uppercase tracking-widest rounded-2xl border transition-all flex items-center justify-center gap-2",
+                  relay.isPaused ? "bg-success/10 border-success/30 text-success" : "bg-warning/10 border-warning/30 text-warning"
+                )}
+              >
+                {isToggling ? (
+                  <RotateCw className="w-4 h-4 animate-spin" />
+                ) : relay.isPaused ? (
+                  <Play className="w-4 h-4" />
+                ) : (
+                  <Pause className="w-4 h-4" />
+                )}
+                {relay.isPaused ? 'Resume relay' : 'Pause relay'}
+              </Button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="space-y-6">
+            <AnimatePresence>
+              {relay.isPaused && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="p-5 rounded-xl border border-warning/20 bg-warning/5 flex items-center gap-4"
+                >
+                  <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
+                  <div className="flex-1 space-y-1">
+                    <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
+                      Relay paused
+                    </div>
+                    <div className="text-[10px] text-muted/80 leading-relaxed uppercase">
+                      Broker unreachable. New events are buffered locally.
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[9px] uppercase tracking-widest text-muted/60">Queued</div>
+                    <div className="text-2xl font-black text-warning tabular-nums">{relay.queuedCount}</div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Stack gap={4}>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
+                Outbox table
+              </label>
+              <Glass intensity="low" className="overflow-hidden min-h-[220px] bg-white/5 border-none">
+                <table className="w-full text-[10px] border-collapse">
+                  <thead className="bg-white/5 border-b border-white/5 text-muted/60 uppercase tracking-widest font-black">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Event ID</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-right">TS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.02]">
+                    <AnimatePresence initial={false}>
+                      {outbox.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="py-16 text-center text-muted/20 italic uppercase tracking-[0.4em]">
+                            Waiting for commit...
+                          </td>
+                        </tr>
+                      ) : (
+                        outbox.map((m) => (
+                          <motion.tr
+                            key={m.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="group hover:bg-white/[0.02] transition-colors"
+                          >
+                            <td className="px-4 py-3.5 text-secondary font-bold font-mono">{m.id.split('-')[0]}</td>
+                            <td className="px-4 py-3.5">
+                              <Pill variant={m.status === 'pending' ? 'warning' : m.status === 'published' ? 'status' : 'success'}>
+                                {m.status}
+                              </Pill>
+                            </td>
+                            <td className="px-4 py-3.5 text-right text-muted/60 tabular-nums">
+                              [{formatTime(m.timestamp)}]
+                            </td>
+                          </motion.tr>
+                        ))
+                      )}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </Glass>
+            </Stack>
+          </Stack>
+        </Card>
+      </Stack>
+
+      <Stack gap={6}>
         <h3 className="text-sm font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
           <Share2 className="w-4 h-4 text-muted" />
           Message broker
         </h3>
 
-        <div className="surface shadow-2xl flex flex-col h-full overflow-hidden">
+        <Card variant="panel-dark" padding="none" className="flex flex-col h-full overflow-hidden shadow-2xl">
           <div className="p-8 space-y-10 flex-1 uppercase tracking-tighter font-mono">
             <div
-              className={`flex items-center gap-6 p-6 glass-subtle transition-colors ${
-                relay.isPaused ? 'border border-warning/20' : ''
-              }`}
+              className={cn(
+                "flex items-center gap-6 p-6 rounded-2xl glass-subtle transition-colors",
+                relay.isPaused ? "border border-warning/20 bg-warning/5" : "bg-white/5 border border-white/10"
+              )}
             >
               <div
-                className={`p-3 rounded-2xl border ${
+                className={cn(
+                  "p-3 rounded-2xl border",
                   relay.isPaused
-                    ? 'bg-warning/10 border-warning/30 text-warning'
-                    : 'bg-white/5 border-white/10 text-accent'
-                }`}
+                    ? "bg-warning/10 border-warning/30 text-warning"
+                    : "bg-accent/10 border-accent/30 text-accent"
+                )}
               >
                 {relay.isPaused ? <Power className="w-7 h-7" /> : <Server className="w-7 h-7" />}
               </div>
@@ -301,20 +302,22 @@ export function EventFlowDemo() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-black text-primary tracking-widest">RabbitMQ_Primary</span>
                   <span
-                    className={`text-[9px] font-bold ${
+                    className={cn(
+                      "text-[9px] font-bold",
                       relay.isPaused ? 'text-warning' : 'text-success'
-                    }`}
+                    )}
                   >
                     {relay.isPaused ? 'RELAY_DISCONNECTED' : 'HEALTH_OPTIMAL'}
                   </span>
                 </div>
                 <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                   <motion.div
-                    className={`h-full ${
+                    className={cn(
+                      "h-full",
                       relay.isPaused
                         ? 'bg-warning/60 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
                         : 'bg-success/60 shadow-[0_0_10px_rgba(34,197,94,0.5)]'
-                    }`}
+                    )}
                     animate={{ opacity: relay.isPaused ? [0.3, 0.6, 0.3] : [1, 0.4, 1] }}
                     transition={{ repeat: Infinity, duration: relay.isPaused ? 1.4 : 2.5 }}
                     style={{ width: relay.isPaused ? '20%' : '100%' }}
@@ -333,9 +336,10 @@ export function EventFlowDemo() {
                     <div className="flex justify-between items-center">
                       <span className="text-secondary font-bold tracking-widest">{q.name}</span>
                       <span
-                        className={
-                          q.depth > 0 ? 'text-warning font-black scale-110' : 'text-muted/20'
-                        }
+                        className={cn(
+                          "font-black tabular-nums",
+                          q.depth > 0 ? 'text-warning' : 'text-muted/20'
+                        )}
                       >
                         {q.depth.toString().padStart(2, '0')} MSG
                       </span>
@@ -354,14 +358,16 @@ export function EventFlowDemo() {
 
             <div className="pt-10 border-t border-white/5 flex flex-col items-center justify-center space-y-3 text-center">
               <div
-                className={`w-2 h-2 rounded-full ${
-                  relay.isPaused ? 'bg-warning animate-pulse' : 'bg-success animate-pulse'
-                } shadow-[0_0_12px_currentColor]`}
+                className={cn(
+                  "w-2 h-2 rounded-full animate-pulse shadow-[0_0_12px_currentColor]",
+                  relay.isPaused ? "bg-warning" : "bg-success"
+                )}
               />
               <p
-                className={`text-[10px] max-w-[260px] leading-relaxed uppercase font-bold tracking-widest ${
+                className={cn(
+                  "text-[10px] max-w-[260px] leading-relaxed uppercase font-bold tracking-widest",
                   relay.isPaused ? 'text-warning' : 'text-muted'
-                }`}
+                )}
               >
                 {relay.isPaused
                   ? `Relay_Suspended // Buffered: ${relay.queuedCount}`
@@ -371,50 +377,18 @@ export function EventFlowDemo() {
           </div>
 
           <div className="p-5 bg-white/[0.02] border-t border-white/5 flex items-center justify-between font-mono text-[9px] font-black uppercase tracking-widest">
-            <span className="text-muted/60">Cluster: cloudamqp_{CLUSTER_LABEL}</span>
+            <span className="text-muted/60">Cluster: cloudamqp_${CLUSTER_LABEL}</span>
             <div
-              className={`flex items-center gap-2 ${relay.isPaused ? 'text-warning' : 'text-success'}`}
+              className={cn("flex items-center gap-2", relay.isPaused ? 'text-warning' : 'text-success')}
             >
               <div
-                className={`w-1 h-1 rounded-full ${
-                  relay.isPaused ? 'bg-warning' : 'bg-success'
-                }`}
+                className={cn("w-1.5 h-1.5 rounded-full", relay.isPaused ? 'bg-warning' : 'bg-success')}
               />
               {relay.isPaused ? 'Holding' : 'Synchronized'}
             </div>
           </div>
-        </div>
-      </div>
+        </Card>
+      </Stack>
     </div>
-  );
-}
-
-function RelayPill({ relay }: { relay: RelayStatus }) {
-  return (
-    <span
-      className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-        relay.isPaused
-          ? 'border-warning/30 bg-warning/10 text-warning'
-          : 'border-success/30 bg-success/10 text-success'
-      }`}
-    >
-      Relay {relay.isPaused ? `paused (${relay.queuedCount})` : 'live'}
-    </span>
-  );
-}
-
-function StatusPill({ status }: { status: OutboxStatus }) {
-  const tone =
-    status === 'pending'
-      ? 'border-warning/30 bg-warning/10 text-warning'
-      : status === 'published'
-      ? 'border-info/30 bg-info/10 text-info'
-      : 'border-success/30 bg-success/10 text-success';
-  return (
-    <span
-      className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-tighter ${tone}`}
-    >
-      {status}
-    </span>
   );
 }

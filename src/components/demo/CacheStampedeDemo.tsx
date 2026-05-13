@@ -78,7 +78,8 @@ export function CacheStampedeDemo() {
       console.error(e);
     } finally {
       setIsRunning(null);
-      setTimeout(() => setRequests([]), 1000);
+      const t = setTimeout(() => setRequests([]), 1000);
+      return () => clearTimeout(t);
     }
   };
 
