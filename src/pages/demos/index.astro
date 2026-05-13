@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { DemoHub } from '../../components/demo/DemoHubLite';
+---
+
+<BaseLayout title="Demos | RitualWorks">
+  <main class="pt-20">
+    <div class="container px-6 lg:px-8 py-12">
+      <DemoHub client:only="react" />
+    </div>
+  </main>
+</BaseLayout>

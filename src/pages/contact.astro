@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Heading } from '../components/ui/Heading';
+import { Container } from '../components/ui/Container';
+import { buttonVariants } from '../components/ui/Button';
+import { Stack } from '../components/ui/Stack';
+---
+
+<BaseLayout title="Contact | Chidi Onyema">
+  <main class="pt-32 pb-24">
+    <Container size="prose">
+      <Stack gap={12}>
+        <Heading variant="hero" level={1}>Let’s talk.</Heading>
+        <p class="text-xl text-secondary leading-relaxed">
+          I’m currently open to new opportunities and interesting technical challenges.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="mailto:hello@chidionyema.dev" class={buttonVariants({ variant: 'primary', className: 'px-8 py-4' })}>Email me</a>
+          <a href="https://linkedin.com/in/chidionyema" target="_blank" rel="noopener noreferrer" class={buttonVariants({ variant: 'secondary', className: 'px-8 py-4' })}>LinkedIn</a>
+        </div>
+      </Stack>
+    </Container>
+  </main>
+</BaseLayout>

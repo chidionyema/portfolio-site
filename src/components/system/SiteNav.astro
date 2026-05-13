@@ -3,48 +3,46 @@
 
 <header
   id="site-nav"
-  class="fixed top-0 inset-x-0 z-30 border-b border-border bg-base/85 backdrop-blur-md"
+  class="fixed top-0 inset-x-0 z-50 border-b border-border bg-base/80 backdrop-blur-xl"
 >
-  <div class="container mx-auto px-4 h-14 flex items-center justify-between gap-4">
+  <div class="container mx-auto px-6 h-16 flex items-center justify-between gap-4">
     <a
       href="/"
-      class="font-mono text-[11px] uppercase tracking-[0.18em] text-secondary hover:text-primary transition-colors whitespace-nowrap py-3 -my-3 focus-ring"
+      class="font-display text-lg tracking-tight text-primary hover:text-secondary transition-colors whitespace-nowrap py-3 -my-3"
     >
       Chidi Onyema
     </a>
 
-    <nav aria-label="Primary" class="hidden sm:flex items-center gap-7 text-[11px] font-mono uppercase tracking-[0.16em] text-muted">
-      <a href="/#demo" class="hover:text-primary transition-colors">Demos</a>
-      <a href="/#deep-dives" class="hover:text-primary transition-colors">Writing</a>
-      <a href="/#about" class="hover:text-primary transition-colors">About</a>
+    <nav aria-label="Primary" class="hidden sm:flex items-center gap-10 text-[10px] uppercase tracking-[0.2em] font-medium text-muted">
+      <a href="/work" class="hover:text-primary transition-colors">Work</a>
+      <a href="/demos" class="hover:text-primary transition-colors">Demos</a>
+      <a href="/#deep-dives" class="hover:text-primary transition-colors">Architecture</a>
+      <a href="/about" class="hover:text-primary transition-colors">About</a>
     </nav>
 
-    <div class="flex items-center gap-2.5">
+    <div class="flex items-center gap-4">
       <a
-        href="mailto:hello@chidionyema.dev"
-        class="inline-flex items-center px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:bg-accent-light transition-colors focus-ring whitespace-nowrap"
+        href="/contact"
+        class="inline-flex items-center px-5 py-2 rounded-full text-xs font-semibold bg-primary text-base-inverse hover:bg-secondary transition-all shadow-md hover:shadow-lg active:scale-95"
       >
-        Contact
+        Hire me
       </a>
     </div>
   </div>
 </header>
 
 <style>
-  /*
-   * Hidden by default. The init script in BaseLayout flips data-show
-   * once the user scrolls past the hero (or immediately on pages without one).
-   */
   #site-nav {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateY(-10px);
+    transition: all 0.4s cubic-bezier(0.21, 0.47, 0.32, 0.98);
   }
   #site-nav[data-show='true'] {
     opacity: 1;
     pointer-events: auto;
+    transform: translateY(0);
   }
-  /* Honor reduced-motion */
   @media (prefers-reduced-motion: reduce) {
     #site-nav { transition: none; }
   }
