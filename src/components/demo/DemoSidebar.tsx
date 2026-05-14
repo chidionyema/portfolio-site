@@ -224,11 +224,11 @@ export function DemoMobileNav({ activeId, onSelect }: MobileNavProps) {
                     }}
                     className={`
                       flex items-center justify-between gap-4 px-8 py-5 text-[11px] font-black uppercase transition-all
-                      ${isActive ? 'bg-white/5 text-primary border-l-4 border-accent' : 'text-muted'}
+                      ${isActive ? 'bg-white/10 text-primary border-l-4 border-accent' : 'text-muted'}
                     `}
                   >
                     <div className="flex items-center gap-4">
-                       <demo.Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-accent' : 'text-muted/60'}`} strokeWidth={2} />
+                       <demo.Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-accent' : 'text-muted/90'}`} strokeWidth={2} />
                        <span className="tracking-tight">{demo.label}</span>
                     </div>
                     {isActive && <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]" />}

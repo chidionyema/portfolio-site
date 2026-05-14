@@ -134,7 +134,7 @@ export function CacheStampedeDemo() {
               {/* L1 Cache */}
               <div className={cn(
                 "w-full p-3 rounded border flex items-center justify-between transition-all duration-300",
-                activeTier === 'l1' ? "bg-success/20 border-success/50 text-success shadow-[0_0_15px_rgba(34,197,94,0.2)]" : "bg-white/5 border-white/10 text-muted"
+                activeTier === 'l1' ? "bg-success/20 border-success/50 text-success shadow-[0_0_15px_rgba(34,197,94,0.2)]" : "bg-white/10 border-white/10 text-muted"
               )}>
                 <div className="flex items-center gap-3">
                   <Server className="w-4 h-4" />
@@ -146,7 +146,7 @@ export function CacheStampedeDemo() {
               {/* L2 Cache */}
               <div className={cn(
                 "w-full p-3 rounded border flex items-center justify-between transition-all duration-300",
-                activeTier === 'l2' ? "bg-warning/20 border-warning/50 text-warning shadow-[0_0_15px_rgba(234,179,8,0.2)]" : "bg-white/5 border-white/10 text-muted"
+                activeTier === 'l2' ? "bg-warning/20 border-warning/50 text-warning shadow-[0_0_15px_rgba(234,179,8,0.2)]" : "bg-white/10 border-white/10 text-muted"
               )}>
                 <div className="flex items-center gap-3">
                   <Layers className="w-4 h-4" />
@@ -158,7 +158,7 @@ export function CacheStampedeDemo() {
               {/* DB */}
               <div className={cn(
                 "w-full p-3 rounded border flex items-center justify-between transition-all duration-300",
-                activeTier === 'db' ? "bg-error/20 border-error/50 text-error shadow-[0_0_15px_rgba(239,68,68,0.2)]" : "bg-white/5 border-white/10 text-muted"
+                activeTier === 'db' ? "bg-error/20 border-error/50 text-error shadow-[0_0_15px_rgba(239,68,68,0.2)]" : "bg-white/10 border-white/10 text-muted"
               )}>
                 <div className="flex items-center gap-3">
                   <Database className="w-4 h-4" />
@@ -202,13 +202,13 @@ export function CacheStampedeDemo() {
 
         <Card variant="panel-dark" padding="none" className="h-[440px] flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-            <span className="text-muted/60 tracking-widest uppercase font-black">Recent Stampedes</span>
-            <span className="text-muted/40">N=50</span>
+            <span className="text-muted/90 tracking-widest uppercase font-black">Recent Stampedes</span>
+            <span className="text-muted/70">N=50</span>
           </div>
           
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/60 uppercase text-[10px] font-black tracking-widest">
+              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/90 uppercase text-[10px] font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-4">Strategy</th>
                   <th className="px-4 py-4 text-right">DB Hits</th>
@@ -219,7 +219,7 @@ export function CacheStampedeDemo() {
                 <AnimatePresence initial={false}>
                   {localResults.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black">
+                      <td colSpan={3} className="py-24 text-center text-muted/80 italic uppercase tracking-[0.4em] font-black">
                         Run a stampede test to view results.
                       </td>
                     </tr>

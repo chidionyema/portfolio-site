@@ -46,7 +46,7 @@ function LoadingSkeleton() {
   return (
     <div className="flex flex-col items-center justify-center h-[500px] space-y-6">
       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}>
-        <Zap className="w-16 h-16 text-accent opacity-20" />
+        <Zap className="w-16 h-16 text-accent opacity-80" />
       </motion.div>
       <div className="text-xs font-mono text-muted animate-pulse">
         Establishing SignalR handshake with {CLUSTER_LABEL}...
@@ -163,7 +163,7 @@ export function DemoHub() {
                        className={cn(
                          "flex items-center gap-2.5 transition-colors",
                          isConnected && !isOffline ? "text-success" : !isOffline && connectionError ? "text-warning" : "text-error",
-                         isOffline ? "cursor-pointer hover:bg-white/5 px-2 -ml-2 py-1 rounded" : "cursor-default"
+                         isOffline ? "cursor-pointer hover:bg-white/10 px-2 -ml-2 py-1 rounded" : "cursor-default"
                        )}
                        title={
                          isConnected && !isOffline
@@ -243,7 +243,7 @@ export function DemoHub() {
                </div>
 
                <div className="flex items-start gap-8">
-                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl shrink-0 shadow-xl text-accent">
+                  <div className="p-4 bg-white/10 border border-white/10 rounded-2xl shrink-0 shadow-xl text-accent">
                      <demo.Icon className="w-10 h-10" strokeWidth={1.5} />
                   </div>
                   <div className="space-y-4">
@@ -282,7 +282,7 @@ export function DemoHub() {
                                 href={src}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-all group/src"
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-all group/src"
                                 title={"View backing implementation: " + demo.sourcePath}
                               >
                                  <Code2 className="w-3 h-3" />
@@ -340,7 +340,7 @@ export function DemoHub() {
                       onClick={() => handleSelect(next.id)}
                       className="focus-ring bg-primary text-black px-5 py-2.5 rounded-full font-black transition-all flex items-center gap-2 group uppercase tracking-[0.15em] shadow-xl hover:bg-white hover:scale-105 active:scale-95"
                     >
-                       <span className="opacity-50 text-[9px]">Try next:</span>
+                       <span className="opacity-80 text-[9px]">Try next:</span>
                        <span className="text-[10px]">{next.label}</span>
                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </button>

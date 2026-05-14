@@ -68,7 +68,7 @@ export const ChaosButton: React.FC<ChaosButtonProps> = ({
             ? 'border-destructive bg-destructive/10 text-destructive cursor-wait' 
             : 'border-muted hover:border-destructive/50 hover:bg-destructive/5 text-muted-foreground hover:text-destructive'
           }
-          disabled:opacity-50
+          disabled:opacity-80
         `}
       >
         <div className="flex items-center gap-3">
@@ -92,7 +92,7 @@ export const ChaosButton: React.FC<ChaosButtonProps> = ({
 
       {traceId && (
         <div className="px-3 py-2 border border-muted/50 bg-muted/5 font-mono text-[10px] flex items-center justify-between">
-          <span className="text-muted/60 uppercase tracking-widest">Chaos trace</span>
+          <span className="text-muted/90 uppercase tracking-widest">Chaos trace</span>
           <span className="text-muted">{traceId}</span>
         </div>
       )}

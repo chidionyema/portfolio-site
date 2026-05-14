@@ -90,7 +90,7 @@ export function CircuitBreakerDemo() {
         <Card variant="panel-dark" padding="lg">
           <Stack gap={8} className="font-mono">
             <Stack gap={4}>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/60">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/90">
                 <span>Polly Policy State</span>
                 <Pill variant={circuitState === 'Closed' ? 'success' : circuitState === 'HalfOpen' ? 'warning' : 'error'}>
                   {circuitState}
@@ -161,7 +161,7 @@ export function CircuitBreakerDemo() {
         <Card variant="panel-dark" padding="none" className="h-[440px] flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/60 uppercase text-[10px] font-black tracking-widest">
+              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/90 uppercase text-[10px] font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Latency</th>
@@ -171,7 +171,7 @@ export function CircuitBreakerDemo() {
                 <AnimatePresence initial={false}>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black">
+                      <td colSpan={2} className="py-24 text-center text-muted/80 italic uppercase tracking-[0.4em] font-black">
                         Send traffic to view results
                       </td>
                     </tr>
@@ -197,7 +197,7 @@ export function CircuitBreakerDemo() {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-right tabular-nums text-muted/60">
+                        <td className="px-6 py-4 text-right tabular-nums text-muted/90">
                           {req.durationMs}ms
                         </td>
                       </motion.tr>

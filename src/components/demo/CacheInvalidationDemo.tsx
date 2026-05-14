@@ -122,7 +122,7 @@ export function CacheInvalidationDemo() {
         <Card variant="panel-dark" padding="lg">
           <Stack gap={8} className="font-mono">
             <Stack gap={4}>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/60">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/90">
                 <span>Catalog Service</span>
                 <Pill variant={cacheStatus === 'hit' ? 'success' : cacheStatus === 'stale' ? 'warning' : 'status'}>
                   {cacheStatus === 'hit' ? 'SYNCED' : cacheStatus === 'stale' ? 'STALE_PENDING_EVENT' : 'EVICTED'}
@@ -182,7 +182,7 @@ export function CacheInvalidationDemo() {
               variant="ghost"
               onClick={handleRead}
               disabled={isUpdating}
-              className="w-full py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 bg-white/5"
+              className="w-full py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 bg-white/10"
             >
               <Eye className="w-4 h-4" />
               Read from Cache
@@ -200,7 +200,7 @@ export function CacheInvalidationDemo() {
         <Card variant="panel-dark" padding="none" className="h-[440px] flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/60 uppercase text-[10px] font-black tracking-widest">
+              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/90 uppercase text-[10px] font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-4">Action</th>
                   <th className="px-6 py-4">Message</th>
@@ -210,7 +210,7 @@ export function CacheInvalidationDemo() {
                 <AnimatePresence initial={false}>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black">
+                      <td colSpan={2} className="py-24 text-center text-muted/80 italic uppercase tracking-[0.4em] font-black">
                         Waiting for cache events...
                       </td>
                     </tr>

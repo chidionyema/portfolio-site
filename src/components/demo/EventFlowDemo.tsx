@@ -212,12 +212,12 @@ export function EventFlowDemo() {
                     <div className="text-[10px] font-black text-warning uppercase tracking-[0.25em]">
                       Relay paused
                     </div>
-                    <div className="text-[10px] text-muted/80 leading-relaxed uppercase">
+                    <div className="text-[10px] text-secondary/90 leading-relaxed uppercase">
                       Broker unreachable. New events are buffered locally.
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[9px] uppercase tracking-widest text-muted/60">Queued</div>
+                    <div className="text-[9px] uppercase tracking-widest text-secondary/90">Queued</div>
                     <div className="text-2xl font-black text-warning tabular-nums">{relay.queuedCount}</div>
                   </div>
                 </motion.div>
@@ -225,12 +225,12 @@ export function EventFlowDemo() {
             </AnimatePresence>
 
             <Stack gap={4}>
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted/60">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary/90">
                 Outbox table
               </label>
-              <Glass intensity="low" className="overflow-hidden min-h-[220px] bg-white/5 border-none">
+              <Glass intensity="low" className="overflow-hidden min-h-[220px] bg-white/10 border-none">
                 <table className="w-full text-[10px] border-collapse">
-                  <thead className="bg-white/5 border-b border-white/5 text-muted/60 uppercase tracking-widest font-black">
+                  <thead className="bg-white/10 border-b border-white/5 text-secondary/90 uppercase tracking-widest font-black">
                     <tr>
                       <th className="px-4 py-3 text-left">Event ID</th>
                       <th className="px-4 py-3 text-left">Status</th>
@@ -241,7 +241,7 @@ export function EventFlowDemo() {
                     <AnimatePresence initial={false}>
                       {outbox.length === 0 ? (
                         <tr>
-                          <td colSpan={3} className="py-16 text-center text-muted/20 italic uppercase tracking-[0.4em]">
+                          <td colSpan={3} className="py-16 text-center text-secondary/90 italic uppercase tracking-[0.4em]">
                             Waiting for commit...
                           </td>
                         </tr>
@@ -259,7 +259,7 @@ export function EventFlowDemo() {
                                 {m.status}
                               </Pill>
                             </td>
-                            <td className="px-4 py-3.5 text-right text-muted/60 tabular-nums">
+                            <td className="px-4 py-3.5 text-right text-secondary/90 tabular-nums">
                               [{formatTime(m.timestamp)}]
                             </td>
                           </motion.tr>
@@ -285,7 +285,7 @@ export function EventFlowDemo() {
             <div
               className={cn(
                 "flex items-center gap-6 p-6 rounded-2xl glass-subtle transition-colors",
-                relay.isPaused ? "border border-warning/20 bg-warning/5" : "bg-white/5 border border-white/10"
+                relay.isPaused ? "border border-warning/20 bg-warning/5" : "bg-white/10 border border-white/10"
               )}
             >
               <div
@@ -310,7 +310,7 @@ export function EventFlowDemo() {
                     {relay.isPaused ? 'RELAY_DISCONNECTED' : 'HEALTH_OPTIMAL'}
                   </span>
                 </div>
-                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                   <motion.div
                     className={cn(
                       "h-full",
@@ -327,7 +327,7 @@ export function EventFlowDemo() {
             </div>
 
             <div className="space-y-6 px-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/30">
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-secondary/90">
                 Queue depth
               </label>
               <div className="space-y-6">
@@ -338,7 +338,7 @@ export function EventFlowDemo() {
                       <span
                         className={cn(
                           "font-black tabular-nums",
-                          q.depth > 0 ? 'text-warning' : 'text-muted/20'
+                          q.depth > 0 ? 'text-warning' : 'text-secondary/90'
                         )}
                       >
                         {q.depth.toString().padStart(2, '0')} MSG
@@ -377,7 +377,7 @@ export function EventFlowDemo() {
           </div>
 
           <div className="p-5 bg-white/[0.02] border-t border-white/5 flex items-center justify-between font-mono text-[9px] font-black uppercase tracking-widest">
-            <span className="text-muted/60">Cluster: cloudamqp_${CLUSTER_LABEL}</span>
+            <span className="text-secondary/90">Cluster: cloudamqp_${CLUSTER_LABEL}</span>
             <div
               className={cn("flex items-center gap-2", relay.isPaused ? 'text-warning' : 'text-success')}
             >

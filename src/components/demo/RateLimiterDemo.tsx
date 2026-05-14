@@ -87,7 +87,7 @@ export function RateLimiterDemo() {
         <Card variant="panel-dark" padding="lg">
           <Stack gap={8} className="font-mono">
             <Stack gap={4}>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/60">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-secondary/90">
                 <span>Limit Policy</span>
                 <Pill variant={retryAfter > 0 ? 'error' : 'success'}>
                   {retryAfter > 0 ? 'THROTTLED' : 'ACCEPTING'}
@@ -106,7 +106,7 @@ export function RateLimiterDemo() {
                   <div className="space-y-1">
                     <div className="text-3xl font-black tabular-nums transition-colors">
                       <span className={tokens === 0 ? 'text-error' : 'text-primary'}>{tokens}</span>
-                      <span className="text-muted/40">/{maxTokens}</span>
+                      <span className="text-secondary/90">/{maxTokens}</span>
                     </div>
                     <div className="text-[9px] uppercase tracking-widest text-muted">Available Tokens</div>
                   </div>
@@ -164,7 +164,7 @@ export function RateLimiterDemo() {
         <Card variant="panel-dark" padding="none" className="h-[440px] flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/60 uppercase text-[10px] font-black tracking-widest">
+              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-secondary/90 uppercase text-[10px] font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-4">Timestamp</th>
                   <th className="px-6 py-4">Result</th>
@@ -174,7 +174,7 @@ export function RateLimiterDemo() {
                 <AnimatePresence initial={false}>
                   {localRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black">
+                      <td colSpan={2} className="py-24 text-center text-secondary/90 italic uppercase tracking-[0.4em] font-black">
                         Send traffic to view results
                       </td>
                     </tr>
@@ -186,7 +186,7 @@ export function RateLimiterDemo() {
                         animate={{ opacity: 1, x: 0 }}
                         className="group border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="px-6 py-4 text-muted/50 text-[10px]">
+                        <td className="px-6 py-4 text-secondary/90 text-[10px]">
                           {req.timestamp.toLocaleTimeString()}
                         </td>
                         <td className="px-6 py-4">

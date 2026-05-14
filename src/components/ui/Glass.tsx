@@ -11,7 +11,7 @@ export function Glass({ className, intensity = "medium", ...props }: GlassProps)
       className={cn(
         "rounded-2xl border border-white/20 shadow-lg",
         intensity === "low" && "bg-white/30 backdrop-blur-sm",
-        intensity === "medium" && "bg-white/50 backdrop-blur-md",
+        intensity === "medium" && "bg-white/100 backdrop-blur-md",
         intensity === "high" && "bg-white/70 backdrop-blur-xl",
         className
       )}

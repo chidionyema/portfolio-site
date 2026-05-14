@@ -27,12 +27,12 @@ export function RequestReceipt({ service, latencyMs, statusCode, traceId }: Requ
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-wrap items-center gap-2 font-mono text-[10px] py-2 border-t border-white/5 mt-4"
     >
-      <div className="flex items-center gap-2 bg-white/5 px-2 py-0.5 rounded border border-white/5">
-        <Terminal className="w-3 h-3 opacity-50 text-muted" />
+      <div className="flex items-center gap-2 bg-white/10 px-2 py-0.5 rounded border border-white/5">
+        <Terminal className="w-3 h-3 opacity-80 text-muted" />
         <span className="font-bold uppercase text-secondary">{service}</span>
-        <span className="opacity-30">|</span>
+        <span className="opacity-60">|</span>
         <span className="text-muted">{latencyMs}ms</span>
-        <span className="opacity-30">|</span>
+        <span className="opacity-60">|</span>
         <Pill variant={variant as any} className="px-1.5 py-0 rounded text-[9px]">{statusCode}</Pill>
       </div>
 

@@ -88,7 +88,7 @@ export function ConcurrencyDemo() {
         <Card variant="panel-dark" padding="lg">
           <Stack gap={8} className="font-mono">
             <Stack gap={4}>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/60">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/90">
                 <span>Postgres Row State</span>
                 <Pill variant="status">
                   xmin tracked
@@ -109,7 +109,7 @@ export function ConcurrencyDemo() {
                 </div>
               </div>
 
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10 flex items-start gap-3">
+              <div className="p-3 rounded-lg bg-white/10 border border-white/10 flex items-start gap-3">
                 <ListEnd className="w-4 h-4 text-muted shrink-0 mt-0.5" />
                 <p className="text-[10px] leading-relaxed text-muted uppercase tracking-widest">
                   EF Core uses a hidden xmin column as a concurrency token. Updates check "WHERE id = X AND xmin = Y".
@@ -149,7 +149,7 @@ export function ConcurrencyDemo() {
         <Card variant="panel-dark" padding="none" className="h-[440px] flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/60 uppercase text-[10px] font-black tracking-widest">
+              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/90 uppercase text-[10px] font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-4">Worker</th>
                   <th className="px-6 py-4">Status</th>
@@ -159,7 +159,7 @@ export function ConcurrencyDemo() {
                 <AnimatePresence initial={false}>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black">
+                      <td colSpan={2} className="py-24 text-center text-muted/80 italic uppercase tracking-[0.4em] font-black">
                         Trigger an update to view results
                       </td>
                     </tr>

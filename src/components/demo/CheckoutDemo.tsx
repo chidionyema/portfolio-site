@@ -188,7 +188,7 @@ export function CheckoutDemo() {
                             "focus-ring py-2 px-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
                             scenario === s
                               ? 'bg-white/10 text-white shadow-sm'
-                              : 'text-muted hover:text-secondary hover:bg-white/5'
+                              : 'text-muted hover:text-secondary hover:bg-white/10'
                           )}
                         >
                           {CHECKOUT_COPY.SCENARIO_LABELS[s]}
@@ -198,7 +198,7 @@ export function CheckoutDemo() {
 
                     {/* Cart Item */}
                     <div className="flex gap-4">
-                      <div className="w-12 h-12 bg-white/5 rounded-lg flex-shrink-0" />
+                      <div className="w-12 h-12 bg-white/10 rounded-lg flex-shrink-0" />
                       <div className="flex-1 min-w-0 font-mono">
                         <div className="flex justify-between items-start">
                           <Heading variant="panel" level={4} className="text-sm">Demo Widget</Heading>
@@ -259,10 +259,10 @@ export function CheckoutDemo() {
               <Card variant="panel-dark" padding="lg" className="shadow-2xl">
                 <Stack gap={4}>
                   <div>
-                    <Heading variant="caption" level={4} className="mb-2 font-mono tracking-[0.3em]">
+                    <Heading variant="caption" level={4} className="mb-2 font-mono tracking-[0.3em] text-secondary/90">
                       Choreography · cross-service event flow
                     </Heading>
-                    <p className="text-[10px] text-muted/60 leading-relaxed font-mono">
+                    <p className="text-[10px] text-secondary/90 leading-relaxed font-mono">
                       Each row is one message — direct HTTP at the top,
                       RabbitMQ events between services after that. No central transaction.
                     </p>
@@ -275,13 +275,13 @@ export function CheckoutDemo() {
 
               <Card variant="panel-dark" padding="none" className="h-[400px] flex flex-col overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-                  <span className="text-muted font-bold uppercase italic opacity-40">Bridge Events Log</span>
+                  <span className="text-secondary font-bold uppercase italic tracking-widest">Bridge Events Log</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto font-mono text-[11px]">
                   <table className="w-full text-left border-collapse">
                     <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10">
-                      <tr className="text-muted/60 uppercase text-[10px] font-black tracking-widest">
+                      <tr className="text-secondary/90 uppercase text-[10px] font-black tracking-widest">
                         <th className="px-6 py-3">Time</th>
                         <th className="px-6 py-3">Event</th>
                         <th className="px-6 py-3 text-right">Status</th>
@@ -291,7 +291,7 @@ export function CheckoutDemo() {
                       <AnimatePresence initial={false}>
                         {localEvents.length === 0 ? (
                           <tr>
-                            <td colSpan={3} className="py-24 text-center text-muted/40 italic uppercase tracking-[0.3em]">
+                            <td colSpan={3} className="py-24 text-center text-secondary/90 italic uppercase tracking-[0.3em]">
                               Awaiting saga initiation...
                             </td>
                           </tr>
@@ -303,16 +303,16 @@ export function CheckoutDemo() {
                               animate={{ opacity: 1, x: 0 }}
                               className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
                             >
-                              <td className="px-6 py-4 text-muted/50 text-[10px] whitespace-nowrap align-top">
+                              <td className="px-6 py-4 text-secondary/90 text-[10px] whitespace-nowrap align-top">
                                 [{formatTime(new Date(e.timestamp))}]
                               </td>
                               <td className="px-6 py-4 align-top">
                                 <div className="text-secondary font-bold">{describeSagaStep(e.step)}</div>
-                                <div className="text-[9px] text-muted/50 mt-0.5 font-mono uppercase tracking-widest">
+                                <div className="text-[9px] text-secondary/90 mt-0.5 font-mono uppercase tracking-widest">
                                   {e.step}
                                 </div>
                                 {e.description && (
-                                  <div className="text-[10px] text-muted/70 mt-1.5 font-sans italic max-w-md leading-relaxed">
+                                  <div className="text-[10px] text-secondary/90 mt-1.5 font-sans italic max-w-md leading-relaxed">
                                     {e.description}
                                   </div>
                                 )}
@@ -460,7 +460,7 @@ function RaceModeCustomerPane({
           <Card key={lane.sagaId} padding="sm" className={cn("surface border transition-colors shadow-lg", tone)}>
             <div className="flex justify-between items-center mb-3 font-mono">
               <Heading variant="caption" level={4} className="text-[10px] font-black text-primary uppercase tracking-widest">{lane.label}</Heading>
-              <span className="text-[9px] text-muted/50">#{lane.sagaId.slice(0, 4)}</span>
+              <span className="text-[9px] text-secondary/90">#{lane.sagaId.slice(0, 4)}</span>
             </div>
 
             <div className="flex justify-between items-center mb-4">
@@ -471,7 +471,7 @@ function RaceModeCustomerPane({
             <div
               className={cn(
                 "w-full py-2.5 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest text-center flex items-center justify-center gap-2 font-mono",
-                isWon ? 'bg-success text-white' : isLost ? 'bg-error text-white' : 'bg-white/5 text-muted'
+                isWon ? 'bg-success text-white' : isLost ? 'bg-error text-white' : 'bg-white/10 text-muted'
               )}
             >
               {isWon ? (
@@ -529,7 +529,7 @@ function CompensationDrawer({ sagaState, localEvents }: { sagaState: string; loc
                 <li className="text-xs text-primary flex items-center gap-2">
                   <Activity className="w-3 h-3 text-accent" />
                   Published{' '}
-                  <span className="font-mono text-[10px] bg-white/5 px-1">StockReleaseRequestedEvent</span> to RabbitMQ
+                  <span className="font-mono text-[10px] bg-white/10 px-1">StockReleaseRequestedEvent</span> to RabbitMQ
                 </li>
               </ul>
 
@@ -578,11 +578,11 @@ function RaceLaneCard({ lane, formatTime }: RaceLaneCardProps) {
           )}
           <Heading variant="panel" level={4} className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">{lane.label}</Heading>
         </div>
-        <span className="text-[9px] text-muted/50">#{lane.sagaId.slice(0, 8)}…</span>
+        <span className="text-[9px] text-secondary/90">#{lane.sagaId.slice(0, 8)}…</span>
       </div>
 
       <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted/60">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-secondary/90">
           <span>Step</span>
           <span className="text-secondary font-black">{lane.step}</span>
         </div>
@@ -592,13 +592,13 @@ function RaceLaneCard({ lane, formatTime }: RaceLaneCardProps) {
       <div className="flex-1 overflow-y-auto font-mono text-[10px] min-h-[280px] max-h-[340px]">
         <ul className="divide-y divide-white/[0.03]">
           {lane.events.length === 0 ? (
-            <li className="py-12 text-center text-muted/40 italic">
+            <li className="py-12 text-center text-secondary/90 italic">
               Awaiting cluster events…
             </li>
           ) : (
             lane.events.map((e, i) => (
               <li key={`${e.step}-${i}`} className="px-6 py-3 flex items-center justify-between">
-                <span className="text-muted/50">[{formatTime(new Date(e.timestamp))}]</span>
+                <span className="text-secondary/90">[{formatTime(new Date(e.timestamp))}]</span>
                 <span className="text-secondary font-bold flex-1 mx-3 truncate" title={e.step}>
                   {describeSagaStep(e.step)}
                 </span>
@@ -678,7 +678,7 @@ function SagaSequenceView({
       <div className="grid gap-0 mb-4 pb-3 border-b border-white/10"
            style={{ gridTemplateColumns: `repeat(${SAGA_LANES.length}, 1fr)` }}>
         {SAGA_LANES.map((lane) => (
-          <div key={lane.id} className="text-[9px] uppercase tracking-[0.2em] text-muted/60 text-center font-bold">
+          <div key={lane.id} className="text-[9px] uppercase tracking-[0.2em] text-secondary/90 text-center font-bold">
             {lane.label}
           </div>
         ))}
@@ -706,7 +706,7 @@ function SagaSequenceView({
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-muted/60 uppercase tracking-widest space-y-1">
+      <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-secondary/90 uppercase tracking-widest space-y-1">
         <div>http = direct HTTP call · event = published via RabbitMQ outbox</div>
         <div>compensation = saga's failure-recovery path (red rows)</div>
       </div>
@@ -743,11 +743,11 @@ function SagaSequenceRow({
       ? 'text-accent border-accent/40'
       : isDone
         ? 'text-success border-success/30'
-        : 'text-muted/40 border-white/5';
+        : 'text-secondary/90 border-white/5';
 
   return (
     <div
-      className={cn("grid gap-0 items-stretch transition-all duration-300", dim ? 'opacity-30' : 'opacity-100')}
+      className={cn("grid gap-0 items-stretch transition-all duration-300", dim ? 'opacity-60' : 'opacity-100')}
       style={{ gridTemplateColumns: `repeat(${laneCount}, 1fr)` }}
     >
       {Array.from({ length: laneCount }).map((_, i) => {
@@ -767,7 +767,7 @@ function SagaSequenceRow({
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className={cn(
                   "absolute left-0 right-0 top-1/2 h-px",
-                  isCompensation ? 'bg-error/40' : isActive ? 'bg-accent/40' : isDone ? 'bg-success/40' : 'bg-white/5'
+                  isCompensation ? 'bg-error/40' : isActive ? 'bg-accent/40' : isDone ? 'bg-success/40' : 'bg-white/10'
                 )} />
                 {isStart && (
                   <div className={cn(
@@ -778,7 +778,7 @@ function SagaSequenceRow({
                 {isEnd && (
                   <div className={cn(
                     "absolute right-0 top-1/2 -translate-y-1/2",
-                    isCompensation ? 'text-error' : isActive ? 'text-accent' : isDone ? 'text-success' : 'text-muted/40'
+                    isCompensation ? 'text-error' : isActive ? 'text-accent' : isDone ? 'text-success' : 'text-secondary/90'
                   )}>
                     {reversed ? '◄' : '►'}
                   </div>
@@ -793,12 +793,12 @@ function SagaSequenceRow({
                   >
                     <span className={cn(
                       "text-[10.5px] font-bold tracking-tight",
-                      isCompensation ? 'text-error' : isActive ? 'text-accent' : isDone ? 'text-secondary' : 'text-muted/50'
+                      isCompensation ? 'text-error' : isActive ? 'text-accent' : isDone ? 'text-secondary' : 'text-secondary/90'
                     )}>
                       {hop.kind === 'http' ? '→ ' : ''}
                       {hop.eventName}
                     </span>
-                    <span className="text-[9px] text-muted/60">
+                    <span className="text-[9px] text-secondary/90">
                       {hop.detail}
                     </span>
                   </div>

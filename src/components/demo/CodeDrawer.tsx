@@ -49,7 +49,7 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={copyToClipboard}
-            className="p-2 hover:bg-white/5 rounded-lg transition-colors group relative"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
             title="Copy to clipboard"
           >
             {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4 text-muted group-hover:text-primary" />}
@@ -70,7 +70,7 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
             href={`https://github.com/chidionyema/ritualworks/blob/main/src/${demoId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 hover:bg-white/5 rounded-lg transition-colors group"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
             title="View on GitHub"
           >
             <GithubIcon className="w-4 h-4 text-muted group-hover:text-primary" />
@@ -81,7 +81,7 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
       {/* Code Area */}
       <div className="flex-1 overflow-auto relative group custom-scrollbar bg-[#08080a]">
         <div className="absolute top-4 right-6 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-           <span className="text-[8px] bg-white/5 border border-white/10 px-2 py-1 rounded font-black text-muted uppercase tracking-widest backdrop-blur-md">
+           <span className="text-[8px] bg-white/10 border border-white/10 px-2 py-1 rounded font-black text-muted uppercase tracking-widest backdrop-blur-md">
               Read_Only
            </span>
         </div>
@@ -97,7 +97,7 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
                   ${isHighlighted ? 'bg-accent/10 border-l-2 border-accent' : 'border-l-2 border-transparent'}
                 `}
               >
-                <span className="w-12 shrink-0 text-[10px] text-muted/30 select-none pt-1">{(i + 1).toString().padStart(2, '0')}</span>
+                <span className="w-12 shrink-0 text-[10px] text-muted/90 select-none pt-1">{(i + 1).toString().padStart(2, '0')}</span>
                 <pre className={`
                   text-[13px] leading-relaxed whitespace-pre selection:bg-accent/30 selection:text-white
                   ${isHighlighted ? 'text-primary font-bold' : 'text-secondary/70'}

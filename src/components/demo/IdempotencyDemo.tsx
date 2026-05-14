@@ -214,18 +214,18 @@ export function IdempotencyDemo() {
         <Card variant="panel-dark" padding="lg">
           <Stack gap={8} className="font-mono">
             <Stack gap={4}>
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60">
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-secondary/90">
                 Request_Header: X-Idempotency-Key
               </label>
-              <div className="flex gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl">
+              <div className="flex gap-2 p-1 bg-white/10 border border-white/5 rounded-2xl">
                 <div className="flex-1 bg-black/40 px-6 py-4 rounded-xl font-mono text-base text-primary flex items-center justify-between shadow-inner">
                   <span className="font-bold tracking-widest">{idempotencyKey}</span>
-                  <Key className="w-5 h-5 opacity-20" />
+                  <Key className="w-5 h-5 opacity-80" />
                 </div>
                 <button
                   onClick={generateKey}
                   disabled={isLoading || isRacing}
-                  className="focus-ring p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-20"
+                  className="focus-ring p-4 bg-white/10 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-80"
                 >
                   <RefreshCcw className="w-5 h-5" />
                 </button>
@@ -233,7 +233,7 @@ export function IdempotencyDemo() {
             </Stack>
 
             <details className="space-y-3 group/details">
-              <summary className="text-[10px] font-black uppercase tracking-[0.4em] text-muted/60 cursor-pointer hover:text-secondary transition-colors list-none flex items-center gap-2">
+              <summary className="text-[10px] font-black uppercase tracking-[0.4em] text-secondary/90 cursor-pointer hover:text-secondary transition-colors list-none flex items-center gap-2">
                 <span className="w-1 h-1 bg-accent rounded-full group-open/details:bg-success" />
                 Advanced: Cache TTL Configuration
               </summary>
@@ -245,17 +245,17 @@ export function IdempotencyDemo() {
                       onClick={() => setTtlPreset(t)}
                       disabled={isLoading || isRacing}
                       className={cn(
-                        "focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all disabled:opacity-30",
+                        "focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all disabled:opacity-60",
                         ttlPreset === t
                           ? "bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-                          : "bg-white/5 border-white/5 text-muted hover:text-secondary hover:bg-white/10"
+                          : "bg-white/10 border-white/5 text-muted hover:text-secondary hover:bg-white/10"
                       )}
                     >
                       {t}s
                     </button>
                   ))}
                 </div>
-                <p className="text-[10px] text-muted/60 leading-relaxed">
+                <p className="text-[10px] text-secondary/90 leading-relaxed">
                   Lower TTL → replays after expiry produce a NEW order. Higher TTL → replays return the cached one.
                 </p>
               </div>
@@ -287,7 +287,7 @@ export function IdempotencyDemo() {
             <Stack gap={6} className="pt-6 border-t border-white/5">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
-                  <Database className="w-4 h-4 text-muted/60" />
+                  <Database className="w-4 h-4 text-secondary/90" />
                   <span className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">
                     Key cache
                   </span>
@@ -305,7 +305,7 @@ export function IdempotencyDemo() {
                 </AnimatePresence>
               </div>
 
-              <Glass intensity="low" className="p-6 min-h-[80px] flex flex-col justify-center border-none bg-white/5">
+              <Glass intensity="low" className="p-6 min-h-[80px] flex flex-col justify-center border-none bg-white/10">
                 {expiresInSeconds > 0 ? (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -316,7 +316,7 @@ export function IdempotencyDemo() {
                       <span className="text-secondary opacity-60">IDM_KEY: {idempotencyKey}</span>
                       <span className="text-warning tabular-nums">{expiresInSeconds}S_TTL</span>
                     </div>
-                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                       <motion.div
                         className="h-full bg-success/60 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
                         animate={{ width: `${Math.max(0, (expiresInSeconds / ttlPreset) * 100)}%` }}
@@ -325,7 +325,7 @@ export function IdempotencyDemo() {
                     </div>
                   </motion.div>
                 ) : (
-                  <div className="text-center text-[11px] text-muted/40 italic">
+                  <div className="text-center text-[11px] text-secondary/90 italic">
                     Cache empty — first request will create a new entry.
                   </div>
                 )}
@@ -356,23 +356,23 @@ export function IdempotencyDemo() {
                         )}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-[9px] uppercase tracking-widest text-muted/50">
+                          <span className="text-[9px] uppercase tracking-widest text-secondary/90">
                             req {o.requestIndex}
                           </span>
                           {o.isWinner ? (
                             <Trophy className="w-3 h-3 text-success" />
                           ) : (
-                            <Copy className="w-3 h-3 text-muted/60" />
+                            <Copy className="w-3 h-3 text-secondary/90" />
                           )}
                         </div>
                         <div className="text-[10px] font-mono text-secondary truncate">
                           {o.orderId.slice(0, 8)}…
                         </div>
-                        <div className="text-[9px] text-muted/60 mt-1 tabular-nums">{o.latencyMs}ms</div>
+                        <div className="text-[9px] text-secondary/90 mt-1 tabular-nums">{o.latencyMs}ms</div>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-muted/60 leading-relaxed">
+                  <p className="text-[10px] text-secondary/90 leading-relaxed">
                     One request creates the order; the rest read the winner&apos;s response.
                     Every loser&apos;s order id matches the winner&apos;s.
                   </p>
@@ -410,7 +410,7 @@ export function IdempotencyDemo() {
 
         <Card variant="panel-dark" padding="none" className={cn("h-[620px] flex flex-col overflow-hidden transition-all duration-500", isRacing && "border-error/40 ring-4 ring-error/5 shadow-[0_0_30px_rgba(239,68,68,0.1)]")}>
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
-            <span className="text-muted/60 tracking-widest uppercase font-black flex items-center gap-2">
+            <span className="text-secondary/90 tracking-widest uppercase font-black flex items-center gap-2">
               Recent requests 
               {isRacing && <span className="text-error animate-pulse">[RACING]</span>}
             </span>
@@ -419,7 +419,7 @@ export function IdempotencyDemo() {
 
           <div className="flex-1 overflow-y-auto font-mono text-[11px]">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/60 uppercase text-[10px] font-black tracking-widest">
+              <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-secondary/90 uppercase text-[10px] font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-4">Timestamp</th>
                   <th className="px-6 py-4">Action</th>
@@ -432,7 +432,7 @@ export function IdempotencyDemo() {
                     <tr>
                       <td
                         colSpan={3}
-                        className="py-24 text-center text-muted/20 italic uppercase tracking-[0.4em] font-black"
+                        className="py-24 text-center text-secondary/90 italic uppercase tracking-[0.4em] font-black"
                       >
                         Fire a request from the controls above — this log will populate in real-time.
                       </td>
@@ -445,7 +445,7 @@ export function IdempotencyDemo() {
                         animate={{ opacity: 1, x: 0 }}
                         className="group border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="px-6 py-4 text-muted/50 text-[10px]">[{formatTime(req.timestamp)}]</td>
+                        <td className="px-6 py-4 text-secondary/90 text-[10px]">[{formatTime(req.timestamp)}]</td>
                         <td className="px-6 py-4">
                           <ActionLabel status={req.status} />
                         </td>
@@ -460,8 +460,8 @@ export function IdempotencyDemo() {
             </table>
           </div>
 
-          <div className="p-6 bg-white/5 border-t border-white/5 font-mono">
-            <p className="text-[10px] text-muted/50 leading-relaxed uppercase tracking-widest text-center italic">
+          <div className="p-6 bg-white/10 border-t border-white/5 font-mono">
+            <p className="text-[10px] text-secondary/90 leading-relaxed uppercase tracking-widest text-center italic">
               Atomic claim via Postgres UNIQUE constraint. TTL: {ttlPreset}s.
             </p>
           </div>

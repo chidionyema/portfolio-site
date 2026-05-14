@@ -9,7 +9,7 @@ const cardVariants = cva(
       variant: {
         default: "bg-white/40 backdrop-blur-sm border border-border shadow-sm",
         panel: "bg-surface-warm border border-border-strong",
-        "panel-dark": "bg-primary text-base-inverse shadow-xl",
+        "panel-dark": "panel-dark shadow-xl",
         glass: "bg-white/70 backdrop-blur-md border border-white/20 shadow-lg",
       },
       padding: {
