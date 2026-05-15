@@ -57,8 +57,8 @@ export function CacheStampedeDemo() {
 
     try {
       const response = await executeCommand('/cache/stampede', {
-        concurrentRequests: 50,
-        protectionStrategy: protection
+        concurrentRequests: 50, cacheKey: "demo-product", protectionMode: protection, simulatedDbLatencyMs: 100,
+        
       });
 
       if (response) {
