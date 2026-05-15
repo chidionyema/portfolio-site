@@ -28,7 +28,7 @@ export function VaultRotationDemo() {
 
   const verifyConnection = useCallback(async () => {
     try {
-      const res = await executeCommand('VerifyDbConnection');
+      const res = await executeCommand('/vault/status', {}, {method: 'GET'});
       
       setLogs(prev => [{
         id: crypto.randomUUID(),
@@ -60,7 +60,7 @@ export function VaultRotationDemo() {
     }, ...prev].slice(0, 8));
 
     try {
-      await executeCommand('RotateCredentials');
+      await executeCommand('/vault/rotate');
       setTimeout(verifyConnection, 1000);
     } finally {
       setIsRotating(false);

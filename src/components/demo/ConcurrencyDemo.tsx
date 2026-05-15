@@ -37,7 +37,7 @@ export function ConcurrencyDemo() {
 
   const sendRequest = async (workerId: number) => {
     try {
-      const res = await executeCommand('TestConcurrency', { workerId, expectedVersion: currentVersion });
+      const res = await executeCommand('/cache/product/demo', {}, {method: 'GET'});
       
       const success = res?.success;
       setLogs(prev => [{
