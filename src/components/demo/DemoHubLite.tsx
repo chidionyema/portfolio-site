@@ -141,7 +141,7 @@ export function DemoHub() {
   const group = findGroupOf(activeId);
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6 relative overflow-x-hidden">
       <DemoMobileNav activeId={activeId} onSelect={handleSelect} />
 
       <ChaosEngine
@@ -155,7 +155,7 @@ export function DemoHub() {
           <DemoSidebar activeId={activeId} onSelect={handleSelect} />
 
           <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-12 lg:p-16 bg-white/[0.01]">
-            <header className="mb-16 relative">
+            <header className="mb-8 sm:mb-16 relative">
                <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 mb-8 sm:mb-12 border-b border-white/5 pb-6 sm:pb-8 font-mono text-[10px] font-bold uppercase tracking-[0.2em]">
                   <div className="flex items-center gap-4 sm:gap-8">
                      <button
