@@ -362,7 +362,7 @@ export const LiveConsoleDock: React.FC = () => {
           dismissHint();
         }}
         className="glass flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:border-white/20 transition-colors w-full"
-        style={{ minWidth: 320 }}
+        style={{ minWidth: 'min(320px, calc(100vw - 2rem))' }}
         aria-expanded={expanded}
         aria-label="Toggle live cluster console"
       >

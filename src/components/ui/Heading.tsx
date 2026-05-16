@@ -7,9 +7,9 @@ const headingVariants = cva(
   {
     variants: {
       variant: {
-        display: "text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.05]",
-        hero: "text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.1]",
-        section: "text-3xl md:text-4xl font-semibold leading-[1.1]",
+        display: "text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-semibold leading-[1.05]",
+        hero: "text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-semibold leading-[1.1]",
+        section: "text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.1]",
         panel: "text-xl md:text-2xl font-medium leading-snug",
         caption: "text-sm font-medium uppercase tracking-[0.18em] text-accent",
       }

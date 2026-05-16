@@ -86,7 +86,7 @@ export function StatusStrip(_: StatusStripProps) {
             </span>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="hidden sm:flex items-center gap-6">
             {services.length === 0 && (
               <span className="text-[9px] font-mono text-muted/40 uppercase tracking-widest italic">
                 waiting for snapshot…
@@ -121,6 +121,14 @@ export function StatusStrip(_: StatusStripProps) {
                 </div>
               </div>
             ))}
+          </div>
+          {/* Mobile: show service count instead of individual services */}
+          <div className="sm:hidden flex items-center gap-2">
+            {services.length > 0 && (
+              <span className="text-[9px] font-mono text-secondary uppercase tracking-widest">
+                {services.filter(s => s.displayStatus === 'online').length}/{services.length} services
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-3 shrink-0 border-l border-white/10 pl-4 text-muted">

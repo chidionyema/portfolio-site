@@ -5,7 +5,7 @@
   id="site-nav"
   class="fixed top-0 inset-x-0 z-50 border-b border-border bg-base/80 backdrop-blur-xl"
 >
-  <div class="container mx-auto px-6 h-16 flex items-center justify-between gap-4">
+  <div class="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
     <a
       href="/"
       class="font-display text-lg tracking-tight text-primary hover:text-secondary transition-colors whitespace-nowrap py-3 -my-3"
@@ -20,7 +20,21 @@
       <a href="/about" class="hover:text-primary transition-colors">About</a>
     </nav>
 
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3">
+      <!-- Mobile hamburger -->
+      <button
+        id="mobile-menu-toggle"
+        class="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg text-muted hover:text-primary hover:bg-surface-warm transition-colors"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path id="hamburger-icon" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
       <a
         href="/contact"
         class="inline-flex items-center px-5 py-2 rounded-full text-xs font-semibold bg-primary text-base-inverse hover:bg-secondary transition-all shadow-md hover:shadow-lg active:scale-95"
@@ -29,7 +43,47 @@
       </a>
     </div>
   </div>
+
+  <!-- Mobile menu panel -->
+  <nav
+    id="mobile-menu"
+    class="sm:hidden hidden border-t border-border bg-base/95 backdrop-blur-xl"
+    aria-label="Mobile navigation"
+  >
+    <div class="container mx-auto px-4 py-4 flex flex-col gap-1">
+      <a href="/work" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors">Work</a>
+      <a href="/demos" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors">Demos</a>
+      <a href="/#deep-dives" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors">Architecture</a>
+      <a href="/about" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors">About</a>
+    </div>
+  </nav>
 </header>
+
+<script is:inline>
+  (function () {
+    var btn = document.getElementById('mobile-menu-toggle');
+    var menu = document.getElementById('mobile-menu');
+    var hamburger = document.getElementById('hamburger-icon');
+    var close = document.getElementById('close-icon');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function () {
+      var isOpen = !menu.classList.contains('hidden');
+      menu.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!isOpen));
+      hamburger.classList.toggle('hidden');
+      close.classList.toggle('hidden');
+    });
+    // Close menu when a link is clicked
+    menu.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        menu.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+        hamburger.classList.remove('hidden');
+        close.classList.add('hidden');
+      });
+    });
+  })();
+</script>
 
 <style>
   #site-nav {

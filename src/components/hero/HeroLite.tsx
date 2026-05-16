@@ -61,15 +61,15 @@ export function Hero(_: HeroProps) {
                 and zero-downtime infrastructure. Currently based in London.
               </p>
 
-              <div className="flex flex-wrap items-center gap-4">
-                <a href="/demos" className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-8 py-4 text-base")}>
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                <a href="/demos" className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
                   See the work
                   <ArrowRight className="w-5 h-5" />
                 </a>
-                <a href="/contact" className={cn(buttonVariants({ variant: "secondary" }), "px-8 py-4 text-base")}>
+                <a href="/contact" className={cn(buttonVariants({ variant: "secondary" }), "px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
                   Contact me
                 </a>
-                <div className="flex items-center ml-4 gap-2">
+                <div className="flex items-center gap-2">
                   <a
                     href="https://linkedin.com/in/chidionyema"
                     target="_blank"
