@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "../../lib/brand-icons";
 import { useClusterState } from "../../hooks/useClusterState";
@@ -18,12 +17,7 @@ interface HeroProps {
 }
 
 export function Hero(_: HeroProps) {
-  const [visible, setVisible] = useState(false);
   const { systemStatus } = useClusterState();
-
-  useEffect(() => {
-    setVisible(true);
-  }, []);
 
   return (
     <section data-hero className="relative bg-base overflow-hidden border-b border-border">
@@ -44,7 +38,7 @@ export function Hero(_: HeroProps) {
         </Pill>
       </div>
 
-      <Container size="wide" className={cn("pt-32 pb-24 lg:pt-48 lg:pb-40 transition-opacity duration-1000", visible ? "opacity-100" : "opacity-0")}>
+      <Container size="wide" className="pt-32 pb-24 lg:pt-48 lg:pb-40">
         <Reveal delay={0.1}>
           <Stack gap={12}>
             <div className="max-w-4xl">

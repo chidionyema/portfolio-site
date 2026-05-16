@@ -24,7 +24,7 @@ import { RequestReceiptHistory } from './RequestReceipt';
 import type { EventFlowEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
+const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 
 type OutboxStatus = 'pending' | 'published' | 'dispatched';
 

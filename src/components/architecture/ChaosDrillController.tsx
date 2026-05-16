@@ -25,7 +25,7 @@ const COOL_DOWN_MS = 25_000;
 const PAUSE_PHASE_MS = PAUSE_DURATION_S * 1000;
 
 const API_URL = (
-  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+  import.meta.env.PUBLIC_API_URL ?? ''
 ).replace(/\/$/, '');
 
 type Mode = 'drill' | 'drive';

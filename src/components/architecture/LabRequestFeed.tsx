@@ -21,7 +21,7 @@ import type { ConsoleEvent, ChaosTargetState } from '../../lib/cluster-store';
 
 const SHOWN = 30;
 const API_URL = (
-  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+  import.meta.env.PUBLIC_API_URL ?? ''
 ).replace(/\/$/, '');
 
 /**

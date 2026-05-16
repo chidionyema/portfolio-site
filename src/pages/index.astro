@@ -4,10 +4,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { Hero } from '../components/hero/HeroLite';
 import { Proof } from '../components/home/Proof';
 import { Dives } from '../components/home/Dives';
-import { getMetricsSnapshot } from '../lib/api/demo-client';
-import { LabBackgroundProber } from '../components/architecture/LabBackgroundProber';
-
-const initialMetrics = await getMetricsSnapshot().catch(() => undefined);
 const dd = await getCollection('deep-dives', ({ data }) => !data.draft);
 dd.sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 
@@ -21,9 +17,8 @@ const dives = dd.slice(0, 3).map((e) => ({
 
 <BaseLayout>
   <main>
-    <Hero client:load initialMetrics={initialMetrics} />
-    <LabBackgroundProber client:only="react" />
-    <Proof client:only="react" />
-    <Dives dives={dives} client:load />
+    <Hero client:load />
+    <Proof client:visible />
+    <Dives dives={dives} client:visible />
   </main>
 </BaseLayout>

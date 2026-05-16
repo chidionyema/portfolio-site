@@ -23,7 +23,7 @@ work.sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
 
         <div class="grid grid-cols-1 gap-8">
           {work.map((project) => (
-            <Card key={project.slug} padding="lg" className="hover:border-secondary transition-colors cursor-pointer">
+            <Card key={project.slug} padding="lg" className="">
               <div class="flex flex-col md:flex-row justify-between gap-6">
                 <div class="space-y-4">
                   <div class="text-xs uppercase tracking-widest text-accent font-semibold">{project.data.company} · {project.data.period}</div>

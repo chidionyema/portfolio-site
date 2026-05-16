@@ -94,7 +94,7 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
         --color-surface-warm: 22 22 30;
         --color-text-primary: 245 245 240;
         --color-text-secondary: 200 200 195;
-        --color-text-muted: 160 160 155;
+        --color-text-muted: 130 140 155;
         --color-border: 255 255 255 / 0.08;
         --color-border-strong: 255 255 255 / 0.16;
         --color-accent: 124 92 255;
@@ -157,6 +157,15 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
       .animate-fade-in{animation:fade-in 0.5s ease-out forwards}
     </style>
 
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Chidi Onyema",
+      "jobTitle": "Senior .NET Engineer",
+      "url": "https://chidionyema.dev",
+      "sameAs": ["https://github.com/chidionyema", "https://linkedin.com/in/chidionyema"]
+    })}</script>
+
     <link rel="canonical" href={canonical} />
 
     <!-- Open Graph -->
@@ -183,7 +192,7 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
 
     <slot />
 
-    <LiveConsoleDock client:load />
+    <LiveConsoleDock client:idle />
 
     <!--
       Site-nav visibility. On pages with a [data-hero] element, the nav stays
@@ -237,8 +246,5 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
       })();
     </script>
 
-    <!-- Load non-critical CSS asynchronously -->
-    <link rel="stylesheet" href="/src/styles/global.css" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="/src/styles/global.css" /></noscript>
   </body>
 </html>
