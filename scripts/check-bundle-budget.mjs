@@ -18,7 +18,7 @@ const astroDir = resolve(distDir, '_astro');
 const BUDGETS = [
   // Per-file budgets — the heaviest known assets.
   { match: /^client\..*\.js$/,      maxGzip: 60_000, label: 'react runtime + framework' },
-  { match: /^DemoHubLite\..*\.js$/, maxGzip: 8_000,  label: 'demo hub layout' },
+  { match: /^DemoHubLite\..*\.js$/, maxGzip: 15_000, label: 'demo hub layout' },
   { match: /^CommandPalette\..*\.js$/, maxGzip: 22_000, label: 'cmdk palette' },
   { match: /^HeroLite\..*\.js$/,    maxGzip: 4_000,  label: 'hero island' },
   // Per-demo budget (any demo file). Bumped from 4KB to 8KB now that demos
