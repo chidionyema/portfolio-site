@@ -44,6 +44,13 @@ export function CacheInvalidationDemo() {
 
   const { executeCommand, events, sessionId } = useDemoSession('cache-invalidation');
 
+  // Seed demo product on mount
+  useEffect(() => {
+    getDemoProduct().then(res => {
+      if (res?.id) setDemoProductId(res.id);
+    }).catch(() => {});
+  }, []);
+
   const addLog = (action: LogEntry['action'], message: string) => {
     setLogs(prev => [{
       id: crypto.randomUUID(),

@@ -59,7 +59,7 @@ export function RateLimiterDemo() {
         remaining: Math.max(0, tokens - 1)
       }, ...prev].slice(0, 10));
 
-      const res = await executeCommand('/ratelimit/request');
+      const res = await executeCommand('/ratelimit/request', {});
       if (res?.metadata) {
         setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
       }

@@ -26,11 +26,13 @@ const sha = process.env.GIT_SHA ?? process.env.GITHUB_SHA ?? gitSha();
 const builtAt = new Date().toISOString();
 
 const apiUrl = process.env.PUBLIC_API_URL ?? 'https://ritualworks-bffweb.fly.dev';
+const signalrUrl = process.env.PUBLIC_SIGNALR_URL ?? `${apiUrl}/hubs/demo`;
 
 const contents =
   `PUBLIC_GIT_SHA=${sha}\n` +
   `PUBLIC_BUILT_AT=${builtAt}\n` +
-  `PUBLIC_API_URL=${apiUrl}\n`;
+  `PUBLIC_API_URL=${apiUrl}\n` +
+  `PUBLIC_SIGNALR_URL=${signalrUrl}\n`;
 
 writeFileSync(envPath, contents);
 console.log(`build-info: SHA ${sha.slice(0, 7)}, built ${builtAt}`);

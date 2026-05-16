@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCcw, Activity, ShieldAlert, GitCommit, ListEnd, ShieldCheck, Play } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
@@ -25,6 +25,16 @@ export function ConcurrencyDemo() {
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
 
   const { executeCommand, events } = useDemoSession('concurrency');
+  const productIdRef = useRef<string | null>(null);
+
+  // Seed demo product on mount
+  useEffect(() => {
+    executeCommand('/cache/product/demo', {}, { method: 'GET' })
+      .then((res: any) => {
+        if (res?.id) productIdRef.current = res.id;
+      })
+      .catch(() => {});
+  }, [executeCommand]);
 
   useEffect(() => {
     if (events.length > 0) {
@@ -36,28 +46,34 @@ export function ConcurrencyDemo() {
   }, [events]);
 
   const sendRequest = async (workerId: number) => {
+    const productId = productIdRef.current;
+    if (!productId) return;
+
     try {
-      const res = await executeCommand('/cache/product/demo', {}, {method: 'GET'});
-      
-      const success = res?.success;
+      const res = await executeCommand(`/inventory/${productId}`, { quantity: workerId * 10 }, {
+        method: 'PUT',
+        headers: { 'If-Match': `"${currentVersion}"` },
+      });
+
+      const success = res?.success !== false && !res?.error;
+      const newVersion = res?.inventory?.version ? parseInt(res.inventory.version) : currentVersion + 1;
+
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
         status: success ? 'success' : 'conflict',
         workerId,
-        newVersion: success ? res?.newVersion || currentVersion + 1 : currentVersion
+        newVersion: success ? newVersion : currentVersion,
       }, ...prev].slice(0, 10));
 
-      if (success && res?.newVersion) {
-        setCurrentVersion(res.newVersion);
+      if (success) {
+        setCurrentVersion(newVersion);
       }
-
-      if (res?.metadata) setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
     } catch (e) {
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        status: 'error',
+        status: 'conflict',
         workerId,
         newVersion: currentVersion
       }, ...prev].slice(0, 10));

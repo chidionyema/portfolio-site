@@ -28,24 +28,24 @@ export function VaultRotationDemo() {
 
   const verifyConnection = useCallback(async () => {
     try {
-      const res = await executeCommand('/vault/status', {}, {method: 'GET'});
-      
+      const res = await executeCommand('/vault/status', {}, { method: 'GET' });
+
+      const isOk = !!res?.status;
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        status: res?.success ? 'valid' : 'invalid',
-        message: res?.success ? 'DB Auth Success' : 'DB Auth Failed (401)'
+        status: isOk ? 'valid' : 'invalid',
+        message: isOk ? `Vault: ${res.status}` : 'Vault unreachable'
       }, ...prev].slice(0, 8));
 
-      setDbState(res?.success ? 'connected' : 'auth_failed');
-      if (res?.metadata) setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
+      setDbState(isOk ? 'connected' : 'auth_failed');
     } catch (e) {
       setDbState('auth_failed');
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
         status: 'invalid',
-        message: 'DB Auth Failed (401)'
+        message: 'Vault unreachable'
       }, ...prev].slice(0, 8));
     }
   }, [executeCommand]);
@@ -60,7 +60,7 @@ export function VaultRotationDemo() {
     }, ...prev].slice(0, 8));
 
     try {
-      await executeCommand('/vault/rotate');
+      await executeCommand('/vault/rotate', {});
       setTimeout(verifyConnection, 1000);
     } finally {
       setIsRotating(false);
