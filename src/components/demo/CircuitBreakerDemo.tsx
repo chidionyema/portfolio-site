@@ -41,7 +41,7 @@ export function CircuitBreakerDemo() {
     setIsLoading(true);
     const start = Date.now();
     try {
-      const res = await executeCommand('TestCircuitBreaker');
+      const res = await executeCommand('/circuit/request', {});
       const duration = Date.now() - start;
       
       setLogs(prev => [{

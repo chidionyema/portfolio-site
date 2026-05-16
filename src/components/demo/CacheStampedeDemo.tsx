@@ -56,9 +56,10 @@ export function CacheStampedeDemo() {
     setRequests(particles);
 
     try {
-      const response = await executeCommand('SimulateStampede', {
+      const response = await executeCommand('/cache/stampede', {
         concurrentRequests: 50,
-        protectionStrategy: protection
+        cacheKey: 'product:demo-widget',
+        protectionMode: protection,
       });
 
       if (response) {
