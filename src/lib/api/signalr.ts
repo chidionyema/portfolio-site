@@ -1,7 +1,10 @@
 import * as signalR from '@microsoft/signalr';
 
-// Local-dev fallback. PUBLIC_SIGNALR_URL is the source of truth (.env.local).
-const SIGNALR_URL = import.meta.env.PUBLIC_SIGNALR_URL || 'http://localhost:5050/hubs/demo';
+// PUBLIC_SIGNALR_URL is injected at build time by inject-build-info.mjs.
+// Fallback derives from PUBLIC_API_URL (always set in prod) so SignalR
+// never accidentally points at localhost in a production bundle.
+const API_BASE = import.meta.env.PUBLIC_API_URL || 'https://ritualworks-bffweb.fly.dev';
+const SIGNALR_URL = import.meta.env.PUBLIC_SIGNALR_URL || `${API_BASE}/hubs/demo`;
 
 export interface SagaStepEvent {
   sessionId: string;
