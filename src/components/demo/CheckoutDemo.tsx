@@ -185,7 +185,7 @@ export function CheckoutDemo() {
                           role="radio"
                           aria-checked={scenario === s}
                           className={cn(
-                            "focus-ring py-2 px-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
+                            "focus-ring py-2.5 px-2 rounded-lg text-[10px] sm:text-[9px] font-bold uppercase tracking-widest transition-all",
                             scenario === s
                               ? 'bg-white/10 text-white shadow-sm'
                               : 'text-muted hover:text-secondary hover:bg-white/10'
@@ -274,24 +274,24 @@ export function CheckoutDemo() {
               <CompensationDrawer sagaState={sagaState} localEvents={localEvents} />
 
               <Card variant="panel-dark" padding="none" className="h-[400px] flex flex-col overflow-hidden shadow-2xl">
-                <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
+                <div className="px-4 sm:px-6 py-4 border-b border-white/5 flex items-center justify-between font-mono text-[10px]">
                   <span className="text-secondary font-bold uppercase italic tracking-widest">Bridge Events Log</span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto font-mono text-[11px]">
-                  <table className="w-full text-left border-collapse">
+                <div className="flex-1 overflow-y-auto overflow-x-auto font-mono text-[11px]">
+                  <table className="w-full text-left border-collapse min-w-[400px]">
                     <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10">
                       <tr className="text-secondary/90 uppercase text-[10px] font-black tracking-widest">
-                        <th className="px-6 py-3">Time</th>
-                        <th className="px-6 py-3">Event</th>
-                        <th className="px-6 py-3 text-right">Status</th>
+                        <th className="px-3 sm:px-6 py-3">Time</th>
+                        <th className="px-3 sm:px-6 py-3">Event</th>
+                        <th className="px-3 sm:px-6 py-3 text-right">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       <AnimatePresence initial={false}>
                         {localEvents.length === 0 ? (
                           <tr>
-                            <td colSpan={3} className="py-24 text-center text-secondary/90 italic uppercase tracking-[0.3em]">
+                            <td colSpan={3} className="py-12 sm:py-24 text-center text-secondary/90 italic uppercase tracking-[0.3em]">
                               Awaiting saga initiation...
                             </td>
                           </tr>
@@ -303,10 +303,10 @@ export function CheckoutDemo() {
                               animate={{ opacity: 1, x: 0 }}
                               className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
                             >
-                              <td className="px-6 py-4 text-secondary/90 text-[10px] whitespace-nowrap align-top">
+                              <td className="px-3 sm:px-6 py-3 sm:py-4 text-secondary/90 text-[10px] whitespace-nowrap align-top">
                                 [{formatTime(new Date(e.timestamp))}]
                               </td>
-                              <td className="px-6 py-4 align-top">
+                              <td className="px-3 sm:px-6 py-3 sm:py-4 align-top">
                                 <div className="text-secondary font-bold">{describeSagaStep(e.step)}</div>
                                 <div className="text-[9px] text-secondary/90 mt-0.5 font-mono uppercase tracking-widest">
                                   {e.step}
@@ -317,7 +317,7 @@ export function CheckoutDemo() {
                                   </div>
                                 )}
                               </td>
-                              <td className="px-6 py-4 text-right align-top">
+                              <td className="px-3 sm:px-6 py-3 sm:py-4 text-right align-top">
                                 <StatusBadge status={e.status} />
                               </td>
                             </motion.tr>
@@ -674,7 +674,8 @@ function SagaSequenceView({
   ) as Record<SagaLaneId, number>;
 
   return (
-    <div className="font-mono">
+    <div className="font-mono overflow-x-auto -mx-2 px-2">
+      <div className="min-w-[480px]">
       <div className="grid gap-0 mb-4 pb-3 border-b border-white/10"
            style={{ gridTemplateColumns: `repeat(${SAGA_LANES.length}, 1fr)` }}>
         {SAGA_LANES.map((lane) => (
@@ -709,6 +710,7 @@ function SagaSequenceView({
       <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-secondary/90 uppercase tracking-widest space-y-1">
         <div>http = direct HTTP call · event = published via RabbitMQ outbox</div>
         <div>compensation = saga's failure-recovery path (red rows)</div>
+      </div>
       </div>
     </div>
   );

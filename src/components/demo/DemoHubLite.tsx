@@ -154,10 +154,10 @@ export function DemoHub() {
         <div className="flex flex-col md:flex-row relative">
           <DemoSidebar activeId={activeId} onSelect={handleSelect} />
 
-          <div className="flex-1 min-w-0 p-8 md:p-12 lg:p-16 bg-white/[0.01]">
+          <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-12 lg:p-16 bg-white/[0.01]">
             <header className="mb-16 relative">
-               <div className="flex flex-wrap items-center justify-between gap-4 mb-12 border-b border-white/5 pb-8 font-mono text-[10px] font-bold uppercase tracking-[0.2em]">
-                  <div className="flex items-center gap-8">
+               <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 mb-8 sm:mb-12 border-b border-white/5 pb-6 sm:pb-8 font-mono text-[10px] font-bold uppercase tracking-[0.2em]">
+                  <div className="flex items-center gap-4 sm:gap-8">
                      <button
                        onClick={isOffline ? handleRetry : undefined}
                        className={cn(
@@ -189,19 +189,19 @@ export function DemoHub() {
                            {isConnected && !isOffline ? "live" : !isOffline && connectionError ? "polling" : "offline"}
                         </span>
                      </button>
-                     <div className="flex items-center gap-2.5">
+                     <div className="hidden sm:flex items-center gap-2.5">
                         <span className="text-muted">Node:</span>
                         <span className="text-primary tracking-normal opacity-70">{CLUSTER_LABEL}</span>
                      </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                     <div className="flex p-1 bg-black/40 rounded-xl border border-white/5 mr-2">
+
+                  <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                     <div className="flex p-1 bg-black/40 rounded-xl border border-white/5 sm:mr-2">
                         <button
                           onClick={() => setViewMode("live")}
                           aria-pressed={viewMode === "live"}
                           className={cn(
-                            "focus-ring flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
+                            "focus-ring flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                             viewMode === "live" ? "bg-accent text-white shadow-lg" : "text-muted hover:text-secondary"
                           )}
                         >
@@ -211,7 +211,7 @@ export function DemoHub() {
                           onClick={() => setViewMode("source")}
                           aria-pressed={viewMode === "source"}
                           className={cn(
-                            "focus-ring flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
+                            "focus-ring flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                             viewMode === "source" ? "bg-accent text-white shadow-lg" : "text-muted hover:text-secondary"
                           )}
                         >
@@ -223,9 +223,9 @@ export function DemoHub() {
                        variant={isChaosActive ? "primary" : "secondary"}
                        onClick={() => setIsChaosOpen(true)}
                        className={cn(
-                         "h-auto px-4 py-2 rounded-xl transition-all group",
-                         isChaosActive 
-                           ? "bg-error text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] border-error" 
+                         "h-auto px-3 sm:px-4 py-2 rounded-xl transition-all group",
+                         isChaosActive
+                           ? "bg-error text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] border-error"
                            : "bg-error/10 hover:bg-error/20 border border-error/20 text-error"
                        )}
                      >
@@ -235,21 +235,24 @@ export function DemoHub() {
                               <span className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse" />
                            )}
                         </div>
-                        <span className="tracking-widest font-black text-[10px]">
+                        <span className="tracking-widest font-black text-[9px] sm:text-[10px] hidden sm:inline">
                            {isChaosActive ? "FAULT_INJECTED" : "FAULT_INJECTION"}
+                        </span>
+                        <span className="tracking-widest font-black text-[9px] sm:hidden">
+                           {isChaosActive ? "FAULT" : "INJECT"}
                         </span>
                      </Button>
                   </div>
                </div>
 
-               <div className="flex items-start gap-8">
-                  <div className="p-4 bg-white/10 border border-white/10 rounded-2xl shrink-0 shadow-xl text-accent">
-                     <demo.Icon className="w-10 h-10" strokeWidth={1.5} />
+               <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-8">
+                  <div className="p-3 sm:p-4 bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl shrink-0 shadow-xl text-accent">
+                     <demo.Icon className="w-7 h-7 sm:w-10 sm:h-10" strokeWidth={1.5} />
                   </div>
-                  <div className="space-y-4">
-                     <div className="flex items-center gap-3">
+                  <div className="space-y-3 sm:space-y-4 min-w-0">
+                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent-light">{group.label}</div>
-                        <div className="h-px w-4 bg-white/10" />
+                        <div className="h-px w-4 bg-white/10 hidden sm:block" />
                         <motion.div
                           key={activeId + "-pill"}
                           initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
@@ -258,7 +261,7 @@ export function DemoHub() {
                            {demo.valueProp}
                         </motion.div>
                      </div>
-                     <Heading variant="hero" level={2} className="text-5xl leading-none">
+                     <Heading variant="hero" level={2}>
                         {demo.label}
                      </Heading>
                      <p className="text-secondary text-lg font-medium leading-relaxed max-w-2xl">
