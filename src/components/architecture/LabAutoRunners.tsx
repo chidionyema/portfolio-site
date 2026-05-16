@@ -20,7 +20,7 @@ import { Loader2, CheckCircle2, AlertCircle, Activity } from 'lucide-react';
  */
 
 const API_URL = (
-  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+  import.meta.env.PUBLIC_API_URL ?? ''
 ).replace(/\/$/, '');
 
 interface RunnerSpec {

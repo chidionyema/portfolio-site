@@ -35,7 +35,7 @@ import * as signalR from '@microsoft/signalr';
 const CONSOLE_HUB_URL = (
   import.meta.env.PUBLIC_API_URL ||
   import.meta.env.PUBLIC_BFF_URL ||
-  'http://localhost:5050'
+  ''
 ).replace(/\/$/, '');
 
 interface UpstreamHop {

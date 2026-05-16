@@ -4,7 +4,6 @@ import {
   Search,
   ArrowRight,
   ExternalLink,
-  Download,
   Sparkles,
   Layers,
 } from 'lucide-react';
@@ -114,7 +113,7 @@ export function CommandPalette({ deepDives }: Props) {
         label: d.label,
         hint: groupLabel,
         Icon: d.Icon,
-        run: go(`/?demo=${d.id}#demo`),
+        run: go(`/demos?demo=${d.id}#demo`),
         group: 'Demos',
         keywords: `${groupLabel} ${d.desc}`,
         persona: PERSONA_MAP[id],
@@ -142,7 +141,7 @@ export function CommandPalette({ deepDives }: Props) {
     // Links
     { id: 'link:github',   label: 'View source on GitHub', Icon: GithubIcon, run: go('https://github.com/chidionyema/haworks'), group: 'Links' },
     { id: 'link:linkedin', label: 'LinkedIn',              Icon: ExternalLink, run: go('https://linkedin.com/in/chidionyema'), group: 'Links' },
-    { id: 'link:cv',       label: 'Download CV',           Icon: Download,    run: go('/cv.pdf'), group: 'Links' },
+    { id: 'link:cv',       label: 'LinkedIn Profile',      Icon: ExternalLink, run: go('https://linkedin.com/in/chidionyema'), group: 'Links' },
   ];
 
   // Group items by their `group` key, preserving insertion order.

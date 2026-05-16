@@ -5,7 +5,7 @@ import { traceStore } from '../lib/trace-store';
 // Local-dev fallback. PUBLIC_API_URL is the source of truth (.env.local).
 // The fallback used to point at production, which silently broke localhost
 // dev whenever Astro failed to inject the env var into a client bundle.
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
+const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 
 export interface DemoSessionState {
   sessionId: string;

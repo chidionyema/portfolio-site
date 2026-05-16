@@ -35,6 +35,7 @@
 
   html {
     @apply scroll-smooth;
+    overflow-x: hidden;
   }
 
   body {
@@ -42,6 +43,7 @@
     color: rgb(var(--color-text-primary));
     -webkit-font-smoothing: antialiased;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    overflow-x: hidden;
   }
 
   /* Refined scrollbar. */

@@ -19,7 +19,7 @@ import { useEffect } from 'react';
  * is open, which is what makes the system feel alive.
  */
 const API_URL = (
-  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+  import.meta.env.PUBLIC_API_URL ?? ''
 ).replace(/\/$/, '');
 
 const PROBE_PATHS: string[] = [

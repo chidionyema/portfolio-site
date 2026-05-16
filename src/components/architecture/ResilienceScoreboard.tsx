@@ -34,7 +34,7 @@ import { useClusterState } from '../../hooks/useClusterState';
  */
 
 const API_URL = (
-  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+  import.meta.env.PUBLIC_API_URL ?? ''
 ).replace(/\/$/, '');
 
 const SESSION_KEY_PREFIX = `lab-idemp-${Math.random().toString(36).slice(2, 8)}-${Date.now()}`;

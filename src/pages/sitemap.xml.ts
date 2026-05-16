@@ -10,6 +10,10 @@ export const GET: APIRoute = async () => {
 
   const urls = [
     { loc: `${SITE}/`, changefreq: 'weekly', priority: '1.0' },
+    { loc: `${SITE}/work`, changefreq: 'monthly', priority: '0.9' },
+    { loc: `${SITE}/about`, changefreq: 'monthly', priority: '0.8' },
+    { loc: `${SITE}/contact`, changefreq: 'monthly', priority: '0.8' },
+    { loc: `${SITE}/demos`, changefreq: 'weekly', priority: '0.9' },
     ...dives.map((d: DeepDive) => ({
       loc: `${SITE}/deep-dives/${d.slug}/`,
       lastmod: (d.data.updatedAt ?? d.data.publishedAt).toISOString().slice(0, 10),

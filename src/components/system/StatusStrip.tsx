@@ -54,9 +54,11 @@ export function StatusStrip(_: StatusStripProps) {
 
   return (
     <>
-      <div 
+      <button
+        type="button"
+        aria-label="Open cluster status details"
         onClick={() => setIsTrayOpen(true)}
-        className="border-b border-white/5 bg-[#050508] relative z-50 overflow-hidden cursor-pointer group"
+        className="border-b border-white/5 bg-[#050508] relative z-50 overflow-hidden cursor-pointer group appearance-none w-full text-left"
       >
         <div className={`absolute inset-0 opacity-20 bg-gradient-to-r transition-colors duration-1000 ${
           systemStatus === 'healthy' ? 'from-success/10 via-transparent to-accent/10' :
@@ -75,7 +77,10 @@ export function StatusStrip(_: StatusStripProps) {
                   statusKey === 'healthy' ? 'bg-success' : statusKey === 'degraded' ? 'bg-warning' : 'bg-error'
                 }`} />
               </span>
-              <span className={`text-[11px] font-mono font-black uppercase tracking-[0.2em] whitespace-nowrap ${labelColors[statusKey]}`}>
+              <span
+                aria-live="polite"
+                className={`text-[11px] font-mono font-black uppercase tracking-[0.2em] whitespace-nowrap ${labelColors[statusKey]}`}
+              >
                 {systemStatus === 'unknown' ? 'connecting…' : `cluster ${systemStatus}`}
               </span>
             </div>
@@ -135,9 +140,9 @@ export function StatusStrip(_: StatusStripProps) {
             <ChevronRight className="w-4 h-4 group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </div>
-      </div>
+      </button>
 
-      <StatusTray 
+      <StatusTray
         isOpen={isTrayOpen} 
         onClose={() => setIsTrayOpen(false)} 
         snapshot={snapshot} 

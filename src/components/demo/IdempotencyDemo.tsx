@@ -21,7 +21,7 @@ import { Pill } from '../ui/Pill';
 import { Glass } from '../ui/Glass';
 import { cn } from '../../lib/utils';
 
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
+const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 
 type LogStatus = 'created' | 'replay-cached' | 'replay-after-expiry' | 'race-winner' | 'race-loser' | 'error';
 

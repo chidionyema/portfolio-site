@@ -30,7 +30,7 @@ const WEB_BUILD_STARTED_AT: string =
 const CONSOLE_HUB_URL = (
   import.meta.env.PUBLIC_API_URL ||
   import.meta.env.PUBLIC_BFF_URL ||
-  'http://localhost:5050'
+  ''
 ).replace(/\/$/, '');
 const HUB_PATH = '/hubs/console';
 
@@ -207,6 +207,7 @@ export const LiveConsoleDock: React.FC = () => {
     });
   }, []);
 
+  // TODO: consolidate with cluster-store to avoid duplicate WebSocket
   useEffect(() => {
     const conn = new signalR.HubConnectionBuilder()
       .withUrl(`${CONSOLE_HUB_URL}${HUB_PATH}`)

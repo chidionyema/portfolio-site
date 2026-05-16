@@ -40,6 +40,8 @@ export function useEventStream({
   const [isConnecting, setIsConnecting] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const retryCountRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connect = useCallback(() => {
     if (mode === 'sse') {
@@ -51,19 +53,24 @@ export function useEventStream({
         setIsConnected(true);
         setIsConnecting(false);
         setError(null);
+        retryCountRef.current = 0;
       };
 
-      es.onerror = (e) => {
+      es.onerror = () => {
+        es.close();
         setIsConnected(false);
         setIsConnecting(false);
         setError(new Error('SSE connection failed'));
-        es.close();
+        // Reconnect with exponential backoff (max 30s)
+        const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
+        retryCountRef.current++;
+        reconnectTimerRef.current = setTimeout(() => connect(), delay);
       };
 
       es.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          
+
           if (filterTypes && !filterTypes.includes(data.type)) {
             return;
           }
@@ -83,6 +90,9 @@ export function useEventStream({
   useEffect(() => {
     connect();
     return () => {
+      if (reconnectTimerRef.current !== null) {
+        clearTimeout(reconnectTimerRef.current);
+      }
       eventSourceRef.current?.close();
     };
   }, [connect]);

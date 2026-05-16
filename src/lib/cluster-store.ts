@@ -35,7 +35,7 @@ import * as signalR from '@microsoft/signalr';
 // bundle ended up calling localhost:5050 — see the production console
 // errors that surfaced after the single-page collapse.
 const API_URL = (
-  import.meta.env.PUBLIC_API_URL || 'http://localhost:5050'
+  import.meta.env.PUBLIC_API_URL ?? ''
 ).replace(/\/$/, '');
 
 export interface UpstreamHop {
