@@ -105,7 +105,7 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
       }
 
       *,*::before,*::after{box-sizing:border-box}
-      html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+      html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;overflow-x:hidden}
       body{
         margin:0;
         font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
@@ -113,6 +113,7 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
         color:rgb(var(--color-text-primary));
         -webkit-font-smoothing:antialiased;
         font-feature-settings: "kern", "liga", "calt", "ss01";
+        overflow-x:hidden;
       }
       .container{width:100%;max-width:1100px;margin:0 auto}
       .container-prose{width:100%;max-width:760px;margin:0 auto}
