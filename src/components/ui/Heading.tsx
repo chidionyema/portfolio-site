@@ -27,7 +27,7 @@ export interface HeadingProps
 }
 
 export function Heading({ className, variant, level = 2, ...props }: HeadingProps) {
-  const Tag = "h" + level as any;
+  const Tag = (`h${level}`) as keyof Pick<JSX.IntrinsicElements, 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'>;
   return (
     <Tag
       className={cn(headingVariants({ variant, className }))}
