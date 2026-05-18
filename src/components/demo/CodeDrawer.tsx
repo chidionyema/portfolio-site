@@ -67,7 +67,7 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
             </AnimatePresence>
           </button>
           <a
-            href={`https://github.com/chidionyema/ritualworks/blob/main/src/${demoId}`}
+            href={`https://github.com/chidionyema/haworks-platform/blob/main/src/${demoId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 hover:bg-white/10 rounded-lg transition-colors group"

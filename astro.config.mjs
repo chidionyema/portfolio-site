@@ -34,7 +34,7 @@ export default defineConfig({
     },
   },
   // TODO: confirm production domain. Used for canonical, OG, sitemap.
-  site: 'https://chidionyema.dev',
+  site: 'https://haworks.pages.dev',
   markdown: {
     shikiConfig: {
       // Dual-theme. CSS picks one via the data-theme attribute on <html>.
