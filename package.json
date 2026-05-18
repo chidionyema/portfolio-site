@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "node scripts/inject-build-info.mjs && node scripts/build-og.mjs && astro build",
     "preview": "astro preview",
-    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=${CLOUDFLARE_PAGES_PROJECT:-haworks} --branch=main --commit-dirty=true"
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=${CLOUDFLARE_PAGES_PROJECT:-haworks-platform} --branch=main --commit-dirty=true"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.6",
