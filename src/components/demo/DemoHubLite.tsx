@@ -26,6 +26,7 @@ const CacheStampedeDemo     = lazy(() => import("./CacheStampedeDemo").then(m =>
 const CacheInvalidationDemo = lazy(() => import("./CacheInvalidationDemo").then(m => ({ default: m.CacheInvalidationDemo })));
 const ConcurrencyDemo       = lazy(() => import("./ConcurrencyDemo").then(m => ({ default: m.ConcurrencyDemo })));
 const RateLimiterDemo       = lazy(() => import("./RateLimiterDemo").then(m => ({ default: m.RateLimiterDemo })));
+const UnderTheHood          = lazy(() => import("./UnderTheHood").then(m => ({ default: m.UnderTheHood })));
 
 const DEFAULT_DEMO = "idempotency";
 
@@ -312,6 +313,7 @@ export function DemoHub() {
                         <DemoContext demoId={activeId} />
                         <Suspense fallback={<LoadingSkeleton />}>
                            <DemoContent id={activeId} />
+                           <UnderTheHood demoId={activeId} />
                         </Suspense>
                      </motion.div>
                   ) : (
