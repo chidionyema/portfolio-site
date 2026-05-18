@@ -116,7 +116,7 @@ export interface HealthSnapshot {
   services: ServiceHealth[];
   systemStatus: 'healthy' | 'degraded' | 'down';
   p99LatencyMs: number;
-  availability: number;
+  availability: number | null;
   timestamp: string;
 }
 

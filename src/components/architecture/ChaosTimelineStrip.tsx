@@ -174,7 +174,7 @@ export function ChaosTimelineStrip() {
     ([, v]) => v.status === 'paused',
   )?.[0];
   const remainingSec =
-    (pausedTarget && chaos[pausedTarget]?.remainingSeconds) ?? null;
+    (pausedTarget ? chaos[pausedTarget]?.remainingSeconds : null) ?? null;
 
   return (
     <div className="rounded-md border border-white/[0.06] bg-black/40 px-4 py-3 font-mono">
