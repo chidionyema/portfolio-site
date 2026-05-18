@@ -82,6 +82,7 @@ export function LabRequestFeed() {
       setCopied(key);
       setTimeout(() => setCopied(null), 1200);
     } catch {
+      /* Clipboard API unavailable (non-HTTPS / backgrounded tab) — fall back to prompt */
       window.prompt('Copy:', s);
     }
   };

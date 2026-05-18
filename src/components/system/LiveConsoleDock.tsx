@@ -161,7 +161,7 @@ export const LiveConsoleDock: React.FC = () => {
     try {
       localStorage.setItem(HINT_DISMISSED_KEY, '1');
     } catch {
-      // ignore
+      /* localStorage blocked in private mode — dismissal won't persist, non-fatal */
     }
   }, []);
 

@@ -56,7 +56,7 @@ export function CommandPalette({ deepDives }: Props) {
 
   const dismissHint = useCallback(() => {
     setHintVisible(false);
-    try { localStorage.setItem(PALETTE_HINT_KEY, '1'); } catch {}
+    try { localStorage.setItem(PALETTE_HINT_KEY, '1'); } catch { /* localStorage blocked in private mode — non-fatal */ }
   }, []);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function CommandPalette({ deepDives }: Props) {
         const t = window.setTimeout(() => setHintVisible(true), 8000);
         return () => window.clearTimeout(t);
       }
-    } catch {}
+    } catch { /* localStorage blocked in private mode — hint simply won't show */ }
   }, []);
 
   // ⌘K / ctrl+K toggles. ESC closes (cmdk handles internally too).

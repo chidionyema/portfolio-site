@@ -133,7 +133,8 @@ export function IdempotencyDemo() {
 
       expiryDeadline.current = Date.now() + data.expiresInSeconds * 1000;
       setExpiresInSeconds(data.expiresInSeconds);
-    } catch {
+    } catch (err) {
+      console.error('Failed to submit idempotency request', err);
       setLogs((prev) =>
         [
           {
@@ -182,7 +183,7 @@ export function IdempotencyDemo() {
       }));
       setLogs((prev) => [...raceLogs, ...prev].slice(0, 16));
     } catch {
-      // ignore
+      /* fire-and-forget race probe — failure is non-fatal, scoreboard reflects errCount */
     } finally {
       setIsRacing(false);
     }

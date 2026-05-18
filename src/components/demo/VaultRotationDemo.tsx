@@ -83,6 +83,7 @@ export function VaultRotationDemo() {
         setReceipts(prev => [res, ...prev].slice(0, 5));
       }
     } catch {
+      /* fallback to null when vault status endpoint is unreachable */
       setVaultStatus(null);
     }
   }, [executeCommand]);
@@ -102,6 +103,7 @@ export function VaultRotationDemo() {
       const res = await executeCommand('/vault/rotate', {});
       if (res) setReceipts(prev => [res, ...prev].slice(0, 5));
     } catch {
+      /* rotation API unreachable — surface failure via stage UI, non-fatal */
       setIsRotating(false);
       setCurrentStage('failed');
     }

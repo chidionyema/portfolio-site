@@ -27,6 +27,7 @@ export function formatBuiltAt(iso: string = BUILT_AT): string {
       day: '2-digit',
     }).format(d);
   } catch {
+    /* fallback to raw ISO string when Intl.DateTimeFormat fails (e.g. invalid date) */
     return iso;
   }
 }

@@ -126,7 +126,8 @@ export function CheckoutDemo() {
         setActiveSagaId(result.sessionId);
         await signalRClient.subscribe(result.sessionId).catch(() => {});
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to start checkout simulation', err);
       setIsProcessing(false);
     }
   };
