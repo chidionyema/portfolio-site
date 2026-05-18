@@ -25,7 +25,7 @@ function gitSha() {
 const sha = process.env.GIT_SHA ?? process.env.GITHUB_SHA ?? gitSha();
 const builtAt = new Date().toISOString();
 
-const apiUrl = process.env.PUBLIC_API_URL ?? 'https://ritualworks-bffweb.fly.dev';
+const apiUrl = process.env.PUBLIC_API_URL ?? 'https://haworks-bffweb.fly.dev';
 const signalrUrl = process.env.PUBLIC_SIGNALR_URL ?? `${apiUrl}/hubs/demo`;
 
 const contents =

@@ -3,7 +3,7 @@ import * as signalR from '@microsoft/signalr';
 // PUBLIC_SIGNALR_URL is injected at build time by inject-build-info.mjs.
 // Fallback derives from PUBLIC_API_URL (always set in prod) so SignalR
 // never accidentally points at localhost in a production bundle.
-const API_BASE = import.meta.env.PUBLIC_API_URL || 'https://ritualworks-bffweb.fly.dev';
+const API_BASE = import.meta.env.PUBLIC_API_URL || 'https://haworks-bffweb.fly.dev';
 const SIGNALR_URL = import.meta.env.PUBLIC_SIGNALR_URL || `${API_BASE}/hubs/demo`;
 
 export interface SagaStepEvent {

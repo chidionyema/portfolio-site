@@ -12,7 +12,7 @@ export interface DemoMeta {
   Icon: LucideIcon;
   deepDiveSlug?: string;
   /**
-   * Path within ritualworks-platform that holds the primary
+   * Path within haworks-platform that holds the primary
    * implementation behind this demo. Rendered as a "view source" link
    * so technical reviewers can verify the claim instead of taking the
    * UI's word for it.
@@ -21,7 +21,7 @@ export interface DemoMeta {
 }
 
 const REPO_BASE_URL =
-  'https://github.com/chidionyema/ritualworks-platform/blob/main/';
+  'https://github.com/chidionyema/haworks-platform/blob/main/';
 
 export function sourceUrlFor(demo: DemoMeta): string | null {
   return demo.sourcePath ? `${REPO_BASE_URL}${demo.sourcePath}` : null;
