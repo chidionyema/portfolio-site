@@ -9,7 +9,7 @@ const dd = await getCollection('deep-dives', ({ data }) => !data.draft);
 dd.sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 
 const dives = dd.slice(0, 3).map((e) => ({
-  slug: e.slug,
+  slug: e.id,
   title: e.data.title,
   description: e.data.description,
   readingTime: e.data.readingTime + ' min read',
