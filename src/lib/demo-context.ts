@@ -56,12 +56,12 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     problem:
       'Networks retry. Mobile clients retry. Webhooks retry. Without protection, every retry that succeeds creates a duplicate charge, a double order, a second email — once-and-only-once is a fiction over an unreliable channel.',
     mechanism:
-      'A deterministic key — namespaced per user, hashed with the request body — records the result of the first run. Replays find the cached result and return it without re-executing the side-effect. Concurrent collisions resolve via optimistic lock.',
+      'A deterministic key is claimed via INSERT...ON CONFLICT against a Postgres UNIQUE constraint. The first request wins and its result is cached in the row. Replays find the cached result and return it without re-executing the side-effect. Concurrent collisions resolve at the database level.',
     watch:
       'Hammer the same key from many directions: only one execution leaves a side-effect. Every other replay returns the same response, immediately, with no second charge.',
     problemSummary: 'Duplicate payments caused by network retries.',
     mechanismSummary: 'Deterministic keys prevent double execution.',
-    strategy: 'Redis-Backed Idempotency Middleware',
+    strategy: 'Postgres UNIQUE Constraint',
   },
   stampede: {
     problem:
@@ -100,12 +100,12 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     problem:
       'A single client — a runaway script, an over-eager partner, a loop bug — issues a million requests a minute. Capacity meant for everyone is consumed by one.',
     mechanism:
-      'A token-bucket limiter assigns each principal a refill rate and a burst capacity. Requests draw tokens; when the bucket is empty, the request is rejected with a 429 and a Retry-After hint. Quotas live in Redis so they apply across nodes.',
+      'A fixed-window rate limiter assigns each session a permit count and window duration. Requests acquire permits; when the window is exhausted, requests are rejected with a 429 and a Retry-After hint.',
     watch:
       'Saturate the bucket: traffic above the rate is shed cleanly while well-behaved clients keep their share. The system stays available even under abuse.',
     problemSummary: 'Single users can exhaust system capacity.',
     mechanismSummary: 'Token-bucket throttling enforced across nodes.',
-    strategy: 'Distributed Token-Bucket (Redis)',
+    strategy: '.NET FixedWindowRateLimiter',
   },
   tracing: {
     problem:
