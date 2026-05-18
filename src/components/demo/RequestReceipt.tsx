@@ -1,6 +1,7 @@
 import { Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { traceStore } from "../../lib/trace-store";
+import { CopyCurl } from "./CopyCurl";
 import { Pill } from "../ui/Pill";
 import { cn } from "../../lib/utils";
 import type { RequestMetadata } from "../../lib/api/demo-client";
@@ -10,19 +11,21 @@ interface RequestReceiptProps {
   latencyMs: number;
   statusCode: number;
   traceId: string | null;
+  /** Optional: enables "copy cURL" button */
+  curl?: { method: string; path: string; headers?: Record<string, string>; body?: unknown };
 }
 
-export function RequestReceipt({ service, latencyMs, statusCode, traceId }: RequestReceiptProps) {
+export function RequestReceipt({ service, latencyMs, statusCode, traceId, curl }: RequestReceiptProps) {
   if (!traceId) return null;
 
-  const variant = statusCode >= 200 && statusCode < 300 
-    ? "success" 
+  const variant = statusCode >= 200 && statusCode < 300
+    ? "success"
     : statusCode === 429 || statusCode === 503
     ? "warning"
     : "error";
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-wrap items-center gap-2 font-mono text-[10px] py-2 border-t border-white/5 mt-4"
@@ -33,7 +36,7 @@ export function RequestReceipt({ service, latencyMs, statusCode, traceId }: Requ
         <span className="opacity-60">|</span>
         <span className="text-muted">{latencyMs}ms</span>
         <span className="opacity-60">|</span>
-        <Pill variant={variant as any} className="px-1.5 py-0 rounded text-[9px]">{statusCode}</Pill>
+        <Pill variant={variant} className="px-1.5 py-0 rounded text-[9px]">{statusCode}</Pill>
       </div>
 
       <button
@@ -42,6 +45,10 @@ export function RequestReceipt({ service, latencyMs, statusCode, traceId }: Requ
       >
         <span className="font-black uppercase tracking-widest">trace: {traceId.substring(0, 6)}</span>
       </button>
+
+      {curl && (
+        <CopyCurl method={curl.method} path={curl.path} headers={curl.headers} body={curl.body} />
+      )}
     </motion.div>
   );
 }
@@ -51,7 +58,7 @@ export function RequestReceiptHistory({ receipts }: { receipts: RequestMetadata[
     <div className="space-y-1">
       <AnimatePresence initial={false}>
         {receipts.map((r, i) => (
-          <RequestReceipt 
+          <RequestReceipt
             key={r.traceId || i}
             service={r.service}
             latencyMs={r.latencyMs}

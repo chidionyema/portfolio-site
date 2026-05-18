@@ -74,10 +74,11 @@ export function CircuitBreakerDemo() {
         rejected: prev.rejected + (isRejected ? 1 : 0),
       }));
 
+      const status = isOk ? 'ok' as const : isRejected ? 'rejected' as const : 'failed' as const;
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        status: isOk ? 'ok' : isRejected ? 'rejected' : 'failed',
+        status,
         durationMs: res?.responseTimeMs ?? duration,
         circuitState: newState,
       }, ...prev].slice(0, 20));
@@ -86,7 +87,7 @@ export function CircuitBreakerDemo() {
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        status: 'failed',
+        status: 'failed' as const,
         durationMs: Date.now() - start,
         circuitState,
       }, ...prev].slice(0, 20));
@@ -111,9 +112,14 @@ export function CircuitBreakerDemo() {
     } catch {}
   }, [executeCommand]);
 
-  const fireSpike = useCallback(async () => {
+  const spikeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => spikeTimers.current.forEach(clearTimeout), []);
+
+  const fireSpike = useCallback(() => {
+    spikeTimers.current.forEach(clearTimeout);
+    spikeTimers.current = [];
     for (let i = 0; i < 5; i++) {
-      setTimeout(() => sendRequest(), i * 200);
+      spikeTimers.current.push(setTimeout(() => sendRequest(), i * 200));
     }
   }, [sendRequest]);
 
@@ -271,8 +277,10 @@ export function CircuitBreakerDemo() {
                     Response latency (last {Math.min(logs.length, 20)})
                   </div>
                   <div className="flex items-end gap-px h-12">
-                    {[...logs].reverse().map((log) => {
-                      const maxMs = Math.max(...logs.map(l => l.durationMs), 1);
+                    {(() => {
+                      const reversed = [...logs].reverse();
+                      const maxMs = Math.max(...reversed.map(l => l.durationMs), 1);
+                      return reversed.map((log) => {
                       const height = Math.max(4, (log.durationMs / maxMs) * 100);
                       return (
                         <motion.div
@@ -288,9 +296,10 @@ export function CircuitBreakerDemo() {
                           title={`${log.durationMs}ms — ${log.status}`}
                         />
                       );
-                    })}
+                    });
+                    })()}
                   </div>
-                  <div className="flex justify-between text-[8px] text-muted/40 font-mono">
+                  <div className="flex justify-between text-[8px] text-muted/60 font-mono">
                     <span>oldest</span>
                     <span>latest</span>
                   </div>

@@ -56,7 +56,7 @@ export const demoGroups: DemoGroup[] = [
       // updated copy elsewhere; sidebar desc kept short.
       { id: 'idempotency', label: 'Idempotency keys',     desc: 'Safe retries via PG UNIQUE constraint',   valueProp: 'Safe to retry — never charges twice', Icon: DemoIcon.idempotency,
         sourcePath: 'src/Orders/Orders.Api/Controllers/DemoIdempotencyController.cs' },
-      { id: 'ratelimit',   label: 'Rate limiting',      desc: 'Token-bucket throttling and QoS',       valueProp: 'One bad client cannot starve everyone else', Icon: DemoIcon.ratelimit,
+      { id: 'ratelimit',   label: 'Rate limiting',      desc: 'Fixed-window throttling per session',    valueProp: 'One bad client cannot starve everyone else', Icon: DemoIcon.ratelimit,
         sourcePath: 'src/BffWeb/BffWeb.Api/Controllers/DemoController.cs' },
     ],
   },

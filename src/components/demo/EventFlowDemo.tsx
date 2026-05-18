@@ -213,10 +213,10 @@ export function EventFlowDemo() {
                     animate={isActive ? { scale: [1, 1.04, 1] } : {}}
                     transition={{ duration: 0.4 }}
                     className={cn(
-                      "flex-1 p-3 rounded-xl border-2 transition-all duration-400 text-center relative overflow-hidden",
+                      "flex-1 p-3 rounded-xl border-2 transition-all duration-300 text-center relative overflow-hidden",
                       isActive
                         ? 'bg-accent/15 border-accent/60 shadow-[0_0_18px_rgba(99,102,241,0.35)]'
-                        : 'bg-white/[0.02] border-white/8'
+                        : 'bg-white/[0.02] border-white/[0.08]'
                     )}
                   >
                     <div className={cn(
@@ -533,7 +533,7 @@ export function EventFlowDemo() {
             </div>
 
             <div className="p-5 bg-white/[0.02] border-t border-white/5 flex items-center justify-between font-mono text-[9px] font-black uppercase tracking-widest">
-              <span className="text-secondary/90">Cluster: cloudamqp_${CLUSTER_LABEL}</span>
+              <span className="text-secondary/90">{`Cluster: cloudamqp_${CLUSTER_LABEL}`}</span>
               <div
                 className={cn("flex items-center gap-2", relay.isPaused ? 'text-warning' : 'text-success')}
               >

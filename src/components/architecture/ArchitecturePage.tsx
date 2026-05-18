@@ -10,7 +10,6 @@ import { Heading } from '../ui/Heading';
 import { Stack } from '../ui/Stack';
 import { Card } from '../ui/Card';
 import { Glass } from '../ui/Glass';
-import { Reveal } from '../ui/Reveal';
 import { Link } from '../ui/Link';
 import { cn } from '../../lib/utils';
 

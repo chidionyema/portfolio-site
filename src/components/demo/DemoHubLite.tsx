@@ -16,6 +16,7 @@ import { Stack } from "../ui/Stack";
 import { Pill } from "../ui/Pill";
 import { Glass } from "../ui/Glass";
 import { cn } from "../../lib/utils";
+import { RealSystemBanner } from "./RealSystemBanner";
 
 const CheckoutDemo          = lazy(() => import("./CheckoutDemo").then(m => ({ default: m.CheckoutDemo })));
 const EventFlowDemo         = lazy(() => import("./EventFlowDemo").then(m => ({ default: m.EventFlowDemo })));
@@ -87,7 +88,7 @@ export function DemoHub() {
 
   const [isChaosOpen, setIsChaosOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"live" | "source">("live");
-  const { chaos, updateChaos, isConnected, error: connectionError, lastSuccessAt } = useDemoSession();
+  const { chaos, updateChaos, isConnected, error: connectionError, lastSuccessAt, metadata } = useDemoSession();
   const [isOffline, setIsOffline] = useState(false);
   const latestTraceId = useLatestTraceId();
   const traceRef = useRef<HTMLDivElement>(null);
@@ -299,6 +300,8 @@ export function DemoHub() {
                   </div>
                </div>
             </header>
+
+            <RealSystemBanner metadata={metadata} />
 
             <div className="relative min-h-[500px]">
                <AnimatePresence mode="wait" initial={false}>

@@ -118,7 +118,7 @@ export function RateLimiterDemo() {
         <div className="flex items-center justify-between">
           <Heading variant="caption" className="flex items-center gap-2.5">
             <Gauge className="w-4 h-4 text-accent" />
-            Token Bucket
+            Fixed Window Limiter
           </Heading>
         </div>
 

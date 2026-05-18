@@ -104,7 +104,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     watch:
       'Saturate the bucket: traffic above the rate is shed cleanly while well-behaved clients keep their share. The system stays available even under abuse.',
     problemSummary: 'Single users can exhaust system capacity.',
-    mechanismSummary: 'Token-bucket throttling enforced across nodes.',
+    mechanismSummary: 'Fixed-window rate limiting with per-session permits.',
     strategy: '.NET FixedWindowRateLimiter',
   },
   tracing: {

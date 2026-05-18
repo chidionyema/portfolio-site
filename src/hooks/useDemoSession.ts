@@ -7,12 +7,19 @@ import { traceStore } from '../lib/trace-store';
 // dev whenever Astro failed to inject the env var into a client bundle.
 const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 
+export interface InstanceMetadata {
+  bff?: { instance: string; region: string };
+  upstreams?: Array<{ service: string; instance?: string | null }>;
+  timestamp?: string;
+}
+
 export interface DemoSessionState {
   sessionId: string;
   isConnected: boolean;
   lastSuccessAt: number | null;
   error: string | null;
   chaos: ChaosState;
+  metadata: InstanceMetadata | null;
 }
 
 export interface ChaosState {
@@ -27,7 +34,8 @@ export function useDemoSession(moduleName?: string) {
     isConnected: false,
     lastSuccessAt: typeof window !== 'undefined' ? Date.now() : null,
     error: null,
-    chaos: { latencyMs: 0, brokerDown: false, serviceFaulty: false }
+    chaos: { latencyMs: 0, brokerDown: false, serviceFaulty: false },
+    metadata: null,
   });
 
   const [events, setEvents] = useState<any[]>([]);
@@ -42,24 +50,17 @@ export function useDemoSession(moduleName?: string) {
     setState(prev => ({ ...prev, sessionId: sid! }));
 
     let mounted = true;
+    const EVENT_NAMES = ['OnSagaStep', 'OnVaultRotation', 'OnCacheEvent', 'OnCircuitBreakerState', 'OnEventFlow', 'OnRateLimit', 'OnConcurrency'] as const;
+    const handler = (e: any) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]);
+    let connection: ReturnType<typeof signalRClient.getConnection> | null = null;
 
     const connect = async () => {
       const tag = `[demo-session ${moduleName ?? 'shared'}]`;
       try {
-        console.info(`${tag} getConnection()`);
-        const connection = signalRClient.getConnection();
+        connection = signalRClient.getConnection();
+        EVENT_NAMES.forEach(name => connection!.on(name, handler));
 
-        connection.on('OnSagaStep', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
-        connection.on('OnVaultRotation', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
-        connection.on('OnCacheEvent', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
-        connection.on('OnCircuitBreakerState', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
-        connection.on('OnEventFlow', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
-        connection.on('OnRateLimit', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
-        connection.on('OnConcurrency', (e) => mounted && setEvents(prev => [e, ...prev.slice(0, 20)]));
-
-        console.info(`${tag} subscribing sid=${sid}`);
         await signalRClient.subscribe(sid!);
-        console.info(`${tag} connected`);
 
         if (mounted) setState(prev => ({ ...prev, isConnected: true }));
       } catch (err) {
@@ -73,6 +74,9 @@ export function useDemoSession(moduleName?: string) {
 
     return () => {
       mounted = false;
+      if (connection) {
+        EVENT_NAMES.forEach(name => connection!.off(name, handler));
+      }
     };
   }, [moduleName]);
 
@@ -108,14 +112,18 @@ export function useDemoSession(moduleName?: string) {
       const traceId = response.headers.get('X-Trace-Id');
       if (traceId) traceStore.set(traceId);
 
-      setState(prev => ({ ...prev, lastSuccessAt: Date.now() }));
+      if (data._metadata) {
+        setState(prev => ({ ...prev, lastSuccessAt: Date.now(), metadata: data._metadata }));
+      } else {
+        setState(prev => ({ ...prev, lastSuccessAt: Date.now() }));
+      }
 
       return { ...data, traceId, latencyMs, statusCode, service };
     } catch (err: any) {
       console.error('Command Execution Failed:', err);
       throw err;
     }
-  }, [state.sessionId, state.chaos]);
+  }, [state.sessionId]);
 
   const updateChaos = (chaos: ChaosState) => {
     setState(prev => ({ ...prev, chaos }));

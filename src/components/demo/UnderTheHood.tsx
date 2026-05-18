@@ -25,7 +25,7 @@ const DEMO_PATTERNS: Record<string, { name: string; oneLiner: string }> = {
   stampede:    { name: '.NET 9 HybridCache Singleflight', oneLiner: 'One caller rebuilds on miss while others wait — N requests, 1 DB hit' },
   cache:       { name: 'Outbox-Driven Invalidation', oneLiner: 'ProductCacheInvalidatedEvent published atomically, consumed by all nodes via MassTransit' },
   concurrency: { name: 'EF Core Optimistic Concurrency', oneLiner: 'Postgres xmin system column as concurrency token — stale writes get 409 Conflict' },
-  ratelimit:   { name: '.NET FixedWindowRateLimiter', oneLiner: 'System.Threading.RateLimiting with per-session token bucket' },
+  ratelimit:   { name: '.NET FixedWindowRateLimiter', oneLiner: 'System.Threading.RateLimiting with per-session fixed-window permits' },
 };
 
 const DEMO_BREAKS: Record<string, string> = {

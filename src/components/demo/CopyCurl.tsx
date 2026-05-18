@@ -25,9 +25,23 @@ export function CopyCurl({ method, path, headers, body }: CopyCurlProps) {
   };
 
   const copy = async () => {
-    await navigator.clipboard.writeText(buildCurl());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(buildCurl());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for non-HTTPS or backgrounded tabs
+      const textarea = document.createElement('textarea');
+      textarea.value = buildCurl();
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

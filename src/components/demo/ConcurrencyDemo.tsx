@@ -97,7 +97,7 @@ export function ConcurrencyDemo() {
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        status: success ? 'success' : 'conflict',
+        status: success ? 'success' as const : 'conflict' as const,
         workerId: user === 'A' ? 0 : 1,
         newVersion: success ? newVersion : currentVersion,
       }, ...prev].slice(0, 10));
@@ -107,7 +107,7 @@ export function ConcurrencyDemo() {
       setLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        status: 'conflict',
+        status: 'conflict' as const,
         workerId: user === 'A' ? 0 : 1,
         newVersion: currentVersion,
       }, ...prev].slice(0, 10));
@@ -140,7 +140,7 @@ export function ConcurrencyDemo() {
         setLogs(prev => [{
           id: crypto.randomUUID(),
           timestamp: new Date(),
-          status: success ? 'success' : 'conflict',
+          status: success ? 'success' as const : 'conflict' as const,
           workerId,
           newVersion: success ? newVersion : currentVersion,
         }, ...prev].slice(0, 10));
@@ -151,7 +151,7 @@ export function ConcurrencyDemo() {
         setLogs(prev => [{
           id: crypto.randomUUID(),
           timestamp: new Date(),
-          status: 'conflict',
+          status: 'conflict' as const,
           workerId,
           newVersion: currentVersion,
         }, ...prev].slice(0, 10));
@@ -198,7 +198,7 @@ export function ConcurrencyDemo() {
               panel.state === 'success' ? 'border-success/50 bg-success/5' :
               panel.state === 'conflict' ? 'border-error/50 bg-error/5' :
               panel.state === 'pending' ? 'border-accent/30 bg-accent/5' :
-              'border-white/8 bg-white/[0.02]'
+              'border-white/[0.08] bg-white/[0.02]'
             )}
           >
             {/* Header */}

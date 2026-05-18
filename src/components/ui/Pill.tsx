@@ -13,6 +13,7 @@ const pillVariants = cva(
         caption: "bg-muted/10 text-muted uppercase tracking-wider",
         success: "bg-success/10 text-success border border-success/20",
         warning: "bg-warning/10 text-warning border border-warning/20",
+        error: "bg-error/10 text-error border border-error/20",
       }
     },
     defaultVariants: {
