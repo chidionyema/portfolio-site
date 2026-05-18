@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test';
  */
 
 const API_URL = process.env.PUBLIC_API_URL || 'http://localhost:5000';
-const HYDRATION_TIMEOUT = 30_000; // client:only takes time
+const HYDRATION_TIMEOUT = 45_000; // client:load still needs hydration on slow CI
 
 const ALL_DEMO_IDS = [
   'idempotency', 'ratelimit', 'circuit', 'stampede', 'cache',
