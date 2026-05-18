@@ -200,7 +200,7 @@ export function EventFlowDemo() {
           <div className="text-[9px] font-black uppercase tracking-[0.35em] text-muted/60 mb-4">
             Event pipeline
           </div>
-          <div className="relative flex items-stretch gap-0">
+          <div className="relative flex items-stretch gap-0 overflow-x-auto pb-2">
             {PIPELINE_NODES.map((node, i) => {
               const Icon = node.icon;
               const isActive = activeNode === node.id;
@@ -215,7 +215,7 @@ export function EventFlowDemo() {
                     animate={isActive ? { scale: [1, 1.04, 1] } : {}}
                     transition={{ duration: 0.4 }}
                     className={cn(
-                      "flex-1 p-3 rounded-xl border-2 transition-all duration-300 text-center relative overflow-hidden",
+                      "flex-1 p-3 rounded-xl border-2 min-w-[120px] transition-all duration-300 text-center relative overflow-hidden",
                       isActive
                         ? 'bg-accent/15 border-accent/60 shadow-[0_0_18px_rgba(99,102,241,0.35)]'
                         : 'bg-white/[0.02] border-white/[0.08]'

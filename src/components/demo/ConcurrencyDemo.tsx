@@ -246,13 +246,13 @@ export function ConcurrencyDemo() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setter(p => ({ ...p, quantity: Math.max(1, p.quantity - 5) }))}
-                    className="w-5 h-5 rounded bg-white/10 text-muted hover:text-primary text-xs flex items-center justify-center"
+                    className="w-10 h-10 rounded bg-white/10 text-muted hover:text-primary text-sm flex items-center justify-center"
                     disabled={panel.state === 'pending' || isRacing}
                   >−</button>
                   <span className="text-sm font-black text-primary tabular-nums w-8 text-center">{panel.quantity}</span>
                   <button
                     onClick={() => setter(p => ({ ...p, quantity: p.quantity + 5 }))}
-                    className="w-5 h-5 rounded bg-white/10 text-muted hover:text-primary text-xs flex items-center justify-center"
+                    className="w-10 h-10 rounded bg-white/10 text-muted hover:text-primary text-sm flex items-center justify-center"
                     disabled={panel.state === 'pending' || isRacing}
                   >+</button>
                 </div>

@@ -115,7 +115,7 @@ export function VaultRotationDemo() {
     <div className="space-y-8">
       {/* Stage Timeline */}
       <div className="relative">
-        <div className="grid grid-cols-4 gap-2 relative">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 relative">
           {/* Connecting line */}
           <div className="absolute top-8 left-[12.5%] right-[12.5%] h-px bg-white/10 hidden md:block" />
 
