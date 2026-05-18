@@ -118,4 +118,15 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     mechanismSummary: 'Correlation IDs track requests across services.',
     strategy: 'OpenTelemetry + Distributed Tracing',
   },
+  refund: {
+    problem:
+      'A refund touches the payment provider, the ledger, and the order state. If the provider call fails or times out, the customer sees nothing — no refund, no explanation, no escalation.',
+    mechanism:
+      'A MassTransit saga state machine tracks each refund through Requested → AwaitingProviderConfirmation → Refunded. If the provider fails or 24 hours elapse, the saga transitions to RequiresReview instead of silently dropping the refund.',
+    watch:
+      'The saga progresses through each state in real time. On success, the refund completes. On timeout or failure, it escalates to ops review — never silently lost.',
+    problemSummary: 'Failed refunds silently disappear.',
+    mechanismSummary: 'Saga with 24h timeout escalates to ops review.',
+    strategy: 'MassTransit Refund Saga',
+  },
 };

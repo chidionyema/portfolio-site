@@ -71,6 +71,14 @@ export const demoGroups: DemoGroup[] = [
     ],
   },
   {
+    id: 'sagas',
+    label: 'Saga orchestration',
+    demos: [
+      { id: 'refund', label: 'Refund saga', desc: 'Multi-stage refund with timeout and review', valueProp: 'Failed refunds never vanish — they escalate', Icon: DemoIcon.checkout,
+        sourcePath: 'src/Payments/Payments.Application/Sagas/RefundSaga.cs' },
+    ],
+  },
+  {
     id: 'secrets',
     label: 'Secret lifecycle',
     demos: [
@@ -99,6 +107,7 @@ export const DEMO_LEARNING_ORDER: string[] = [
   'concurrency',
   'events',
   'checkout',
+  'refund',
   'vault',
 ];
 

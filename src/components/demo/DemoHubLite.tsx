@@ -27,6 +27,7 @@ const CacheStampedeDemo     = lazy(() => import("./CacheStampedeDemo").then(m =>
 const CacheInvalidationDemo = lazy(() => import("./CacheInvalidationDemo").then(m => ({ default: m.CacheInvalidationDemo })));
 const ConcurrencyDemo       = lazy(() => import("./ConcurrencyDemo").then(m => ({ default: m.ConcurrencyDemo })));
 const RateLimiterDemo       = lazy(() => import("./RateLimiterDemo").then(m => ({ default: m.RateLimiterDemo })));
+const RefundSagaDemo       = lazy(() => import("./RefundSagaDemo").then(m => ({ default: m.RefundSagaDemo })));
 const UnderTheHood          = lazy(() => import("./UnderTheHood").then(m => ({ default: m.UnderTheHood })));
 
 const DEFAULT_DEMO = "idempotency";
@@ -68,6 +69,7 @@ function DemoContent({ id }: { id: string }) {
     case "cache":       return <CacheInvalidationDemo />;
     case "concurrency": return <ConcurrencyDemo />;
     case "ratelimit":   return <RateLimiterDemo />;
+    case "refund":      return <RefundSagaDemo />;
     default:            return null;
   }
 }
