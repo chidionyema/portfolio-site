@@ -322,7 +322,7 @@ export const LiveTopologyMap: React.FC = () => {
     try {
       localStorage.setItem('topology-hint-dismissed', '1');
     } catch {
-      // ignore
+      /* localStorage blocked in private mode — dismissal won't persist, non-fatal */
     }
   };
 
@@ -355,7 +355,7 @@ export const LiveTopologyMap: React.FC = () => {
         body: JSON.stringify({ durationSeconds: 30 }),
       });
     } catch {
-      // ignore — SignalR push will reflect actual state if it landed
+      /* fire-and-forget: SignalR push will reflect actual state if the call landed */
     }
   };
 
@@ -368,7 +368,7 @@ export const LiveTopologyMap: React.FC = () => {
         method: 'POST',
       });
     } catch {
-      // ignore
+      /* fire-and-forget: SignalR push will reflect resumed state if the call landed */
     }
   };
 

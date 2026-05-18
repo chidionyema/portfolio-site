@@ -102,6 +102,7 @@ export function ConcurrencyDemo() {
         newVersion: success ? newVersion : currentVersion,
       }, ...prev].slice(0, 10));
     } catch {
+      /* network error treated as conflict — surfaces in panel UI */
       setPanel(p => ({ ...p, state: 'conflict', lastError: '409 Conflict — stale version' }));
       setTimeout(() => setPanel(p => ({ ...p, state: 'idle' })), 3000);
       setLogs(prev => [{
@@ -148,6 +149,7 @@ export function ConcurrencyDemo() {
         if (success) setCurrentVersion(newVersion);
         return { success, newVersion };
       } catch {
+        /* network error — log as conflict so the race UI reflects the failure */
         setLogs(prev => [{
           id: crypto.randomUUID(),
           timestamp: new Date(),

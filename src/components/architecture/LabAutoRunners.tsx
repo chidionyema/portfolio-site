@@ -47,7 +47,7 @@ async function rawFetch(
       const ct = r.headers.get('content-type') ?? '';
       if (ct.includes('application/json')) body = await r.json();
     } catch {
-      // ignore
+      /* JSON parse failed — body stays undefined, caller inspects r.ok/status */
     }
     return { ok: r.ok, status: r.status, body };
   } catch (e) {

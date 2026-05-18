@@ -160,7 +160,8 @@ export function EventFlowDemo() {
       if (result?.queuedCount !== undefined) {
         setRelay({ isPaused: true, queuedCount: result.queuedCount });
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to trigger outbox event', err);
     } finally {
       setIsProcessing(false);
     }
@@ -176,7 +177,8 @@ export function EventFlowDemo() {
       if (result) {
         setRelay({ isPaused: !!result.isPaused, queuedCount: result.queuedCount ?? 0 });
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to toggle relay pause', err);
     } finally {
       setIsToggling(false);
     }

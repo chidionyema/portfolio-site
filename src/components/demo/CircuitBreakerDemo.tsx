@@ -100,7 +100,7 @@ export function CircuitBreakerDemo() {
     try {
       await executeCommand('/circuit/toggle-failure', { failureMode: !isFaultActive });
       setIsFaultActive(!isFaultActive);
-    } catch {}
+    } catch { /* fire-and-forget: circuit state is reflected via polling, failure is non-fatal */ }
   }, [executeCommand, isFaultActive]);
 
   const resetCircuit = useCallback(async () => {
@@ -109,7 +109,7 @@ export function CircuitBreakerDemo() {
       setCircuitState('Closed');
       setMetrics({ success: 0, failure: 0, rejected: 0 });
       setIsFaultActive(false);
-    } catch {}
+    } catch { /* fire-and-forget: circuit state is reflected via polling, failure is non-fatal */ }
   }, [executeCommand]);
 
   const spikeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);

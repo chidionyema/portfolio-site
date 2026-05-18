@@ -133,6 +133,7 @@ const idempotencySpec: ProofSpec = {
         ((state.detail.dedups as number) ?? 0) + (isWinner ? 0 : 1);
       state.detail.firstWrite = isWinner ? 1 : (state.detail.firstWrite ?? 1);
     } catch {
+      /* network/parse error — counted in errCount so the scoreboard reflects it */
       state.errCount++;
     }
   },
@@ -201,6 +202,7 @@ const sagaSpec: ProofSpec = {
             : 'failed';
       state.detail[key] = ((state.detail[key] as number) ?? 0) + 1;
     } catch {
+      /* network/parse error — counted in errCount so the scoreboard reflects it */
       state.errCount++;
     }
   },
@@ -280,6 +282,7 @@ const concurrencySpec: ProofSpec = {
         state.invariantReason = `${won} updates won the same xmin race — lost update possible`;
       }
     } catch {
+      /* network/parse error — counted in errCount so the scoreboard reflects it */
       state.errCount++;
     }
   },
