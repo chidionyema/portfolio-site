@@ -1,5 +1,5 @@
 ---
-import { getCollection, getEntry } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { ArrowLeft, Clock, CalendarDays } from 'lucide-react';
 import { DeepDiveIcon } from '../../lib/icons';
@@ -8,16 +8,16 @@ import { CommandPalette } from '../../components/system/CommandPalette';
 export async function getStaticPaths() {
   const entries = await getCollection('deep-dives', ({ data }) => !data.draft);
   return entries.map((entry) => ({
-    params: { slug: entry.slug },
+    params: { id: entry.id },
     props: { entry, allEntries: entries },
   }));
 }
 
 const { entry, allEntries } = Astro.props;
-const { Content } = await entry.render();
+const { Content } = await render(entry);
 
 const deepDives = allEntries.map((e: any) => ({
-  slug: e.slug,
+  slug: e.id,
   title: e.data.title,
   description: e.data.description,
   iconKey: e.data.iconKey,
@@ -81,7 +81,7 @@ const formatDate = (d: Date) =>
             {related.map((rel: any) => (
               <li>
                 <a
-                  href={`/deep-dives/${rel.slug}`}
+                  href={`/deep-dives/${rel.id}`}
                   class="group flex items-baseline justify-between gap-4 p-4 surface rounded-xl hover:border-accent/40 transition-colors"
                 >
                   <div>
@@ -108,7 +108,7 @@ const formatDate = (d: Date) =>
         ← Chidi Onyema
       </a>
       <a
-        href={`https://github.com/chidionyema/portfolio-site/blob/main/src/content/deep-dives/${entry.slug}.mdx`}
+        href={`https://github.com/chidionyema/portfolio-site/blob/main/src/content/deep-dives/${entry.id}.mdx`}
         target="_blank"
         rel="noopener"
         class="text-xs font-mono uppercase tracking-wider text-muted hover:text-secondary transition-colors"
