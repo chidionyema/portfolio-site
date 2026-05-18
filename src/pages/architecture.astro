@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ArchitecturePage } from '../components/architecture/ArchitecturePage';
+---
+
+<BaseLayout title="Architecture | Chidi Onyema">
+  <main class="pt-20 overflow-x-hidden">
+    <div class="container px-4 sm:px-6 lg:px-8 py-12">
+      <ArchitecturePage client:visible />
+    </div>
+  </main>
+</BaseLayout>

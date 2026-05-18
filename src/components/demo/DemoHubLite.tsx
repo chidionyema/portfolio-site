@@ -16,6 +16,7 @@ import { Stack } from "../ui/Stack";
 import { Pill } from "../ui/Pill";
 import { Glass } from "../ui/Glass";
 import { cn } from "../../lib/utils";
+import { RealSystemBanner } from "./RealSystemBanner";
 
 const CheckoutDemo          = lazy(() => import("./CheckoutDemo").then(m => ({ default: m.CheckoutDemo })));
 const EventFlowDemo         = lazy(() => import("./EventFlowDemo").then(m => ({ default: m.EventFlowDemo })));
@@ -26,6 +27,7 @@ const CacheStampedeDemo     = lazy(() => import("./CacheStampedeDemo").then(m =>
 const CacheInvalidationDemo = lazy(() => import("./CacheInvalidationDemo").then(m => ({ default: m.CacheInvalidationDemo })));
 const ConcurrencyDemo       = lazy(() => import("./ConcurrencyDemo").then(m => ({ default: m.ConcurrencyDemo })));
 const RateLimiterDemo       = lazy(() => import("./RateLimiterDemo").then(m => ({ default: m.RateLimiterDemo })));
+const UnderTheHood          = lazy(() => import("./UnderTheHood").then(m => ({ default: m.UnderTheHood })));
 
 const DEFAULT_DEMO = "idempotency";
 
@@ -86,7 +88,7 @@ export function DemoHub() {
 
   const [isChaosOpen, setIsChaosOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"live" | "source">("live");
-  const { chaos, updateChaos, isConnected, error: connectionError, lastSuccessAt } = useDemoSession();
+  const { chaos, updateChaos, isConnected, error: connectionError, lastSuccessAt, metadata } = useDemoSession();
   const [isOffline, setIsOffline] = useState(false);
   const latestTraceId = useLatestTraceId();
   const traceRef = useRef<HTMLDivElement>(null);
@@ -299,6 +301,8 @@ export function DemoHub() {
                </div>
             </header>
 
+            <RealSystemBanner metadata={metadata} />
+
             <div className="relative min-h-[500px]">
                <AnimatePresence mode="wait" initial={false}>
                   {viewMode === "live" ? (
@@ -312,6 +316,7 @@ export function DemoHub() {
                         <DemoContext demoId={activeId} />
                         <Suspense fallback={<LoadingSkeleton />}>
                            <DemoContent id={activeId} />
+                           <UnderTheHood demoId={activeId} />
                         </Suspense>
                      </motion.div>
                   ) : (

@@ -462,7 +462,7 @@ export function IdempotencyDemo() {
 
           <div className="p-6 bg-white/10 border-t border-white/5 font-mono">
             <p className="text-[10px] text-secondary/90 leading-relaxed uppercase tracking-widest text-center italic">
-              Atomic claim via Postgres UNIQUE constraint. TTL: {ttlPreset}s.
+              Strategy: Postgres UNIQUE Constraint · TTL: {ttlPreset}s
             </p>
           </div>
         </Card>
@@ -501,7 +501,7 @@ function StateBadge({ req }: { req: RequestLog }) {
   const label = isCacheHit ? 'Cache hit' : isCommit ? 'DB write' : 'Failure';
 
   return (
-    <Pill variant={variant as any} className="text-[9px] px-2 py-0.5">
+    <Pill variant={variant} className="text-[9px] px-2 py-0.5">
       {label}
       {req.latencyMs !== undefined && <span className="opacity-60 ml-2">{req.latencyMs}ms</span>}
     </Pill>

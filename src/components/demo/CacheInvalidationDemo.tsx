@@ -65,13 +65,13 @@ export function CacheInvalidationDemo() {
     addLog('read', 'GET /api/catalog/products/demo');
     try {
       if (demoProductId) {
-        const p = await getCachedProduct(demoProductId, sessionId);
+        const p = await getCachedProduct(demoProductId);
         setProduct({
-          name: p.name,
-          price: p.price,
-          version: p.version || 1,
+          name: p.product?.name ?? 'Widget Pro',
+          price: p.product?.price ?? 49.99,
+          version: p.product?.version ?? 1,
           cachedAt: new Date(),
-          ttl: 60
+          ttl: p.cacheInfo?.ttlSeconds ?? 60,
         });
         setCacheStatus('hit');
         addLog('hit', 'Returned from HybridCache (L1/L2)');
@@ -89,7 +89,7 @@ export function CacheInvalidationDemo() {
     addLog('update', `PUT /api/catalog/products/${demoProductId}`);
     try {
       if (demoProductId) {
-        await apiUpdateProduct(demoProductId, { price: parseFloat(newPrice) }, sessionId);
+        await apiUpdateProduct(demoProductId, { price: parseFloat(newPrice) });
         setCacheStatus('stale');
         addLog('publish', 'Committed to DB + Published ProductCacheInvalidatedEvent');
       }
@@ -105,7 +105,7 @@ export function CacheInvalidationDemo() {
     addLog('invalidate', 'Received MassTransit Event: Evicting cache key');
     try {
       if (demoProductId) {
-        await apiInvalidateCache(demoProductId, sessionId);
+        await apiInvalidateCache(demoProductId);
         setCacheStatus('miss');
         addLog('invalidate', 'HybridCache.RemoveAsync(key) complete');
       }

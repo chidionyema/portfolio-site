@@ -17,7 +17,8 @@ const { pathname } = Astro.url;
     <nav aria-label="Primary" class="hidden sm:flex items-center gap-10 text-[10px] uppercase tracking-[0.2em] font-medium text-muted">
       <a href="/work" class="hover:text-primary transition-colors" aria-current={pathname === '/work' ? 'page' : undefined}>Work</a>
       <a href="/demos" class="hover:text-primary transition-colors" aria-current={pathname.startsWith('/demos') ? 'page' : undefined}>Demos</a>
-      <a href="/#deep-dives" class="hover:text-primary transition-colors">Architecture</a>
+      <a href="/architecture" class="hover:text-primary transition-colors" aria-current={pathname === '/architecture' ? 'page' : undefined}>Architecture</a>
+      <a href="/#deep-dives" class="hover:text-primary transition-colors">Deep Dives</a>
       <a href="/about" class="hover:text-primary transition-colors" aria-current={pathname === '/about' ? 'page' : undefined}>About</a>
     </nav>
 
@@ -54,7 +55,8 @@ const { pathname } = Astro.url;
     <div class="container mx-auto px-4 py-4 flex flex-col gap-1">
       <a href="/work" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors" aria-current={pathname === '/work' ? 'page' : undefined}>Work</a>
       <a href="/demos" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors" aria-current={pathname.startsWith('/demos') ? 'page' : undefined}>Demos</a>
-      <a href="/#deep-dives" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors">Architecture</a>
+      <a href="/architecture" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors" aria-current={pathname === '/architecture' ? 'page' : undefined}>Architecture</a>
+      <a href="/#deep-dives" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors">Deep Dives</a>
       <a href="/about" class="px-4 py-3 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-surface-warm transition-colors" aria-current={pathname === '/about' ? 'page' : undefined}>About</a>
     </div>
   </nav>

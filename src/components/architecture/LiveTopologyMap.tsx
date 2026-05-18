@@ -1140,11 +1140,11 @@ function normaliseChaos(raw: any): Record<string, ChaosTargetState> {
   const out: Record<string, ChaosTargetState> = {};
   if (raw && typeof raw === 'object') {
     for (const [target, value] of Object.entries(raw)) {
-      const v = value as any;
+      const v = value as Record<string, unknown>;
       out[target] = {
-        target: v?.target ?? target,
+        target: (typeof v?.target === 'string' ? v.target : target),
         status: v?.status === 'paused' ? 'paused' : 'running',
-        resumeAtUtc: v?.resumeAtUtc ?? null,
+        resumeAtUtc: typeof v?.resumeAtUtc === 'string' ? v.resumeAtUtc : null,
         remainingSeconds: typeof v?.remainingSeconds === 'number'
           ? v.remainingSeconds
           : null,
