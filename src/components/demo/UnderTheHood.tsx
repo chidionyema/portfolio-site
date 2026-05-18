@@ -15,6 +15,9 @@ const DEMO_SERVICES: Record<string, Array<{ name: string; role: string }>> = {
   concurrency: [{ name: 'bff-web', role: 'proxy' }, { name: 'catalog-svc', role: 'xmin' }, { name: 'postgres', role: 'row lock' }],
   ratelimit:   [{ name: 'bff-web', role: 'limiter' }],
   refund:      [{ name: 'bff-web', role: 'proxy' }, { name: 'payments-svc', role: 'saga' }, { name: 'stripe', role: 'provider' }, { name: 'rabbitmq', role: 'broker' }, { name: 'postgres', role: 'state' }],
+  ledger:      [{ name: 'bff-web', role: 'proxy' }, { name: 'payouts-svc', role: 'ledger' }, { name: 'postgres', role: 'entries' }],
+  erasure:     [{ name: 'bff-web', role: 'proxy' }, { name: 'privacy-svc', role: 'saga' }, { name: 'orders-svc', role: 'erasure' }, { name: 'payments-svc', role: 'erasure' }, { name: 'identity-svc', role: 'erasure' }, { name: 'audit-svc', role: 'erasure' }, { name: 'rabbitmq', role: 'broker' }, { name: 'postgres', role: 'state' }],
+  cdcsearch:   [{ name: 'bff-web', role: 'proxy' }, { name: 'catalog-svc', role: 'write' }, { name: 'postgres', role: 'WAL' }, { name: 'debezium', role: 'CDC' }, { name: 'kafka', role: 'stream' }, { name: 'elasticsearch', role: 'index' }],
 };
 
 const DEMO_PATTERNS: Record<string, { name: string; oneLiner: string }> = {
@@ -28,6 +31,9 @@ const DEMO_PATTERNS: Record<string, { name: string; oneLiner: string }> = {
   concurrency: { name: 'EF Core Optimistic Concurrency', oneLiner: 'Postgres xmin system column as concurrency token — stale writes get 409 Conflict' },
   ratelimit:   { name: '.NET FixedWindowRateLimiter', oneLiner: 'System.Threading.RateLimiting with per-session fixed-window permits' },
   refund:      { name: 'MassTransit Refund Saga', oneLiner: 'StateMachine with 24h timeout, provider failure handling, and RequiresReview terminal state' },
+  ledger:      { name: 'Double-Entry Bookkeeping', oneLiner: 'Every payment produces CREDIT + DEBIT entries in one atomic transaction — sum always equals zero' },
+  erasure:     { name: 'GDPR Erasure Saga', oneLiner: 'Ordered deletion across 5 services with 7-day SLA timer; failure transitions to Stalled for ops review' },
+  cdcsearch:   { name: 'Debezium CDC Pipeline', oneLiner: 'WAL events flow PostgreSQL → Debezium → Kafka → Elasticsearch with no polling and sub-second lag' },
 };
 
 const DEMO_BREAKS: Record<string, string> = {
@@ -40,7 +46,10 @@ const DEMO_BREAKS: Record<string, string> = {
   cache:       'Nodes serve stale data for the full TTL window after an update.',
   concurrency: 'Last-write-wins silently overwrites the first editor\'s changes.',
   ratelimit:   'A single runaway client consumes capacity meant for everyone.',
-  refund:       'Failed refunds silently disappear — no escalation, no audit trail, no customer notification.',
+  refund:      'Failed refunds silently disappear — no escalation, no audit trail, no customer notification.',
+  ledger:      'A partial write credits the seller but skips the commission debit — money is created out of thin air.',
+  erasure:     'One silent service failure leaves personal data in the system — a GDPR breach with no ops visibility.',
+  cdcsearch:   'Polling-based index jobs run on a schedule, serve stale results, and hammer the primary database unnecessarily.',
 };
 
 export function UnderTheHood({ demoId }: { demoId: string }) {

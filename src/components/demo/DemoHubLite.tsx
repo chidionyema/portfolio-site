@@ -28,6 +28,9 @@ const CacheInvalidationDemo = lazy(() => import("./CacheInvalidationDemo").then(
 const ConcurrencyDemo       = lazy(() => import("./ConcurrencyDemo").then(m => ({ default: m.ConcurrencyDemo })));
 const RateLimiterDemo       = lazy(() => import("./RateLimiterDemo").then(m => ({ default: m.RateLimiterDemo })));
 const RefundSagaDemo       = lazy(() => import("./RefundSagaDemo").then(m => ({ default: m.RefundSagaDemo })));
+const LedgerDemo            = lazy(() => import("./LedgerDemo").then(m => ({ default: m.LedgerDemo })));
+const GdprErasureDemo       = lazy(() => import("./GdprErasureDemo").then(m => ({ default: m.GdprErasureDemo })));
+const CdcSearchDemo         = lazy(() => import("./CdcSearchDemo").then(m => ({ default: m.CdcSearchDemo })));
 const UnderTheHood          = lazy(() => import("./UnderTheHood").then(m => ({ default: m.UnderTheHood })));
 
 const DEFAULT_DEMO = "idempotency";
@@ -70,6 +73,9 @@ function DemoContent({ id }: { id: string }) {
     case "concurrency": return <ConcurrencyDemo />;
     case "ratelimit":   return <RateLimiterDemo />;
     case "refund":      return <RefundSagaDemo />;
+    case "ledger":      return <LedgerDemo />;
+    case "erasure":     return <GdprErasureDemo />;
+    case "cdcsearch":   return <CdcSearchDemo />;
     default:            return null;
   }
 }

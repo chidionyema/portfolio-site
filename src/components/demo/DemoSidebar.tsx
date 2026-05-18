@@ -79,6 +79,30 @@ export const demoGroups: DemoGroup[] = [
     ],
   },
   {
+    id: 'financial',
+    label: 'Financial integrity',
+    demos: [
+      { id: 'ledger', label: 'Double-entry ledger', desc: 'Debit/credit pairs with balance invariant', valueProp: 'Every cent is accounted for — twice', Icon: DemoIcon.checkout,
+        sourcePath: 'src/Payouts/Payouts.Domain/Aggregates/LedgerEntry.cs' },
+    ],
+  },
+  {
+    id: 'compliance',
+    label: 'Compliance',
+    demos: [
+      { id: 'erasure', label: 'GDPR erasure', desc: 'Cross-service data deletion with 7-day SLA', valueProp: 'Right to be forgotten as a saga — never silently ignored', Icon: DemoIcon.vault,
+        sourcePath: 'src/Privacy/Privacy.Application/Requests/Sagas/PrivacyRequestStateMachine.cs' },
+    ],
+  },
+  {
+    id: 'search',
+    label: 'Search pipeline',
+    demos: [
+      { id: 'cdcsearch', label: 'CDC search', desc: 'WAL-driven search index via Debezium + Kafka', valueProp: 'Product changes appear in search within seconds', Icon: DemoIcon.events,
+        sourcePath: 'src/Search/Search.Application/Consumers/ProductCacheInvalidatedConsumer.cs' },
+    ],
+  },
+  {
     id: 'secrets',
     label: 'Secret lifecycle',
     demos: [
@@ -108,6 +132,9 @@ export const DEMO_LEARNING_ORDER: string[] = [
   'events',
   'checkout',
   'refund',
+  'ledger',
+  'erasure',
+  'cdcsearch',
   'vault',
 ];
 

@@ -129,4 +129,37 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     mechanismSummary: 'Saga with 24h timeout escalates to ops review.',
     strategy: 'MassTransit Refund Saga',
   },
+  ledger: {
+    problem:
+      'A payment credited to a seller and a commission debited to the platform are two separate writes. If one succeeds and the other fails, money is created or destroyed — the books no longer balance.',
+    mechanism:
+      'Double-entry bookkeeping requires every transaction to produce at least two ledger entries that sum to zero. Both entries are written in a single atomic transaction on the same aggregate, so partial writes are impossible.',
+    watch:
+      'Every simulation posts a CREDIT for the gross amount and a DEBIT for the platform commission. The sum of all entries always equals zero. That invariant is enforced at the domain model level, not the UI.',
+    problemSummary: 'Single-entry writes leave books out of balance.',
+    mechanismSummary: 'Paired debit/credit entries in one atomic write.',
+    strategy: 'Double-Entry Ledger (domain invariant)',
+  },
+  erasure: {
+    problem:
+      'A GDPR erasure request touches five services. If one service fails silently, personal data remains in the system — a regulatory breach. If the saga has no SLA enforcement, requests can stall indefinitely.',
+    mechanism:
+      'A saga orchestrates erasure commands to each service in order. Each service confirms deletion before the saga advances. A 7-day SLA timer is started on creation; expiry without completion transitions the saga to Stalled for mandatory ops review.',
+    watch:
+      'Each service node lights up as it confirms erasure. On success all five confirm and the saga completes. Any failure transitions to Failed — never a silent partial delete.',
+    problemSummary: 'Partial erasure leaves regulated data in the system.',
+    mechanismSummary: 'Ordered saga with SLA timer prevents silent failures.',
+    strategy: 'GDPR Erasure Saga (Art. 17)',
+  },
+  cdcsearch: {
+    problem:
+      'Search indexes updated by polling the database on a timer lag behind writes by the poll interval. High-frequency writes mean the index is always slightly stale, and frequent polling adds unnecessary load to the primary.',
+    mechanism:
+      "Debezium reads PostgreSQL's Write-Ahead Log (WAL) and publishes every row change to a Kafka topic. A consumer reads from Kafka and updates the Elasticsearch index. The entire pipeline is event-driven — no polling, no scheduled jobs.",
+    watch:
+      'Trigger a search and watch the CDC pipeline light up: PostgreSQL WAL → Debezium → Kafka → Elasticsearch. The pipeline completes and results reflect the latest data within seconds of any product write.',
+    problemSummary: 'Polling-based indexing is stale and wastes DB resources.',
+    mechanismSummary: 'WAL-driven CDC keeps indexes current with zero polling.',
+    strategy: 'Debezium CDC + Kafka + Elasticsearch',
+  },
 };
