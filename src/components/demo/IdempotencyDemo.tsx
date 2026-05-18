@@ -462,7 +462,7 @@ export function IdempotencyDemo() {
 
           <div className="p-6 bg-white/10 border-t border-white/5 font-mono">
             <p className="text-[10px] text-secondary/90 leading-relaxed uppercase tracking-widest text-center italic">
-              Atomic claim via Postgres UNIQUE constraint. TTL: {ttlPreset}s.
+              Strategy: Postgres UNIQUE Constraint · TTL: {ttlPreset}s
             </p>
           </div>
         </Card>
