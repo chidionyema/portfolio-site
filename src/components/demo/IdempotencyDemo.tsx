@@ -501,7 +501,7 @@ function StateBadge({ req }: { req: RequestLog }) {
   const label = isCacheHit ? 'Cache hit' : isCommit ? 'DB write' : 'Failure';
 
   return (
-    <Pill variant={variant as any} className="text-[9px] px-2 py-0.5">
+    <Pill variant={variant} className="text-[9px] px-2 py-0.5">
       {label}
       {req.latencyMs !== undefined && <span className="opacity-60 ml-2">{req.latencyMs}ms</span>}
     </Pill>

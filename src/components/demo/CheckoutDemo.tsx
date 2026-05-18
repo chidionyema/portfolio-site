@@ -845,7 +845,7 @@ function StatusBadge({ status }: { status: SagaStepEvent['status'] }) {
       ? 'warning'
       : 'status';
   return (
-    <Pill variant={variant as any} className="text-[10px] px-2 py-0.5">
+    <Pill variant={variant} className="text-[10px] px-2 py-0.5">
       {status}
     </Pill>
   );
