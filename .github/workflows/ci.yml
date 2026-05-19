@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
 
       - name: Install
-        run: npm ci --legacy-peer-deps && npm rebuild sharp
+        run: npm install --legacy-peer-deps
 
       - name: Quality gates
         run: bash scripts/check-quality.sh
@@ -52,7 +52,7 @@ jobs:
           cache: 'npm'
 
       - name: Install
-        run: npm ci --legacy-peer-deps && npm rebuild sharp
+        run: npm install --legacy-peer-deps
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
@@ -87,7 +87,7 @@ jobs:
           cache: 'npm'
 
       - name: Install
-        run: npm ci --legacy-peer-deps && npm rebuild sharp
+        run: npm install --legacy-peer-deps
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
@@ -120,7 +120,7 @@ jobs:
           cache: 'npm'
 
       - name: Install
-        run: npm ci --legacy-peer-deps && npm rebuild sharp
+        run: npm install --legacy-peer-deps
 
       - name: Build (with build-info)
         env:
@@ -146,7 +146,7 @@ jobs:
           cache: 'npm'
 
       - name: Install
-        run: npm ci --legacy-peer-deps && npm rebuild sharp
+        run: npm install --legacy-peer-deps
 
       - name: Install Playwright + axe
         run: |
