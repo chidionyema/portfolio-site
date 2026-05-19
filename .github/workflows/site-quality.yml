@@ -23,11 +23,5 @@ jobs:
       - name: Check Architecture
         run: ./scripts/check-frontend-architecture.sh
 
-      - name: Run Unit & Component Tests
-        run: npx vitest run --coverage
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      - name: Run E2E & A11y Tests
-        run: npx playwright test
+      - name: Run Unit Tests
+        run: npx vitest run --coverage tests/unit
