@@ -192,8 +192,8 @@ test.describe('Homepage', () => {
   test('trust tiles render with values', async ({ page }) => {
     await page.goto('/');
     // Trust tiles use framer-motion whileInView — check content exists in DOM
-    await expect(page.locator('text=Microservices').first()).toBeAttached({ timeout: HYDRATION_TIMEOUT });
-    await expect(page.locator('text=Architecture Guards').first()).toBeAttached();
+    await expect(page.locator('text=Live Services').first()).toBeAttached({ timeout: HYDRATION_TIMEOUT });
+    await expect(page.locator('text=Arch Guards').first()).toBeAttached();
   });
 
   test('hero renders', async ({ page }) => {
