@@ -148,6 +148,23 @@ test.describe('Architecture Page', () => {
 // ─── Navigation ─────────────────────────────────────────────────
 
 test.describe('Navigation', () => {
+  test('nav links point to correct destinations', async ({ page }) => {
+    await page.goto('/');
+    const expected: Record<string, string> = {
+      'Work': '/work',
+      'Demos': '/demos',
+      'Architecture': '/architecture',
+      'About': '/about',
+    };
+    const nav = page.locator('nav[aria-label="Primary"]');
+    for (const [label, path] of Object.entries(expected)) {
+      const link = nav.getByText(label, { exact: true });
+      await expect(link, `"${label}" nav link should exist`).toBeVisible();
+      const href = await link.getAttribute('href');
+      expect(href, `"${label}" should link to ${path}`).toBe(path);
+    }
+  });
+
   test('all nav links resolve to 200', async ({ page }) => {
     const pages = ['/', '/work', '/demos', '/architecture', '/about', '/contact'];
     for (const path of pages) {
