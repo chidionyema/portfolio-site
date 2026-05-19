@@ -1,72 +1,70 @@
-import { Terminal } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { traceStore } from "../../lib/trace-store";
-import { CopyCurl } from "./CopyCurl";
-import { Pill } from "../ui/Pill";
-import { cn } from "../../lib/utils";
-import type { RequestMetadata } from "../../lib/api/demo-client";
+import { motion, AnimatePresence } from 'framer-motion';
+import { Activity } from 'lucide-react';
 
 interface RequestReceiptProps {
-  service: string;
-  latencyMs: number;
-  statusCode: number;
-  traceId: string | null;
-  /** Optional: enables "copy cURL" button */
-  curl?: { method: string; path: string; headers?: Record<string, string>; body?: unknown };
+  traceId?: string | null;
+  latencyMs?: number;
+  statusCode?: number;
+  service?: string;
+  className?: string;
 }
 
-export function RequestReceipt({ service, latencyMs, statusCode, traceId, curl }: RequestReceiptProps) {
-  if (!traceId) return null;
+export function RequestReceipt({ traceId, latencyMs, statusCode, service, className = '' }: RequestReceiptProps) {
+  if (!traceId && !latencyMs) return null;
 
-  const variant = statusCode >= 200 && statusCode < 300
-    ? "success"
-    : statusCode === 429 || statusCode === 503
-    ? "warning"
-    : "error";
+  const statusColor = !statusCode ? 'text-muted'
+    : statusCode < 300 ? 'text-success'
+    : statusCode < 500 ? 'text-warning'
+    : 'text-error';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-wrap items-center gap-2 font-mono text-[10px] py-2 border-t border-white/5 mt-4"
-    >
-      <div className="flex items-center gap-2 bg-white/10 px-2 py-0.5 rounded border border-white/5">
-        <Terminal className="w-3 h-3 opacity-80 text-muted" />
-        <span className="font-bold uppercase text-secondary">{service}</span>
-        <span className="opacity-60">|</span>
-        <span className="text-muted">{latencyMs}ms</span>
-        <span className="opacity-60">|</span>
-        <Pill variant={variant} className="px-1.5 py-0 rounded text-[9px]">{statusCode}</Pill>
-      </div>
-
-      <button
-        onClick={() => traceStore.set(traceId)}
-        className="flex items-center gap-1.5 bg-accent/10 hover:bg-accent/20 px-2 py-0.5 rounded border border-accent/20 text-accent transition-all group"
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        className={`flex items-center gap-3 px-3 py-1.5 rounded bg-black/40 border border-white/5 font-mono text-[10px] tracking-wide ${className}`}
       >
-        <span className="font-black uppercase tracking-widest">trace: {traceId.substring(0, 6)}</span>
-      </button>
-
-      {curl && (
-        <CopyCurl method={curl.method} path={curl.path} headers={curl.headers} body={curl.body} />
-      )}
-    </motion.div>
+        <Activity className="w-3 h-3 text-accent shrink-0" />
+        {service && <span className="text-secondary/60">{service}</span>}
+        {statusCode && <span className={statusColor}>{statusCode}</span>}
+        {latencyMs !== undefined && (
+          <span className="text-secondary/50">{latencyMs}ms</span>
+        )}
+        {traceId && (
+          <span className="text-muted truncate max-w-[140px]" title={traceId}>
+            trace:{traceId.slice(0, 12)}
+          </span>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
-export function RequestReceiptHistory({ receipts }: { receipts: RequestMetadata[] }) {
+interface ReceiptEntry {
+  traceId?: string | null;
+  latencyMs?: number;
+  statusCode?: number;
+  service?: string;
+  timestamp?: number;
+}
+
+export function RequestReceiptHistory({ receipts }: { receipts: ReceiptEntry[] }) {
+  if (!receipts.length) return null;
+
   return (
-    <div className="space-y-1">
-      <AnimatePresence initial={false}>
-        {receipts.map((r, i) => (
-          <RequestReceipt
-            key={r.traceId || i}
-            service={r.service}
-            latencyMs={r.latencyMs}
-            statusCode={r.statusCode}
-            traceId={r.traceId}
-          />
-        ))}
-      </AnimatePresence>
+    <div className="space-y-1 mt-3">
+      <p className="text-[9px] uppercase tracking-widest text-muted mb-1">Recent Requests</p>
+      {receipts.slice(-5).reverse().map((r, i) => (
+        <RequestReceipt
+          key={i}
+          traceId={r.traceId}
+          latencyMs={r.latencyMs}
+          statusCode={r.statusCode}
+          service={r.service}
+          className="opacity-80"
+        />
+      ))}
     </div>
   );
 }

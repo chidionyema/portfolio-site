@@ -23,6 +23,7 @@ import { cn } from '../../lib/utils';
 import { CLUSTER_LABEL } from '../../lib/copy';
 import type { EventFlowEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
 
 const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 
@@ -68,6 +69,7 @@ export function EventFlowDemo() {
   const [relay, setRelay] = useState<RelayStatus>({ isPaused: false, queuedCount: 0 });
   const [isToggling, setIsToggling] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
   const [activeNode, setActiveNode] = useState<PipelineNode | null>(null);
   const [flowDots, setFlowDots] = useState<FlowDot[]>([]);
 
@@ -157,6 +159,7 @@ export function EventFlowDemo() {
         payload: { message: 'Atomic Commit Test', triggeredAt: new Date().toISOString() },
       });
       setReceipts(prev => [result, ...prev].slice(0, 10));
+      setReceipt(result as RequestMetadata);
       if (result?.queuedCount !== undefined) {
         setRelay({ isPaused: true, queuedCount: result.queuedCount });
       }
@@ -307,6 +310,13 @@ export function EventFlowDemo() {
           </AnimatePresence>
         </div>
       </Card>
+
+      <RequestReceipt
+        traceId={receipt?.traceId}
+        latencyMs={receipt?.latencyMs}
+        statusCode={receipt?.statusCode}
+        service={receipt?.service}
+      />
 
       <div className="grid lg:grid-cols-2 gap-12">
         <Stack gap={6}>

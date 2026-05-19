@@ -11,6 +11,7 @@ import { Pill } from '../ui/Pill';
 import { Glass } from '../ui/Glass';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
 
 interface CacheEntry {
   name: string;
@@ -41,6 +42,7 @@ export function CacheInvalidationDemo() {
   const [newPrice, setNewPrice] = useState('59.99');
   const [isUpdating, setIsUpdating] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
   const { executeCommand, events, sessionId } = useDemoSession('cache-invalidation');
 
@@ -66,6 +68,7 @@ export function CacheInvalidationDemo() {
     try {
       if (demoProductId) {
         const p = await getCachedProduct(demoProductId);
+        setReceipt(p as RequestMetadata);
         setProduct({
           name: p.product?.name ?? 'Widget Pro',
           price: p.product?.price ?? 49.99,
@@ -89,7 +92,8 @@ export function CacheInvalidationDemo() {
     addLog('update', `PUT /api/catalog/products/${demoProductId}`);
     try {
       if (demoProductId) {
-        await apiUpdateProduct(demoProductId, { price: parseFloat(newPrice) });
+        const r = await apiUpdateProduct(demoProductId, { price: parseFloat(newPrice) });
+        setReceipt(r as RequestMetadata);
         setCacheStatus('stale');
         addLog('publish', 'Committed to DB + Published ProductCacheInvalidatedEvent');
       }
@@ -105,7 +109,8 @@ export function CacheInvalidationDemo() {
     addLog('invalidate', 'Received MassTransit Event: Evicting cache key');
     try {
       if (demoProductId) {
-        await apiInvalidateCache(demoProductId);
+        const r = await apiInvalidateCache(demoProductId);
+        setReceipt(r as RequestMetadata);
         setCacheStatus('miss');
         addLog('invalidate', 'HybridCache.RemoveAsync(key) complete');
       }
@@ -194,6 +199,13 @@ export function CacheInvalidationDemo() {
               <Eye className="w-4 h-4" />
               Read from Cache
             </Button>
+
+            <RequestReceipt
+              traceId={receipt?.traceId}
+              latencyMs={receipt?.latencyMs}
+              statusCode={receipt?.statusCode}
+              service={receipt?.service}
+            />
           </Stack>
         </Card>
       </Stack>

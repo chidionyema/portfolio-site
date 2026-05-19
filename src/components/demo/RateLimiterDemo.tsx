@@ -11,6 +11,7 @@ import { cn } from '../../lib/utils';
 import { CLUSTER_LABEL } from '../../lib/copy';
 import type { RateLimitEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
 
 interface RequestLog {
   id: string;
@@ -34,6 +35,7 @@ export function RateLimiterDemo() {
   const [windowReset, setWindowReset] = useState(0);
   const [burstBars, setBurstBars] = useState<BurstBar[]>([]);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
   const { executeCommand, events } = useDemoSession('ratelimit');
 
@@ -84,8 +86,11 @@ export function RateLimiterDemo() {
       setLocalRequests(prev => [log, ...prev].slice(0, 10));
 
       const res = await executeCommand('/ratelimit/request', {});
-      if (res?.metadata) {
-        setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
+      if (res) {
+        setReceipt(res as RequestMetadata);
+        if (res?.metadata) {
+          setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
+        }
       }
     } catch (e) {
       console.error(e);
@@ -272,6 +277,13 @@ export function RateLimiterDemo() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <RequestReceipt
+              traceId={receipt?.traceId}
+              latencyMs={receipt?.latencyMs}
+              statusCode={receipt?.statusCode}
+              service={receipt?.service}
+            />
           </Stack>
         </Card>
       </Stack>

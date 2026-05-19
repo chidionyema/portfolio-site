@@ -9,6 +9,7 @@ import { Stack } from '../ui/Stack';
 import { Pill } from '../ui/Pill';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
 
 interface ConcurrencyResult {
   id: string;
@@ -41,6 +42,7 @@ export function ConcurrencyDemo() {
   const [currentVersion, setCurrentVersion] = useState(1);
   const [isRacing, setIsRacing] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
   // Per-user panels
   const [userA, setUserA] = useState<UserPanel>({ ...INITIAL_PANEL, label: 'User A', quantity: 10 });
@@ -80,6 +82,7 @@ export function ConcurrencyDemo() {
         method: 'PUT',
         headers: { 'If-Match': `"${currentVersion}"` },
       });
+      if (res?.traceId || res?.latencyMs) setReceipt(res as RequestMetadata);
 
       const success = res?.success !== false && !res?.error;
       const newVersion = res?.inventory?.version ? parseInt(res.inventory.version) : currentVersion + 1;
@@ -343,6 +346,13 @@ export function ConcurrencyDemo() {
           Race 3 Workers
         </Button>
       </div>
+
+      <RequestReceipt
+        traceId={receipt?.traceId}
+        latencyMs={receipt?.latencyMs}
+        statusCode={receipt?.statusCode}
+        service={receipt?.service}
+      />
 
       {/* Commit log */}
       <div className="grid lg:grid-cols-[1fr_1fr] gap-8">

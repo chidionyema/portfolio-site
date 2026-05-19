@@ -10,6 +10,7 @@ import { Pill } from '../ui/Pill';
 import { Glass } from '../ui/Glass';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
 
 type CircuitState = 'Closed' | 'Open' | 'HalfOpen';
 
@@ -34,6 +35,7 @@ export function CircuitBreakerDemo() {
   const [metrics, setMetrics] = useState({ success: 0, failure: 0, rejected: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [isFaultActive, setIsFaultActive] = useState(false);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
   const transitionTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const { executeCommand, events, chaos } = useDemoSession('circuit-breaker');
@@ -58,6 +60,7 @@ export function CircuitBreakerDemo() {
     const start = Date.now();
     try {
       const res = await executeCommand('/circuit/request', { shouldFail: shouldFail ?? isFaultActive });
+      if (res?.traceId || res?.latencyMs) setReceipt(res as RequestMetadata);
       const duration = Date.now() - start;
       const isRejected = res?.isRejected || res?.rejected;
       const isOk = res?.success && !isRejected;
@@ -305,6 +308,12 @@ export function CircuitBreakerDemo() {
                   </div>
                 </div>
               )}
+              <RequestReceipt
+                traceId={receipt?.traceId}
+                latencyMs={receipt?.latencyMs}
+                statusCode={receipt?.statusCode}
+                service={receipt?.service}
+              />
             </Stack>
           </Card>
         </Stack>

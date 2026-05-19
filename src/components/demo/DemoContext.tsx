@@ -1,10 +1,8 @@
 import { motion } from "framer-motion";
-import { AlertCircle, Cog } from "lucide-react";
+import { AlertCircle, Cog, Shield } from "lucide-react";
 import { DEMO_CONTEXT } from "../../lib/demo-context";
 import { Card } from "../ui/Card";
-import { Stack } from "../ui/Stack";
 import { Heading } from "../ui/Heading";
-import { cn } from "../../lib/utils";
 
 interface DemoContextProps {
   demoId: string;
@@ -22,6 +20,12 @@ export function DemoContext({ demoId }: DemoContextProps) {
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       className="mb-10"
     >
+      {/* Business outcome headline */}
+      <div className="flex items-center gap-2.5 px-4 py-2.5 mb-4 rounded-lg bg-accent/[0.06] border border-accent/10">
+        <Shield className="w-4 h-4 text-accent shrink-0" />
+        <p className="text-sm font-semibold text-primary/90 leading-snug">{copy.businessOutcome}</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card variant="panel" padding="sm" className="border-l-4 border-l-warning bg-warning/[0.03]">
           <div className="flex items-start gap-4">
