@@ -2,8 +2,10 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { Hero } from '../components/hero/HeroLite';
+import { LiveHealthStrip } from '../components/home/LiveHealthStrip';
 import { TrustTiles } from '../components/home/TrustTiles';
 import { TechStack } from '../components/home/TechStack';
+import { ArchitecturePreview } from '../components/home/ArchitecturePreview';
 import { Proof } from '../components/home/Proof';
 import { Dives } from '../components/home/Dives';
 const dd = await getCollection('deep-dives', ({ data }) => !data.draft);
@@ -20,9 +22,11 @@ const dives = dd.slice(0, 3).map((e) => ({
 <BaseLayout>
   <main>
     <Hero client:load />
+    <LiveHealthStrip client:load />
     <section class="py-12 px-6 max-w-6xl mx-auto">
       <TrustTiles client:load />
       <TechStack client:visible />
+      <ArchitecturePreview client:visible />
     </section>
     <Proof client:visible />
     <Dives dives={dives} client:visible />

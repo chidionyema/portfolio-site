@@ -5,18 +5,59 @@ import { Container } from '../components/ui/Container';
 import { Stack } from '../components/ui/Stack';
 ---
 
-<BaseLayout title="About | Chidi Onyema">
+<BaseLayout title="About | Chidi Onyema" description="Senior .NET contractor. 10+ years building distributed systems. London-based, remote-friendly.">
   <main class="pt-32 pb-24">
     <Container size="prose">
       <Stack gap={12}>
-        <Heading variant="hero" level={1}>Senior .NET engineer based in London.</Heading>
-        <div class="prose prose-primary">
-          <p class="text-xl text-secondary leading-relaxed">
-            I specialize in building and stabilizing distributed systems. 
-            My work focuses on resilience, consistency, and performance at scale.
+        <div>
+          <Heading variant="hero" level={1}>About me</Heading>
+          <p class="text-xl text-secondary leading-relaxed mt-6">
+            I'm a senior .NET contractor based in London, specializing in distributed systems
+            that handle real money, real users, and real failure modes.
           </p>
-          <p>
-            Currently available for contract engagements.
+        </div>
+
+        <div class="prose prose-primary max-w-none">
+          <h2 class="text-lg font-semibold text-primary">What I do</h2>
+          <p class="text-secondary">
+            I design and build microservice platforms — the kind where a payment can't silently
+            disappear, a refund can't get stuck without escalation, and a cache stampede can't
+            take down the database. My focus is on the hard problems: distributed transactions,
+            saga orchestration, idempotency, and zero-downtime deployments.
+          </p>
+
+          <h2 class="text-lg font-semibold text-primary mt-8">How I work</h2>
+          <ul class="text-secondary space-y-2">
+            <li><strong>Architecture-first:</strong> I start with failure modes, not happy paths. Every design decision maps to a specific production failure I've seen.</li>
+            <li><strong>Automated enforcement:</strong> 159 architecture guards + 50 Roslyn analyzers catch violations at compile time, not in code review.</li>
+            <li><strong>Observable by default:</strong> OpenTelemetry tracing, structured logging, health endpoints on every service.</li>
+            <li><strong>Test pyramid:</strong> Unit → Integration → Contract → E2E. 13 CI suites, all green.</li>
+          </ul>
+
+          <h2 class="text-lg font-semibold text-primary mt-8">This portfolio</h2>
+          <p class="text-secondary">
+            This isn't a static site with screenshots. It's a live .NET 9 cluster — 8 microservices
+            on Fly.io, PostgreSQL on Supabase, RabbitMQ on CloudAMQP, Redis on Upstash. Every demo
+            hits real infrastructure. The source is on
+            <a href="https://github.com/chidionyema/haworks-platform" target="_blank" class="text-accent hover:underline">GitHub</a>.
+          </p>
+
+          <h2 class="text-lg font-semibold text-primary mt-8">Stack</h2>
+          <div class="flex flex-wrap gap-2 not-prose">
+            {['C# / .NET 9', 'MassTransit', 'EF Core', 'PostgreSQL', 'RabbitMQ', 'Redis', 'Polly', 'HashiCorp Vault', 'Docker', 'Fly.io', 'Supabase', 'OpenTelemetry', 'xUnit', 'Pact', 'Aspire'].map(tech => (
+              <span class="px-2.5 py-1 bg-surface-warm border border-border rounded text-[10px] uppercase tracking-wider font-mono text-muted">{tech}</span>
+            ))}
+          </div>
+
+          <h2 class="text-lg font-semibold text-primary mt-8">Availability</h2>
+          <p class="text-secondary">
+            Currently available for contract engagements. London-based, comfortable with
+            remote and hybrid. Day rate on request.
+          </p>
+          <p class="mt-4">
+            <a href="/contact" class="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-primary text-base-inverse hover:bg-secondary transition-all">
+              Get in touch
+            </a>
           </p>
         </div>
       </Stack>

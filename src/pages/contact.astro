@@ -6,18 +6,83 @@ import { buttonVariants } from '../components/ui/Button';
 import { Stack } from '../components/ui/Stack';
 ---
 
-<BaseLayout title="Contact | Chidi Onyema">
+<BaseLayout
+  title="Contact | Chidi Onyema"
+  description="Get in touch with Chidi Onyema — senior .NET contractor based in London, open to distributed systems and fintech contracts."
+>
   <main class="pt-32 pb-24">
     <Container size="prose">
       <Stack gap={12}>
-        <Heading variant="hero" level={1}>Let’s talk.</Heading>
-        <p class="text-xl text-secondary leading-relaxed">
-          I’m currently open to new opportunities and interesting technical challenges.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4">
-          <a href="mailto:hello@chidionyema.dev" class={buttonVariants({ variant: 'primary', className: 'px-8 py-4' })}>Email me</a>
-          <a href="https://linkedin.com/in/chidionyema" target="_blank" rel="noopener noreferrer" class={buttonVariants({ variant: 'secondary', className: 'px-8 py-4' })}>LinkedIn</a>
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-muted font-bold mb-4">Get in touch</p>
+          <Heading variant="hero" level={1}>Let's work together.</Heading>
         </div>
+
+        <div class="space-y-4">
+          <p class="text-xl text-secondary leading-relaxed">
+            I'm available for .NET contracts in London and remote. Distributed systems,
+            fintech, event-driven architecture — the harder the problem, the better.
+          </p>
+          <p class="text-base text-muted leading-relaxed">
+            Typical engagement: 3&ndash;12 month contracts, inside or outside IR35.
+            Happy to discuss rate and availability directly.
+          </p>
+        </div>
+
+        <!-- CTA buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a
+            href="mailto:chidi@haworks.dev"
+            class={buttonVariants({ variant: 'primary', className: 'px-8 py-4' })}
+          >
+            Email me directly
+          </a>
+          <a
+            href="https://linkedin.com/in/chidionyema"
+            target="_blank"
+            rel="noopener noreferrer"
+            class={buttonVariants({ variant: 'secondary', className: 'px-8 py-4' })}
+          >
+            LinkedIn
+          </a>
+        </div>
+
+        <!-- Divider -->
+        <hr class="border-border" />
+
+        <!-- Links row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div class="glass-subtle p-5 rounded-xl">
+            <p class="text-[10px] uppercase tracking-widest text-muted font-bold mb-2">Email</p>
+            <a
+              href="mailto:chidi@haworks.dev"
+              class="text-sm text-accent hover:underline font-mono"
+            >chidi@haworks.dev</a>
+          </div>
+          <div class="glass-subtle p-5 rounded-xl">
+            <p class="text-[10px] uppercase tracking-widest text-muted font-bold mb-2">GitHub</p>
+            <a
+              href="https://github.com/chidionyema"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-sm text-accent hover:underline font-mono"
+            >github.com/chidionyema</a>
+          </div>
+          <div class="glass-subtle p-5 rounded-xl">
+            <p class="text-[10px] uppercase tracking-widest text-muted font-bold mb-2">LinkedIn</p>
+            <a
+              href="https://linkedin.com/in/chidionyema"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-sm text-accent hover:underline font-mono"
+            >in/chidionyema</a>
+          </div>
+        </div>
+
+        <!-- Availability note -->
+        <p class="text-xs text-muted border-l-2 border-accent pl-4 leading-relaxed">
+          Currently available &mdash; response time is usually within one business day.
+        </p>
       </Stack>
     </Container>
   </main>
