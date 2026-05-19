@@ -8,7 +8,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  workers: isCI ? 2 : undefined,
+  workers: isCI ? 1 : undefined,
   reporter: isCI ? 'github' : 'html',
   timeout: 60_000, // 60s per test — client:only islands need time
   use: {
