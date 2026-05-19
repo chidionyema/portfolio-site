@@ -28,3 +28,4 @@ yarn-error.log*
 # Wrangler
 .wrangler/
 test-results/
+package-lock.json
