@@ -12,6 +12,7 @@ import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
 import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 type CircuitState = 'Closed' | 'Open' | 'HalfOpen';
 
@@ -134,6 +135,7 @@ export function CircuitBreakerDemo() {
   return (
     <div className="space-y-8">
       <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="circuit" />
 
       {/* Before/After callout */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 font-mono text-[10px] text-muted leading-relaxed">

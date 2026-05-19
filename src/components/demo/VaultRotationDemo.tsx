@@ -11,6 +11,7 @@ import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
 import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 type RotationStage = 'idle' | 'started' | 'activated' | 'grace_period' | 'revoked' | 'failed';
 
@@ -121,6 +122,7 @@ export function VaultRotationDemo() {
   return (
     <div className="space-y-8">
       <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="vault" />
 
       {/* Stage Timeline */}
       <div className="relative">

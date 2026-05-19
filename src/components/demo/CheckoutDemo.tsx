@@ -17,6 +17,7 @@ import type { SagaStepEvent } from '../../lib/api/signalr';
 import { ChaosButton } from './ChaosButton';
 import { RequestReceipt, RequestReceiptHistory } from './RequestReceipt';
 import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Heading } from '../ui/Heading';
@@ -153,6 +154,7 @@ export function CheckoutDemo() {
   return (
     <div className="space-y-8 relative">
       <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="checkout" />
       <div className="grid lg:grid-cols-[45fr_55fr] gap-12 items-start">
         {/* Left Pane - Customer context */}
         <Stack gap={6}>

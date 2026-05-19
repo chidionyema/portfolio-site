@@ -13,6 +13,7 @@ import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
 import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 interface CacheEntry {
   name: string;
@@ -125,6 +126,7 @@ export function CacheInvalidationDemo() {
   return (
     <div className="space-y-6">
       <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="cache" />
 
       <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.02] border border-white/5 font-mono text-[10px] text-muted">
         <span className="font-black uppercase tracking-widest text-accent">Flow:</span>

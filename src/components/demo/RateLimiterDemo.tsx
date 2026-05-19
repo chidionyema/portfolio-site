@@ -13,6 +13,7 @@ import type { RateLimitEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
 import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 interface RequestLog {
   id: string;
@@ -121,6 +122,7 @@ export function RateLimiterDemo() {
   return (
     <div className="space-y-6">
       <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="ratelimit" />
     <div className="grid lg:grid-cols-2 gap-8">
       <Stack gap={6}>
         <div className="flex items-center justify-between">

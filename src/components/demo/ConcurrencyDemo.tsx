@@ -11,6 +11,7 @@ import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
 import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 interface ConcurrencyResult {
   id: string;
@@ -184,6 +185,7 @@ export function ConcurrencyDemo() {
   return (
     <div className="space-y-8">
       <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="concurrency" />
 
       {/* Split-panel user editors */}
       <div className="grid md:grid-cols-2 gap-4">
