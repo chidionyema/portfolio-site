@@ -15,15 +15,16 @@ export function Proof() {
           <Stack gap={8}>
             <div className="max-w-2xl">
               <Heading variant="caption" className="mb-4">
-                Evidence
+                Don't take my word for it — try it
               </Heading>
               <Heading variant="section" className="mb-6" level={2}>
-                A live .NET 9 cluster, running in your browser.
+                A distributed saga, running live.
               </Heading>
               <p className="text-lg text-secondary leading-relaxed">
-                This isn't a mock. Trigger a checkout to see a real MassTransit 
-                saga state machine orchestrate across four microservices. 
-                Click 'Inject Fault' to see the cluster automatically compensate.
+                This checkout orchestrates stock reservation, payment, and order creation 
+                across four real microservices. Click <strong>'Inject Fault'</strong> to 
+                crash a step mid-flow and watch the saga automatically compensate — 
+                stock released, payment reversed, no orphaned data.
               </p>
             </div>
 
@@ -31,9 +32,13 @@ export function Proof() {
               <CheckoutDemo />
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted max-w-md">
+                Every request hits Fly.io → BFF → Catalog/Payments/Orders via RabbitMQ. 
+                Trace IDs, latency, and instance IDs are real.
+              </p>
               <Link variant="cta" href="/demos">
-                Explore the full pattern catalog →
+                Explore all 13 patterns →
               </Link>
             </div>
           </Stack>
