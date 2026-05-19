@@ -6,10 +6,10 @@ test.describe('Homepage', () => {
     await page.goto('/', { waitUntil: 'networkidle' });
     
     // 1. Hero
-    await expect(page.locator('h1')).toContainText('don't break at 3am');
+    await expect(page.locator('h1')).toContainText("don't break at 3am");
 
     // 2. Proof (The Saga Demo)
-    await expect(page.getByRole('heading', { name: 'Don't take my word' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: "Don't take my word" })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('A live .NET 9 cluster')).toBeVisible();
 
     // 3. Deep Dives
