@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Cog, Shield, TriangleAlert, ChevronDown } from "lucide-react";
+import { AlertCircle, Cog, Shield, TriangleAlert, ChevronDown, ExternalLink } from "lucide-react";
 import { DEMO_CONTEXT } from "../../lib/demo-context";
 import { Card } from "../ui/Card";
 import { Heading } from "../ui/Heading";
@@ -49,6 +49,21 @@ export function DemoContext({ demoId }: DemoContextProps) {
           </div>
         </Card>
       </div>
+
+      {/* View source link */}
+      {copy.sourceUrl && (
+        <div className="mt-3 flex justify-end">
+          <a
+            href={copy.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-white/30 hover:text-accent transition-colors"
+          >
+            View source on GitHub
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      )}
 
       {/* Without this pattern — expandable failure scenario */}
       {copy.withoutPattern && (

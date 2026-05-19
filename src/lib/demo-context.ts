@@ -7,6 +7,7 @@ export interface DemoContextCopy {
   strategy: string;
   businessOutcome: string;
   withoutPattern: string;
+  sourceUrl: string;
 }
 
 export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
@@ -22,6 +23,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Partial commits: customer charged but no order created. Manual reconciliation required.',
     businessOutcome: 'Zero lost orders — every checkout either completes fully or rolls back cleanly.',
     strategy: 'Stateful Saga Orchestration',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/CheckoutOrchestrator/CheckoutOrchestrator.Application/Sagas/CheckoutSaga.cs',
   },
   events: {
     problem:
@@ -35,6 +37,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Events silently lost during broker outages. Downstream services never learn about the order.',
     businessOutcome: 'Zero lost events — even when the message broker goes down mid-write.',
     strategy: 'Transactional Outbox Pattern',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Payments/Payments.Infrastructure/DependencyInjection.cs',
   },
   circuit: {
     problem:
@@ -48,6 +51,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Thread pool exhaustion. 30-second timeouts cascade. Entire platform becomes unresponsive.',
     businessOutcome: 'One failing service can\'t take down the whole platform.',
     strategy: 'Polly Circuit Breaker & Bulkheads',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/BffWeb/BffWeb.Api/Controllers/DemoController.cs',
   },
   vault: {
     problem:
@@ -61,6 +65,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Six-month-old database password in config files. One leaked credential compromises everything.',
     businessOutcome: 'No static passwords — credentials rotate automatically with zero downtime.',
     strategy: 'HashiCorp Vault Dynamic Secrets',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Identity/Identity.Api/Controllers/AdminController.cs',
   },
   idempotency: {
     problem:
@@ -74,6 +79,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Every network retry creates a duplicate charge. Customer support flooded with refund requests.',
     businessOutcome: 'Duplicate clicks and network retries never double-charge a customer.',
     strategy: 'Postgres UNIQUE Constraint',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Orders/Orders.Api/Controllers/DemoController.cs',
   },
   stampede: {
     problem:
@@ -87,6 +93,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: '50 concurrent requests all hit the database simultaneously. Origin database overwhelmed, latency spikes to seconds.',
     businessOutcome: 'Cache expiration doesn\'t flood the database — only one caller rebuilds.',
     strategy: '.NET 9 HybridCache / Coalescing',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Catalog/Catalog.Api/Controllers/DemoTestController.cs',
   },
   cache: {
     problem:
@@ -100,6 +107,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Node A updates a product price. Nodes B-F keep serving the old price for minutes until TTL expires.',
     businessOutcome: 'All nodes converge within milliseconds of a write — no stale data served.',
     strategy: 'Distributed Cache Invalidation',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Catalog/Catalog.Api/Controllers/DemoTestController.cs',
   },
   concurrency: {
     problem:
@@ -113,6 +121,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Last writer silently wins. First editor\'s 20 minutes of work vanishes without warning.',
     businessOutcome: 'No silent overwrites — conflicting edits are caught and surfaced immediately.',
     strategy: 'EF Core Optimistic Concurrency',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Catalog/Catalog.Api/Controllers/DemoTestController.cs',
   },
   ratelimit: {
     problem:
@@ -126,6 +135,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'A single runaway script consumes all capacity. Legitimate users get 503 errors across the board.',
     businessOutcome: 'Abusive traffic is shed cleanly while legitimate users keep their quota.',
     strategy: '.NET FixedWindowRateLimiter',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/BffWeb/BffWeb.Api/Controllers/DemoController.cs',
   },
   tracing: {
     problem:
@@ -139,6 +149,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Forty minutes correlating timestamps across log aggregators to find one slow span.',
     businessOutcome: 'Any slow request is traceable across all services in seconds.',
     strategy: 'OpenTelemetry + Distributed Tracing',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/BuildingBlocks/Extensions/ServiceDefaults.cs',
   },
   refund: {
     problem:
@@ -152,6 +163,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Provider timeout = refund disappears. No escalation, no audit trail, angry customer.',
     businessOutcome: 'Failed refunds escalate to ops review — never silently dropped.',
     strategy: 'MassTransit Refund Saga',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Payments/Payments.Api/Controllers/AdminController.cs',
   },
   ledger: {
     problem:
@@ -165,6 +177,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Commission debit succeeds but seller credit fails. Money created from nothing. Books never balance.',
     businessOutcome: 'Every transaction balances to zero — money can\'t be created or destroyed.',
     strategy: 'Double-Entry Ledger (domain invariant)',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Payouts/Payouts.Api/Controllers/LedgerController.cs',
   },
   erasure: {
     problem:
@@ -178,6 +191,7 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Four of five services delete data. The fifth silently retains it. GDPR breach.',
     businessOutcome: 'GDPR erasure touches all services or escalates — no partial deletes.',
     strategy: 'GDPR Erasure Saga (Art. 17)',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Privacy/Privacy.Api/Controllers/PrivacyRequestsController.cs',
   },
   cdcsearch: {
     problem:
@@ -191,5 +205,6 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     withoutPattern: 'Search results lag 5-30 seconds behind writes. Customers see stale product data.',
     businessOutcome: 'Search indexes stay current within seconds — no polling, no stale results.',
     strategy: 'Debezium CDC + Kafka + Elasticsearch',
+    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Search/Search.Api/Program.cs',
   },
 };
