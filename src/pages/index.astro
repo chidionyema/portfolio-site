@@ -20,7 +20,7 @@ const dives = dd.slice(0, 3).map((e) => ({
   <main>
     <Hero client:load />
     <section class="py-12 px-6 max-w-6xl mx-auto">
-      <TrustTiles client:visible />
+      <TrustTiles client:load />
     </section>
     <Proof client:visible />
     <Dives dives={dives} client:visible />
