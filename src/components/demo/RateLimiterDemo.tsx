@@ -11,6 +11,9 @@ import { cn } from '../../lib/utils';
 import { CLUSTER_LABEL } from '../../lib/copy';
 import type { RateLimitEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
+import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 interface RequestLog {
   id: string;
@@ -34,8 +37,9 @@ export function RateLimiterDemo() {
   const [windowReset, setWindowReset] = useState(0);
   const [burstBars, setBurstBars] = useState<BurstBar[]>([]);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
-  const { executeCommand, events } = useDemoSession('ratelimit');
+  const { executeCommand, events, metadata } = useDemoSession('ratelimit');
 
   useEffect(() => {
     if (events.length > 0) {
@@ -84,8 +88,11 @@ export function RateLimiterDemo() {
       setLocalRequests(prev => [log, ...prev].slice(0, 10));
 
       const res = await executeCommand('/ratelimit/request', {});
-      if (res?.metadata) {
-        setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
+      if (res) {
+        setReceipt(res as RequestMetadata);
+        if (res?.metadata) {
+          setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
+        }
       }
     } catch (e) {
       console.error(e);
@@ -113,6 +120,9 @@ export function RateLimiterDemo() {
   }, [sendRequest, tokens]);
 
   return (
+    <div className="space-y-6">
+      <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="ratelimit" />
     <div className="grid lg:grid-cols-2 gap-8">
       <Stack gap={6}>
         <div className="flex items-center justify-between">
@@ -233,8 +243,10 @@ export function RateLimiterDemo() {
                   exit={{ opacity: 0 }}
                   className="space-y-3"
                 >
-                  <div className="text-[9px] font-black uppercase tracking-[0.3em] text-muted/60">
-                    Burst result — {burstBars.filter(b => b.status === 'allowed').length} allowed / {burstBars.filter(b => b.status === 'limited').length} rejected
+                  <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.3em]">
+                    <span className="text-success">{burstBars.filter(b => b.status === 'allowed').length} allowed</span>
+                    <span className="text-muted/40">/</span>
+                    <span className="text-error">{burstBars.filter(b => b.status === 'limited').length} rejected</span>
                   </div>
                   <div className="flex gap-1.5">
                     {burstBars.map((bar, i) => (
@@ -272,6 +284,13 @@ export function RateLimiterDemo() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <RequestReceipt
+              traceId={receipt?.traceId}
+              latencyMs={receipt?.latencyMs}
+              statusCode={receipt?.statusCode}
+              service={receipt?.service}
+            />
           </Stack>
         </Card>
       </Stack>
@@ -345,6 +364,7 @@ export function RateLimiterDemo() {
           </div>
         </Card>
       </Stack>
+    </div>
     </div>
   );
 }

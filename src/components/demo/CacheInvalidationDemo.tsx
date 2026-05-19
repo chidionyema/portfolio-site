@@ -11,6 +11,9 @@ import { Pill } from '../ui/Pill';
 import { Glass } from '../ui/Glass';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
+import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 interface CacheEntry {
   name: string;
@@ -41,8 +44,9 @@ export function CacheInvalidationDemo() {
   const [newPrice, setNewPrice] = useState('59.99');
   const [isUpdating, setIsUpdating] = useState(false);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
-  const { executeCommand, events, sessionId } = useDemoSession('cache-invalidation');
+  const { executeCommand, events, sessionId, metadata } = useDemoSession('cache-invalidation');
 
   // Seed demo product on mount
   useEffect(() => {
@@ -66,6 +70,7 @@ export function CacheInvalidationDemo() {
     try {
       if (demoProductId) {
         const p = await getCachedProduct(demoProductId);
+        setReceipt(p as RequestMetadata);
         setProduct({
           name: p.product?.name ?? 'Widget Pro',
           price: p.product?.price ?? 49.99,
@@ -89,7 +94,8 @@ export function CacheInvalidationDemo() {
     addLog('update', `PUT /api/catalog/products/${demoProductId}`);
     try {
       if (demoProductId) {
-        await apiUpdateProduct(demoProductId, { price: parseFloat(newPrice) });
+        const r = await apiUpdateProduct(demoProductId, { price: parseFloat(newPrice) });
+        setReceipt(r as RequestMetadata);
         setCacheStatus('stale');
         addLog('publish', 'Committed to DB + Published ProductCacheInvalidatedEvent');
       }
@@ -105,7 +111,8 @@ export function CacheInvalidationDemo() {
     addLog('invalidate', 'Received MassTransit Event: Evicting cache key');
     try {
       if (demoProductId) {
-        await apiInvalidateCache(demoProductId);
+        const r = await apiInvalidateCache(demoProductId);
+        setReceipt(r as RequestMetadata);
         setCacheStatus('miss');
         addLog('invalidate', 'HybridCache.RemoveAsync(key) complete');
       }
@@ -117,7 +124,17 @@ export function CacheInvalidationDemo() {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
+    <div className="space-y-6">
+      <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="cache" />
+
+      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.02] border border-white/5 font-mono text-[10px] text-muted">
+        <span className="font-black uppercase tracking-widest text-accent">Flow:</span>
+        <span>Write → Pub/Sub Event → All Nodes Evict</span>
+        <span className="ml-auto text-warning/70 font-black uppercase tracking-widest whitespace-nowrap">Stale window: ~50ms while event propagates</span>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8">
       <Stack gap={6}>
         <div className="flex items-center justify-between">
           <Heading variant="caption" className="flex items-center gap-2.5">
@@ -194,6 +211,13 @@ export function CacheInvalidationDemo() {
               <Eye className="w-4 h-4" />
               Read from Cache
             </Button>
+
+            <RequestReceipt
+              traceId={receipt?.traceId}
+              latencyMs={receipt?.latencyMs}
+              statusCode={receipt?.statusCode}
+              service={receipt?.service}
+            />
           </Stack>
         </Card>
       </Stack>
@@ -254,6 +278,7 @@ export function CacheInvalidationDemo() {
           </div>
         </Card>
       </Stack>
+      </div>
     </div>
   );
 }

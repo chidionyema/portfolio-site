@@ -1,10 +1,9 @@
-import { motion } from "framer-motion";
-import { AlertCircle, Cog } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, Cog, Shield, TriangleAlert, ChevronDown } from "lucide-react";
 import { DEMO_CONTEXT } from "../../lib/demo-context";
 import { Card } from "../ui/Card";
-import { Stack } from "../ui/Stack";
 import { Heading } from "../ui/Heading";
-import { cn } from "../../lib/utils";
 
 interface DemoContextProps {
   demoId: string;
@@ -12,6 +11,7 @@ interface DemoContextProps {
 
 export function DemoContext({ demoId }: DemoContextProps) {
   const copy = DEMO_CONTEXT[demoId];
+  const [showFailure, setShowFailure] = useState(false);
   if (!copy) return null;
 
   return (
@@ -22,6 +22,12 @@ export function DemoContext({ demoId }: DemoContextProps) {
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       className="mb-10"
     >
+      {/* Business outcome headline */}
+      <div className="flex items-center gap-2.5 px-4 py-2.5 mb-4 rounded-lg bg-accent/[0.06] border border-accent/10">
+        <Shield className="w-4 h-4 text-accent shrink-0" />
+        <p className="text-sm font-semibold text-primary/90 leading-snug">{copy.businessOutcome}</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card variant="panel" padding="sm" className="border-l-4 border-l-warning bg-warning/[0.03]">
           <div className="flex items-start gap-4">
@@ -43,6 +49,34 @@ export function DemoContext({ demoId }: DemoContextProps) {
           </div>
         </Card>
       </div>
+
+      {/* Without this pattern — expandable failure scenario */}
+      {copy.withoutPattern && (
+        <div className="mt-3">
+          <button
+            onClick={() => setShowFailure(!showFailure)}
+            className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-error/60 hover:text-error/80 transition-colors"
+          >
+            <TriangleAlert className="w-3.5 h-3.5" />
+            <span className="font-bold">Without this pattern</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFailure ? 'rotate-180' : ''}`} />
+          </button>
+          <AnimatePresence>
+            {showFailure && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2 px-4 py-2.5 rounded bg-error/[0.05] border border-error/10 text-sm text-error/80 leading-relaxed">
+                  {copy.withoutPattern}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </motion.section>
   );
 }

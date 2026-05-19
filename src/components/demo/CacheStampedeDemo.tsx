@@ -9,6 +9,9 @@ import { Stack } from '../ui/Stack';
 import { Pill } from '../ui/Pill';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
+import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 interface StampedeResult {
   id: string;
@@ -31,8 +34,9 @@ export function CacheStampedeDemo() {
   const [requests, setRequests] = useState<RequestParticle[]>([]);
   const [activeTier, setActiveTier] = useState<'l1' | 'l2' | 'db' | null>(null);
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
-  const { executeCommand, events } = useDemoSession('stampede');
+  const { executeCommand, events, metadata } = useDemoSession('stampede');
 
   useEffect(() => {
     if (events.length > 0) {
@@ -62,6 +66,7 @@ export function CacheStampedeDemo() {
       });
 
       if (response) {
+        setReceipt(response as RequestMetadata);
         const result: StampedeResult = {
           id: crypto.randomUUID(),
           protection,
@@ -89,6 +94,9 @@ export function CacheStampedeDemo() {
   const showComparison = !!(noneResult && protectedResult);
 
   return (
+    <div className="space-y-6">
+      <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="stampede" />
     <div className="grid lg:grid-cols-2 gap-8">
       <Stack gap={6}>
         <div className="flex items-center justify-between">
@@ -194,6 +202,13 @@ export function CacheStampedeDemo() {
               </div>
             </div>
           </Stack>
+
+          <RequestReceipt
+            traceId={receipt?.traceId}
+            latencyMs={receipt?.latencyMs}
+            statusCode={receipt?.statusCode}
+            service={receipt?.service}
+          />
         </Card>
       </Stack>
 
@@ -318,6 +333,7 @@ export function CacheStampedeDemo() {
           </div>
         </Card>
       </Stack>
+    </div>
     </div>
   );
 }

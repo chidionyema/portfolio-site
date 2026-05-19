@@ -10,6 +10,9 @@ import { Pill } from '../ui/Pill';
 import { Glass } from '../ui/Glass';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
+import { RequestReceipt } from './RequestReceipt';
+import { RealSystemBanner } from './RealSystemBanner';
+import { WhatToWatch } from './WhatToWatch';
 
 type CircuitState = 'Closed' | 'Open' | 'HalfOpen';
 
@@ -34,9 +37,10 @@ export function CircuitBreakerDemo() {
   const [metrics, setMetrics] = useState({ success: 0, failure: 0, rejected: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [isFaultActive, setIsFaultActive] = useState(false);
+  const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
   const transitionTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { executeCommand, events, chaos } = useDemoSession('circuit-breaker');
+  const { executeCommand, events, chaos, metadata } = useDemoSession('circuit-breaker');
 
   useEffect(() => {
     if (events.length > 0) {
@@ -58,6 +62,7 @@ export function CircuitBreakerDemo() {
     const start = Date.now();
     try {
       const res = await executeCommand('/circuit/request', { shouldFail: shouldFail ?? isFaultActive });
+      if (res?.traceId || res?.latencyMs) setReceipt(res as RequestMetadata);
       const duration = Date.now() - start;
       const isRejected = res?.isRejected || res?.rejected;
       const isOk = res?.success && !isRejected;
@@ -129,6 +134,18 @@ export function CircuitBreakerDemo() {
 
   return (
     <div className="space-y-8">
+      <RealSystemBanner metadata={metadata} />
+      <WhatToWatch demoId="circuit" />
+
+      {/* Before/After callout */}
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 font-mono text-[10px] text-muted leading-relaxed">
+        <span className="shrink-0 text-error font-black uppercase tracking-widest">Without:</span>
+        <span>all requests wait on upstream timeout (&gt;30s)</span>
+        <span className="mx-3 text-white/10">|</span>
+        <span className="shrink-0 text-success font-black uppercase tracking-widest">With:</span>
+        <span>failures rejected in &lt;1ms once circuit opens</span>
+      </div>
+
       {/* State Machine Visualization */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {(['Closed', 'Open', 'HalfOpen'] as CircuitState[]).map((state) => {
@@ -242,7 +259,11 @@ export function CircuitBreakerDemo() {
                   className="w-full h-auto py-4 font-black text-[10px] uppercase tracking-widest rounded-xl flex flex-col items-center justify-center gap-1.5"
                 >
                   <Send className="w-4 h-4" />
-                  Request
+                  {isLoading
+                    ? circuitState === 'HalfOpen' ? 'Probing…'
+                    : 'Sending…'
+                    : circuitState === 'Open' ? 'Rejected'
+                    : 'Request'}
                 </Button>
                 <Button
                   variant="secondary"
@@ -305,6 +326,12 @@ export function CircuitBreakerDemo() {
                   </div>
                 </div>
               )}
+              <RequestReceipt
+                traceId={receipt?.traceId}
+                latencyMs={receipt?.latencyMs}
+                statusCode={receipt?.statusCode}
+                service={receipt?.service}
+              />
             </Stack>
           </Card>
         </Stack>

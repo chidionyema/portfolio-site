@@ -5,6 +5,8 @@ export interface DemoContextCopy {
   problemSummary: string;
   mechanismSummary: string;
   strategy: string;
+  businessOutcome: string;
+  withoutPattern: string;
 }
 
 export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
@@ -17,6 +19,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'When a step fails, every prior step is reversed in order. The system never half-commits — it either reaches the end or unwinds cleanly back to the start.',
     problemSummary: 'Cross-service crashes leave data inconsistent.',
     mechanismSummary: 'Chained local commits with rollback logic.',
+    withoutPattern: 'Partial commits: customer charged but no order created. Manual reconciliation required.',
+    businessOutcome: 'Zero lost orders — every checkout either completes fully or rolls back cleanly.',
     strategy: 'Stateful Saga Orchestration',
   },
   events: {
@@ -28,6 +32,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Pull the broker out from under the system mid-write — the row commits, the outbox row commits, and the event is delivered the moment the relay is back. Zero loss, no special handling.',
     problemSummary: 'Publishing events can fail after database commits.',
     mechanismSummary: 'Atomic outbox table + background relay.',
+    withoutPattern: 'Events silently lost during broker outages. Downstream services never learn about the order.',
+    businessOutcome: 'Zero lost events — even when the message broker goes down mid-write.',
     strategy: 'Transactional Outbox Pattern',
   },
   circuit: {
@@ -39,6 +45,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Compare two paths: fast-fail under an open breaker (visible in milliseconds) vs. the timeout cliff a circuit-less system would experience. Recovery is automatic and observable.',
     problemSummary: 'Slow dependencies cascade into total system failure.',
     mechanismSummary: 'Fail-fast circuit state with automatic probes.',
+    withoutPattern: 'Thread pool exhaustion. 30-second timeouts cascade. Entire platform becomes unresponsive.',
+    businessOutcome: 'One failing service can\'t take down the whole platform.',
     strategy: 'Polly Circuit Breaker & Bulkheads',
   },
   vault: {
@@ -50,6 +58,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'During a rotation the new lease is issued, the old one revoked, and not a single in-flight request fails. Two leases overlap for a few seconds; that overlap is the whole point.',
     problemSummary: 'Static database passwords are a security risk.',
     mechanismSummary: 'Dynamic roles with automated TTL rotation.',
+    withoutPattern: 'Six-month-old database password in config files. One leaked credential compromises everything.',
+    businessOutcome: 'No static passwords — credentials rotate automatically with zero downtime.',
     strategy: 'HashiCorp Vault Dynamic Secrets',
   },
   idempotency: {
@@ -61,6 +71,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Hammer the same key from many directions: only one execution leaves a side-effect. Every other replay returns the same response, immediately, with no second charge.',
     problemSummary: 'Duplicate payments caused by network retries.',
     mechanismSummary: 'Deterministic keys prevent double execution.',
+    withoutPattern: 'Every network retry creates a duplicate charge. Customer support flooded with refund requests.',
+    businessOutcome: 'Duplicate clicks and network retries never double-charge a customer.',
     strategy: 'Postgres UNIQUE Constraint',
   },
   stampede: {
@@ -72,6 +84,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Without protection, request count to the origin equals concurrency. With protection it equals one. The graph is the demo.',
     problemSummary: 'Cache expiration floods the database (Stampede).',
     mechanismSummary: 'Locking and request coalescing during misses.',
+    withoutPattern: '50 concurrent requests all hit the database simultaneously. Origin database overwhelmed, latency spikes to seconds.',
+    businessOutcome: 'Cache expiration doesn\'t flood the database — only one caller rebuilds.',
     strategy: '.NET 9 HybridCache / Coalescing',
   },
   cache: {
@@ -83,6 +97,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Update a record on instance A. Within milliseconds, instance B serves the new value — without a poll, a TTL, or a request-time round trip.',
     problemSummary: 'Multi-node clusters serve stale cached data.',
     mechanismSummary: 'Pub/sub messages drop stale local copies.',
+    withoutPattern: 'Node A updates a product price. Nodes B-F keep serving the old price for minutes until TTL expires.',
+    businessOutcome: 'All nodes converge within milliseconds of a write — no stale data served.',
     strategy: 'Distributed Cache Invalidation',
   },
   concurrency: {
@@ -94,6 +110,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Both edits start; both submit. One commits, one is rejected with a clear conflict signal. Nothing is silently overwritten.',
     problemSummary: 'Concurrent edits cause silent data overwrites.',
     mechanismSummary: 'Version tracking prevents stale updates.',
+    withoutPattern: 'Last writer silently wins. First editor\'s 20 minutes of work vanishes without warning.',
+    businessOutcome: 'No silent overwrites — conflicting edits are caught and surfaced immediately.',
     strategy: 'EF Core Optimistic Concurrency',
   },
   ratelimit: {
@@ -105,6 +123,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Saturate the bucket: traffic above the rate is shed cleanly while well-behaved clients keep their share. The system stays available even under abuse.',
     problemSummary: 'Single users can exhaust system capacity.',
     mechanismSummary: 'Fixed-window rate limiting with per-session permits.',
+    withoutPattern: 'A single runaway script consumes all capacity. Legitimate users get 503 errors across the board.',
+    businessOutcome: 'Abusive traffic is shed cleanly while legitimate users keep their quota.',
     strategy: '.NET FixedWindowRateLimiter',
   },
   tracing: {
@@ -116,6 +136,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'One request fans out across orders-domain, inventory, payments (which itself calls Stripe), notifications, and the outbox. The flame graph lets you read total time, where the long tail lives, and which span owned the failure when one occurs.',
     problemSummary: 'Interleaved logs hide cross-service bottlenecks.',
     mechanismSummary: 'Correlation IDs track requests across services.',
+    withoutPattern: 'Forty minutes correlating timestamps across log aggregators to find one slow span.',
+    businessOutcome: 'Any slow request is traceable across all services in seconds.',
     strategy: 'OpenTelemetry + Distributed Tracing',
   },
   refund: {
@@ -127,6 +149,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'The saga progresses through each state in real time. On success, the refund completes. On timeout or failure, it escalates to ops review — never silently lost.',
     problemSummary: 'Failed refunds silently disappear.',
     mechanismSummary: 'Saga with 24h timeout escalates to ops review.',
+    withoutPattern: 'Provider timeout = refund disappears. No escalation, no audit trail, angry customer.',
+    businessOutcome: 'Failed refunds escalate to ops review — never silently dropped.',
     strategy: 'MassTransit Refund Saga',
   },
   ledger: {
@@ -138,6 +162,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Every simulation posts a CREDIT for the gross amount and a DEBIT for the platform commission. The sum of all entries always equals zero. That invariant is enforced at the domain model level, not the UI.',
     problemSummary: 'Single-entry writes leave books out of balance.',
     mechanismSummary: 'Paired debit/credit entries in one atomic write.',
+    withoutPattern: 'Commission debit succeeds but seller credit fails. Money created from nothing. Books never balance.',
+    businessOutcome: 'Every transaction balances to zero — money can\'t be created or destroyed.',
     strategy: 'Double-Entry Ledger (domain invariant)',
   },
   erasure: {
@@ -149,6 +175,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Each service node lights up as it confirms erasure. On success all five confirm and the saga completes. Any failure transitions to Failed — never a silent partial delete.',
     problemSummary: 'Partial erasure leaves regulated data in the system.',
     mechanismSummary: 'Ordered saga with SLA timer prevents silent failures.',
+    withoutPattern: 'Four of five services delete data. The fifth silently retains it. GDPR breach.',
+    businessOutcome: 'GDPR erasure touches all services or escalates — no partial deletes.',
     strategy: 'GDPR Erasure Saga (Art. 17)',
   },
   cdcsearch: {
@@ -160,6 +188,8 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
       'Trigger a search and watch the CDC pipeline light up: PostgreSQL WAL → Debezium → Kafka → Elasticsearch. The pipeline completes and results reflect the latest data within seconds of any product write.',
     problemSummary: 'Polling-based indexing is stale and wastes DB resources.',
     mechanismSummary: 'WAL-driven CDC keeps indexes current with zero polling.',
+    withoutPattern: 'Search results lag 5-30 seconds behind writes. Customers see stale product data.',
+    businessOutcome: 'Search indexes stay current within seconds — no polling, no stale results.',
     strategy: 'Debezium CDC + Kafka + Elasticsearch',
   },
 };

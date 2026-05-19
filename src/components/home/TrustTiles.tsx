@@ -3,10 +3,34 @@ import { Server, Shield, FlaskConical, Activity } from 'lucide-react';
 import { Glass } from '../ui/Glass';
 
 const tiles = [
-  { icon: Server, value: '16', label: 'Microservices', color: 'text-accent' },
-  { icon: Shield, value: '159', label: 'Architecture Guards', color: 'text-success' },
-  { icon: FlaskConical, value: '13', label: 'CI Test Suites', color: 'text-warning' },
-  { icon: Activity, value: '50', label: 'Roslyn Analyzers', color: 'text-primary' },
+  { 
+    icon: Server, 
+    value: '8', 
+    label: 'Live Services', 
+    detail: 'Running on Fly.io right now',
+    color: 'text-accent' 
+  },
+  { 
+    icon: Shield, 
+    value: '159', 
+    label: 'Arch Guards', 
+    detail: 'Regex + NetArchTest rules in CI',
+    color: 'text-success' 
+  },
+  { 
+    icon: FlaskConical, 
+    value: '13', 
+    label: 'Test Suites', 
+    detail: 'Unit · Integration · Contract · E2E',
+    color: 'text-warning' 
+  },
+  { 
+    icon: Activity, 
+    value: '50', 
+    label: 'Roslyn Analyzers', 
+    detail: 'Custom compile-time enforcement',
+    color: 'text-primary' 
+  },
 ];
 
 export function TrustTiles() {
@@ -25,8 +49,11 @@ export function TrustTiles() {
             <div className="text-3xl font-black tabular-nums text-primary mb-1 font-mono">
               {tile.value}
             </div>
-            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-muted">
+            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-muted mb-2">
               {tile.label}
+            </div>
+            <div className="text-[10px] text-secondary/50 leading-tight">
+              {tile.detail}
             </div>
           </Glass>
         </motion.div>
