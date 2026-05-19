@@ -48,7 +48,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm ci --legacy-peer-deps && npm install sharp --no-save
+        run: npm ci
 
       - name: Build with production env inlined
         env:

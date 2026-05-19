@@ -18,7 +18,7 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps && npm install sharp --no-save
+        run: npm ci
 
       - name: Check Architecture
         run: ./scripts/check-frontend-architecture.sh
