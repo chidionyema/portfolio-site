@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { AlertCircle, Cog, Shield } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, Cog, Shield, TriangleAlert, ChevronDown } from "lucide-react";
 import { DEMO_CONTEXT } from "../../lib/demo-context";
 import { Card } from "../ui/Card";
 import { Heading } from "../ui/Heading";
@@ -10,6 +11,7 @@ interface DemoContextProps {
 
 export function DemoContext({ demoId }: DemoContextProps) {
   const copy = DEMO_CONTEXT[demoId];
+  const [showFailure, setShowFailure] = useState(false);
   if (!copy) return null;
 
   return (
@@ -47,6 +49,34 @@ export function DemoContext({ demoId }: DemoContextProps) {
           </div>
         </Card>
       </div>
+
+      {/* Without this pattern — expandable failure scenario */}
+      {copy.withoutPattern && (
+        <div className="mt-3">
+          <button
+            onClick={() => setShowFailure(!showFailure)}
+            className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-error/60 hover:text-error/80 transition-colors"
+          >
+            <TriangleAlert className="w-3.5 h-3.5" />
+            <span className="font-bold">Without this pattern</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFailure ? 'rotate-180' : ''}`} />
+          </button>
+          <AnimatePresence>
+            {showFailure && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2 px-4 py-2.5 rounded bg-error/[0.05] border border-error/10 text-sm text-error/80 leading-relaxed">
+                  {copy.withoutPattern}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </motion.section>
   );
 }
