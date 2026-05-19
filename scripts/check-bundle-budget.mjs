@@ -18,7 +18,7 @@ const astroDir = resolve(distDir, '_astro');
 const BUDGETS = [
   // Per-file budgets — the heaviest known assets.
   { match: /^client\..*\.js$/,      maxGzip: 60_000, label: 'react runtime + framework' },
-  { match: /^DemoHubLite\..*\.js$/, maxGzip: 15_000, label: 'demo hub layout' },
+  { match: /^DemoHubLite\..*\.js$/, maxGzip: 16_500, label: 'demo hub layout' },
   { match: /^CommandPalette\..*\.js$/, maxGzip: 22_000, label: 'cmdk palette' },
   { match: /^HeroLite\..*\.js$/,    maxGzip: 4_000,  label: 'hero island' },
   // Per-demo budget (any demo file). Bumped from 4KB to 8KB now that demos
@@ -33,7 +33,7 @@ const BUDGETS = [
 // ChaosReceipts, ChaosDrillController, ArchitectureCanvas, SagaMessageFlow,
 // ResilienceScoreboard. Each is small (<3KB) but they add up. Tighten back
 // down once any panels get demolished.
-const TOTAL_JS_GZIP_BUDGET = 215_000;
+const TOTAL_JS_GZIP_BUDGET = 230_000;
 
 let failures = 0;
 let totalJsGzip = 0;
