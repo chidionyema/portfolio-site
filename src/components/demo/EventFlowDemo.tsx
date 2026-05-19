@@ -24,6 +24,7 @@ import { CLUSTER_LABEL } from '../../lib/copy';
 import type { EventFlowEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
+import { RealSystemBanner } from './RealSystemBanner';
 
 const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 
@@ -73,7 +74,7 @@ export function EventFlowDemo() {
   const [activeNode, setActiveNode] = useState<PipelineNode | null>(null);
   const [flowDots, setFlowDots] = useState<FlowDot[]>([]);
 
-  const { executeCommand, events } = useDemoSession('events');
+  const { executeCommand, events, metadata } = useDemoSession('events');
 
   useEffect(() => {
     let cancelled = false;
@@ -197,6 +198,8 @@ export function EventFlowDemo() {
 
   return (
     <div className="space-y-8">
+      <RealSystemBanner metadata={metadata} />
+
       {/* Pipeline diagram */}
       <Card variant="panel-dark" padding="lg">
         <div className="space-y-3">
@@ -345,7 +348,7 @@ export function EventFlowDemo() {
                   className="w-full h-auto py-4 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2"
                 >
                   {isProcessing ? <RotateCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  Commit event
+                  {isProcessing ? 'Committing to outbox…' : 'Commit event'}
                 </Button>
                 <Button
                   variant="secondary"

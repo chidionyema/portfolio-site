@@ -10,6 +10,7 @@ import { Pill } from '../ui/Pill';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
+import { RealSystemBanner } from './RealSystemBanner';
 
 interface ConcurrencyResult {
   id: string;
@@ -48,7 +49,7 @@ export function ConcurrencyDemo() {
   const [userA, setUserA] = useState<UserPanel>({ ...INITIAL_PANEL, label: 'User A', quantity: 10 });
   const [userB, setUserB] = useState<UserPanel>({ ...INITIAL_PANEL, label: 'User B', quantity: 25 });
 
-  const { executeCommand, events } = useDemoSession('concurrency');
+  const { executeCommand, events, metadata } = useDemoSession('concurrency');
   const productIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -182,6 +183,8 @@ export function ConcurrencyDemo() {
 
   return (
     <div className="space-y-8">
+      <RealSystemBanner metadata={metadata} />
+
       {/* Split-panel user editors */}
       <div className="grid md:grid-cols-2 gap-4">
         {([
@@ -278,9 +281,10 @@ export function ConcurrencyDemo() {
               {panel.state === 'conflict' && panel.lastError && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0, boxShadow: ['0 0 0px rgba(239,68,68,0)', '0 0 16px rgba(239,68,68,0.5)', '0 0 0px rgba(239,68,68,0)'] }}
+                  transition={{ boxShadow: { duration: 0.8, repeat: 2 } }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center justify-between p-3 rounded-lg bg-error/10 border border-error/20"
+                  className="flex items-center justify-between p-3 rounded-lg bg-error/10 border border-error/40 ring-1 ring-error/30"
                 >
                   <div className="flex items-center gap-2">
                     <ShieldAlert className="w-3.5 h-3.5 text-error shrink-0" />

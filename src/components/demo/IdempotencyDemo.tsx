@@ -13,6 +13,7 @@ import {
   Swords,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { RealSystemBanner } from './RealSystemBanner';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Heading } from '../ui/Heading';
@@ -70,7 +71,7 @@ export function IdempotencyDemo() {
   const [expiresInSeconds, setExpiresInSeconds] = useState(0);
   const [lastRace, setLastRace] = useState<RaceResponse | null>(null);
 
-  const { sessionId } = useDemoSession('idempotency');
+  const { sessionId, metadata } = useDemoSession('idempotency');
   const expiryDeadline = useRef<number>(0);
 
   useEffect(() => {
@@ -203,6 +204,8 @@ export function IdempotencyDemo() {
   ).size;
 
   return (
+    <div className="space-y-6">
+      <RealSystemBanner metadata={metadata} />
     <div className="grid lg:grid-cols-2 gap-8">
       <Stack gap={6}>
         <div className="flex items-center justify-between">
@@ -468,6 +471,7 @@ export function IdempotencyDemo() {
           </div>
         </Card>
       </Stack>
+    </div>
     </div>
   );
 }

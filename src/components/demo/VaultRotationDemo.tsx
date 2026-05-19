@@ -10,6 +10,7 @@ import { Pill } from '../ui/Pill';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
+import { RealSystemBanner } from './RealSystemBanner';
 
 type RotationStage = 'idle' | 'started' | 'activated' | 'grace_period' | 'revoked' | 'failed';
 
@@ -40,7 +41,7 @@ export function VaultRotationDemo() {
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
   const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
-  const { executeCommand, events } = useDemoSession('vault');
+  const { executeCommand, events, metadata } = useDemoSession('vault');
 
   // Map SignalR VaultRotation events to stages
   useEffect(() => {
@@ -119,6 +120,8 @@ export function VaultRotationDemo() {
 
   return (
     <div className="space-y-8">
+      <RealSystemBanner metadata={metadata} />
+
       {/* Stage Timeline */}
       <div className="relative">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 relative">
