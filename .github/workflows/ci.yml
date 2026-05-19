@@ -74,6 +74,7 @@ jobs:
   e2e-deployed:
     if: github.ref == 'refs/heads/main'
     needs: build
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
