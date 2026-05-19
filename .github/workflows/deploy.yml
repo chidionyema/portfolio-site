@@ -48,7 +48,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --force
 
       - name: Build with production env inlined
         env:

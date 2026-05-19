@@ -18,7 +18,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --force
 
       - name: Quality gates
         run: bash scripts/check-quality.sh
@@ -50,7 +50,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --force
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
@@ -84,7 +84,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --force
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
@@ -116,7 +116,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --force
 
       - name: Build (with build-info)
         env:
@@ -141,7 +141,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --force
 
       - name: Install Playwright + axe
         run: |
