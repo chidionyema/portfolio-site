@@ -48,7 +48,7 @@ jobs:
           node-version: '22'
 
       - name: Install
-        run: npm ci
+        run: npm install
 
       - name: Build with production env inlined
         env:
