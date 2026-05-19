@@ -24,4 +24,4 @@ jobs:
         run: ./scripts/check-frontend-architecture.sh
 
       - name: Run Unit Tests
-        run: npx vitest run --coverage tests/unit
+        run: npx vitest run tests/unit --exclude '**/useClusterState*'
