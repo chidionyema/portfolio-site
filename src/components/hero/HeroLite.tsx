@@ -58,7 +58,7 @@ export function Hero(_: HeroProps) {
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
                 I'm a <strong className="text-primary">Principal Backend Engineer</strong> specializing in microservice platforms with real saga orchestration, 
-                transactional outboxes, and automated resilience. This is running code, not just slides.
+                transactional outboxes, and automated resilience. This is running code.
               </p>
 
               {/* Differentiator callout */}
