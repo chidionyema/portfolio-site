@@ -68,56 +68,40 @@ export function RateLimiterDemo() {
     return () => clearInterval(interval);
   }, []);
 
-  const sendRequest = useCallback(async () => {
+  const sendRequest = useCallback(async (amount: number = 1) => {
     try {
-      const isAllowed = tokens > 0;
-      const newTokens = Math.max(0, tokens - 1);
-      setTokens(newTokens);
-
-      if (!isAllowed) {
-        setRetryAfter(windowReset);
-      }
-
-      const log: RequestLog = {
-        id: crypto.randomUUID(),
-        timestamp: new Date(),
-        status: isAllowed ? 'allowed' : 'limited',
-        remaining: newTokens,
-      };
-
-      setLocalRequests(prev => [log, ...prev].slice(0, 10));
-
-      const res = await executeCommand('/ratelimit/request', {});
+      const res = await executeCommand('/ratelimit/request', { amount });
       if (res) {
         setReceipt(res as RequestMetadata);
         if (res?.metadata) {
           setReceipts(prev => [res.metadata, ...prev].slice(0, 5));
         }
+        
+        // SignalR will handle the state update via the events listener,
+        // but we can optimistically update or just rely on the event.
+        // The brief says the BFF returns the bucket state.
       }
+      
+      const log: RequestLog = {
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+        status: tokens >= amount ? 'allowed' : 'limited',
+        remaining: Math.max(0, tokens - amount),
+      };
+      setLocalRequests(prev => [log, ...prev].slice(0, 10));
+
     } catch (e) {
       console.error(e);
     }
-  }, [tokens, windowReset, executeCommand]);
+  }, [tokens, executeCommand]);
 
-  const burstRequest = useCallback(() => {
-    const results: BurstBar[] = [];
-    let currentTokens = tokens;
-
-    for (let i = 0; i < 6; i++) {
-      const isAllowed = currentTokens > 0;
-      if (isAllowed) currentTokens--;
-      results.push({
-        id: crypto.randomUUID(),
-        index: i + 1,
-        status: isAllowed ? 'allowed' : 'limited',
-      });
+  const burstRequest = useCallback((amount: number) => {
+    // For visual effect, we can stagger the calls if the backend supports it,
+    // or just fire them. The brief says "drain N tokens with a 50ms stagger".
+    for (let i = 0; i < amount; i++) {
+      setTimeout(() => sendRequest(1), i * 50);
     }
-
-    setBurstBars(results);
-    for (let i = 0; i < 6; i++) {
-      setTimeout(sendRequest, i * 50);
-    }
-  }, [sendRequest, tokens]);
+  }, [sendRequest]);
 
   return (
     <div className="space-y-6">
@@ -128,7 +112,7 @@ export function RateLimiterDemo() {
         <div className="flex items-center justify-between">
           <Heading variant="caption" className="flex items-center gap-2.5">
             <Gauge className="w-4 h-4 text-accent" />
-            Fixed Window Limiter
+            Token Bucket Limiter
           </Heading>
         </div>
 
@@ -136,154 +120,92 @@ export function RateLimiterDemo() {
           <Stack gap={8} className="font-mono">
             <Stack gap={4}>
               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-secondary/90">
-                <span>Limit Policy</span>
+                <span>Bucket State</span>
                 <Pill variant={retryAfter > 0 ? 'error' : 'success'}>
                   {retryAfter > 0 ? 'THROTTLED' : 'ACCEPTING'}
                 </Pill>
               </div>
 
               <div className={cn(
-                "p-6 rounded-xl border relative overflow-hidden transition-colors",
-                retryAfter > 0 ? "bg-error/5 border-error/30" : "bg-black/40 border-white/5"
+                "p-8 rounded-xl border relative overflow-hidden transition-all duration-500",
+                retryAfter > 0 ? "bg-error/[0.03] border-error/30" : "bg-black/40 border-white/5"
               )}>
-                {retryAfter > 0 && (
-                  <div className="absolute inset-0 bg-error/5 animate-pulse pointer-events-none" />
-                )}
+                {/* Token Bucket Strip */}
+                <div className="flex flex-wrap justify-center gap-3 mb-10">
+                  {Array.from({ length: maxTokens }).map((_, i) => {
+                    const isFull = i < tokens;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={false}
+                        animate={{
+                          scale: isFull ? 1 : 0.8,
+                          opacity: isFull ? 1 : 0.2,
+                          backgroundColor: isFull ? "var(--color-accent, #6366f1)" : "rgba(255,255,255,0.1)"
+                        }}
+                        className={cn(
+                          "w-6 h-6 rounded-full border border-white/10",
+                          isFull && "shadow-[0_0_15px_rgba(99,102,241,0.4)]"
+                        )}
+                      />
+                    );
+                  })}
+                </div>
 
-                <div className="flex justify-between items-end mb-6 relative z-10">
-                  <div className="space-y-1">
-                    <div className="text-3xl font-black tabular-nums transition-colors">
-                      <motion.span
-                        key={tokens}
-                        initial={{ scale: 1.2 }}
-                        animate={{ scale: 1 }}
-                        className={tokens === 0 ? 'text-error' : 'text-primary'}
-                      >
-                        {tokens}
-                      </motion.span>
-                      <span className="text-secondary/90">/{maxTokens}</span>
-                    </div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted">Available Tokens</div>
+                {/* Cooldown / Progress */}
+                <div className="relative h-1 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    className={cn("h-full", retryAfter > 0 ? "bg-error" : "bg-accent")}
+                    animate={{ 
+                      width: retryAfter > 0 
+                        ? `${(retryAfter / windowSeconds) * 100}%` 
+                        : `${((windowSeconds - windowReset) / windowSeconds) * 100}%` 
+                    }}
+                    transition={{ duration: 1, ease: 'linear' }}
+                  />
+                </div>
+
+                <div className="flex justify-between mt-3 text-[9px] uppercase tracking-[0.2em] font-black">
+                  <div className="flex flex-col">
+                    <span className="text-muted/50 mb-1">Capacity</span>
+                    <span className="text-primary">{tokens} / {maxTokens}</span>
                   </div>
-
-                  {/* Window reset countdown */}
-                  <div className="text-right">
-                    <div className={cn(
-                      "text-xl font-black tabular-nums",
-                      retryAfter > 0 ? 'text-error' : 'text-secondary/70'
-                    )}>
+                  <div className="flex flex-col text-right">
+                    <span className="text-muted/50 mb-1">{retryAfter > 0 ? 'Retry in' : 'Refill in'}</span>
+                    <span className={cn(retryAfter > 0 ? "text-error" : "text-secondary")}>
                       {retryAfter > 0 ? retryAfter : windowReset}s
-                    </div>
-                    <div className={cn(
-                      "text-[9px] uppercase tracking-widest",
-                      retryAfter > 0 ? 'text-error/70' : 'text-muted/60'
-                    )}>
-                      {retryAfter > 0 ? 'Retry After' : 'Window Reset'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Token bar */}
-                <div className="flex gap-1 relative z-10">
-                  {Array.from({ length: maxTokens }).map((_, i) => (
-                    <motion.div
-                      key={i}
-                      animate={i < tokens ? { opacity: 1 } : { opacity: 0.15 }}
-                      transition={{ duration: 0.2 }}
-                      className={cn(
-                        "flex-1 h-3 rounded-full transition-colors duration-300",
-                        i < tokens ? "bg-success shadow-[0_0_10px_rgba(34,197,94,0.5)]" : "bg-white/10"
-                      )}
-                    />
-                  ))}
-                </div>
-
-                {/* Window reset progress bar */}
-                <div className="mt-3 relative z-10">
-                  <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-accent/40"
-                      animate={{ width: `${((windowSeconds - windowReset) / windowSeconds) * 100}%` }}
-                      transition={{ duration: 1, ease: 'linear' }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[8px] text-muted/30 mt-1">
-                    <span>window start</span>
-                    <span>reset in {windowReset}s</span>
+                    </span>
                   </div>
                 </div>
               </div>
             </Stack>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 variant="primary"
-                onClick={sendRequest}
+                onClick={() => sendRequest(1)}
                 disabled={retryAfter > 0}
-                className="w-full h-auto py-4 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2"
+                className="py-3 font-black text-[9px] uppercase tracking-widest rounded-xl"
               >
-                Send Request
+                Send 1
               </Button>
               <Button
                 variant="secondary"
-                onClick={burstRequest}
+                onClick={() => burstRequest(5)}
                 disabled={retryAfter > 0}
-                className="w-full h-auto py-4 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 border-warning/30 text-warning hover:bg-warning/10"
+                className="py-3 font-black text-[9px] uppercase tracking-widest rounded-xl border-white/10"
               >
-                Burst (6x)
+                Send 5
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => burstRequest(12)}
+                disabled={retryAfter > 0}
+                className="py-3 font-black text-[9px] uppercase tracking-widest rounded-xl border-warning/20 text-warning hover:bg-warning/10"
+              >
+                Send 12
               </Button>
             </div>
-
-            {/* Burst result bars */}
-            <AnimatePresence>
-              {burstBars.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-3"
-                >
-                  <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.3em]">
-                    <span className="text-success">{burstBars.filter(b => b.status === 'allowed').length} allowed</span>
-                    <span className="text-muted/40">/</span>
-                    <span className="text-error">{burstBars.filter(b => b.status === 'limited').length} rejected</span>
-                  </div>
-                  <div className="flex gap-1.5">
-                    {burstBars.map((bar, i) => (
-                      <motion.div
-                        key={bar.id}
-                        initial={{ scaleY: 0, opacity: 0 }}
-                        animate={{ scaleY: 1, opacity: 1 }}
-                        transition={{ delay: i * 0.06, type: 'spring', stiffness: 300 }}
-                        style={{ originY: 1 }}
-                        className="flex-1 flex flex-col items-center gap-1"
-                      >
-                        <div className={cn(
-                          "w-full rounded-sm",
-                          bar.status === 'allowed'
-                            ? "h-8 bg-success/70 shadow-[0_0_6px_rgba(34,197,94,0.5)]"
-                            : "h-4 bg-error/70 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
-                        )} />
-                        <div className={cn(
-                          "text-[8px] font-black",
-                          bar.status === 'allowed' ? 'text-success' : 'text-error'
-                        )}>
-                          {bar.index}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-[8px] font-mono">
-                    <span className="text-success flex items-center gap-1">
-                      <CheckCircle2 className="w-2.5 h-2.5" /> 200 OK
-                    </span>
-                    <span className="text-error flex items-center gap-1">
-                      <AlertCircle className="w-2.5 h-2.5" /> 429 Too Many
-                    </span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             <RequestReceipt
               traceId={receipt?.traceId}
@@ -294,6 +216,7 @@ export function RateLimiterDemo() {
           </Stack>
         </Card>
       </Stack>
+
 
       <Stack gap={6}>
         <Heading variant="caption" className="flex items-center gap-2.5">

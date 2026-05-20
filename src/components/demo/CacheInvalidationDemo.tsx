@@ -46,7 +46,15 @@ export function CacheInvalidationDemo() {
   const [receipts, setReceipts] = useState<RequestMetadata[]>([]);
   const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
 
-  const { executeCommand, events, sessionId, metadata } = useDemoSession('cache-invalidation');
+  const { executeCommand, events, metadata } = useDemoSession('cache-invalidation');
+
+  const [tiers, setTiers] = useState([
+    { id: 'l1', label: 'L1 (Memory)', color: 'text-accent', status: 'cached' as const },
+    { id: 'l2', label: 'L2 (Redis)', color: 'text-primary', status: 'cached' as const },
+    { id: 'db', label: 'PostgreSQL', color: 'text-success', status: 'origin' as const },
+  ]);
+
+  const [waveActive, setWaveActive] = useState(false);
 
   // Seed demo product on mount
   useEffect(() => {
@@ -78,8 +86,22 @@ export function CacheInvalidationDemo() {
           cachedAt: new Date(),
           ttl: p.cacheInfo?.ttlSeconds ?? 60,
         });
+        
+        const source = p.cacheInfo?.source?.toLowerCase() ?? 'l1';
+        setTiers(prev => prev.map(t => ({
+          ...t,
+          status: t.id === source ? 'serving' : (t.id === 'db' ? 'origin' : 'cached')
+        })));
+        
         setCacheStatus('hit');
-        addLog('hit', 'Returned from HybridCache (L1/L2)');
+        addLog('hit', `Returned from ${p.cacheInfo?.source ?? 'Cache'}`);
+        
+        setTimeout(() => {
+          setTiers(prev => prev.map(t => ({
+            ...t,
+            status: t.id === 'db' ? 'origin' : 'cached'
+          })));
+        }, 1000);
       }
     } catch (e) {
       setCacheStatus('miss');
@@ -96,8 +118,19 @@ export function CacheInvalidationDemo() {
       if (demoProductId) {
         const r = await apiUpdateProduct(demoProductId, { price: parseFloat(newPrice) });
         setReceipt(r as RequestMetadata);
-        setCacheStatus('stale');
+        
+        // Start Invalidation Wave
+        setWaveActive(true);
         addLog('publish', 'Committed to DB + Published ProductCacheInvalidatedEvent');
+        
+        // Staggered eviction animation
+        setTimeout(() => addLog('invalidate', 'Pub/Sub: Evicting L1...'), 200);
+        setTimeout(() => addLog('invalidate', 'Pub/Sub: Evicting L2...'), 500);
+        
+        setTimeout(() => {
+          setWaveActive(false);
+          setCacheStatus('stale');
+        }, 1200);
       }
     } catch (e) {
       addLog('update', 'Failed to update database');
@@ -139,17 +172,50 @@ export function CacheInvalidationDemo() {
         <div className="flex items-center justify-between">
           <Heading variant="caption" className="flex items-center gap-2.5">
             <Radio className="w-4 h-4 text-accent" />
-            Pub/Sub Invalidation
+            Three-Tier Cache Ladder
           </Heading>
         </div>
 
         <Card variant="panel-dark" padding="lg">
           <Stack gap={8} className="font-mono">
+            {/* Ladder UI */}
+            <div className="space-y-3">
+              {tiers.map((tier, i) => (
+                <div key={tier.id} className="relative">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg border transition-all duration-300",
+                    tier.status === 'serving' ? "bg-accent/10 border-accent shadow-[0_0_15px_rgba(99,102,241,0.3)]" : "bg-black/40 border-white/5",
+                    waveActive && i < 2 && "opacity-50"
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-2 h-2 rounded-full", tier.status === 'serving' ? "bg-accent animate-pulse" : "bg-white/10")} />
+                      <span className={cn("text-[10px] font-black uppercase tracking-widest", tier.status === 'serving' ? "text-primary" : "text-muted")}>
+                        {tier.label}
+                      </span>
+                    </div>
+                    {tier.status === 'serving' && (
+                      <Pill variant="status" className="text-[8px] px-1.5 py-0">SERVING</Pill>
+                    )}
+                  </div>
+                  
+                  {/* Wave effect */}
+                  {waveActive && i < 2 && (
+                    <motion.div
+                      initial={{ left: 0, opacity: 0 }}
+                      animate={{ left: '100%', opacity: [0, 1, 0] }}
+                      transition={{ duration: 0.6, delay: i * 0.2 }}
+                      className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-error/40 to-transparent z-10"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
             <Stack gap={4}>
               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted/90">
-                <span>Catalog Service</span>
+                <span>Product State</span>
                 <Pill variant={cacheStatus === 'hit' ? 'success' : cacheStatus === 'stale' ? 'warning' : 'status'}>
-                  {cacheStatus === 'hit' ? 'SYNCED' : cacheStatus === 'stale' ? 'STALE_PENDING_EVENT' : 'EVICTED'}
+                  {cacheStatus === 'hit' ? 'SYNCED' : cacheStatus === 'stale' ? 'STALE_WAITING' : 'EVICTED'}
                 </Pill>
               </div>
 

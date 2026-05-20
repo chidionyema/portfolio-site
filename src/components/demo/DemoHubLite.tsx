@@ -32,6 +32,7 @@ const LedgerDemo            = lazy(() => import("./LedgerDemo").then(m => ({ def
 const GdprErasureDemo       = lazy(() => import("./GdprErasureDemo").then(m => ({ default: m.GdprErasureDemo })));
 const CdcSearchDemo         = lazy(() => import("./CdcSearchDemo").then(m => ({ default: m.CdcSearchDemo })));
 const UnderTheHood          = lazy(() => import("./UnderTheHood").then(m => ({ default: m.UnderTheHood })));
+import { TraceViewer } from "./TraceViewer";
 
 const DEFAULT_DEMO = "idempotency";
 
@@ -324,6 +325,13 @@ export function DemoHub() {
                         <DemoContext demoId={activeId} />
                         <Suspense fallback={<LoadingSkeleton />}>
                            <DemoContent id={activeId} />
+                           
+                           {latestTraceId && (
+                              <div ref={traceRef} className="mt-12 scroll-mt-24">
+                                 <TraceViewer traceId={latestTraceId} />
+                              </div>
+                           )}
+
                            <UnderTheHood demoId={activeId} />
                         </Suspense>
                      </motion.div>

@@ -197,12 +197,19 @@ export function ConcurrencyDemo() {
             key={key}
             animate={
               panel.state === 'success'
-                ? { boxShadow: ['0 0 0px rgba(34,197,94,0)', '0 0 24px rgba(34,197,94,0.4)', '0 0 0px rgba(34,197,94,0)'] }
+                ? { 
+                    boxShadow: ['0 0 0px rgba(34,197,94,0)', '0 0 24px rgba(34,197,94,0.4)', '0 0 0px rgba(34,197,94,0)'],
+                    scale: [1, 1.02, 1]
+                  }
                 : panel.state === 'conflict'
-                ? { boxShadow: ['0 0 0px rgba(239,68,68,0)', '0 0 24px rgba(239,68,68,0.4)', '0 0 0px rgba(239,68,68,0)'] }
+                ? { 
+                    x: [-4, 4, -4, 4, 0],
+                    boxShadow: ['0 0 0px rgba(239,68,68,0)', '0 0 32px rgba(239,68,68,0.5)', '0 0 0px rgba(239,68,68,0)'],
+                    borderColor: ['rgba(239,68,68,0.08)', 'rgba(239,68,68,0.8)', 'rgba(239,68,68,0.08)']
+                  }
                 : {}
             }
-            transition={{ duration: 0.6 }}
+            transition={{ duration: panel.state === 'conflict' ? 0.4 : 0.6 }}
             className={cn(
               "rounded-2xl border-2 p-5 space-y-4 font-mono transition-colors duration-300",
               panel.state === 'success' ? 'border-success/50 bg-success/5' :
@@ -257,7 +264,15 @@ export function ConcurrencyDemo() {
                     className="w-10 h-10 rounded bg-white/10 text-muted hover:text-primary text-sm flex items-center justify-center"
                     disabled={panel.state === 'pending' || isRacing}
                   >−</button>
-                  <span className="text-sm font-black text-primary tabular-nums w-8 text-center">{panel.quantity}</span>
+                  <motion.span 
+                    animate={panel.state === 'conflict' ? { 
+                      scale: [1, 1.4, 1],
+                      color: ['#ffffff', '#f87171', '#ffffff'] 
+                    } : {}}
+                    className="text-sm font-black text-primary tabular-nums w-8 text-center"
+                  >
+                    {panel.quantity}
+                  </motion.span>
                   <button
                     onClick={() => setter(p => ({ ...p, quantity: p.quantity + 5 }))}
                     className="w-10 h-10 rounded bg-white/10 text-muted hover:text-primary text-sm flex items-center justify-center"
@@ -270,13 +285,18 @@ export function ConcurrencyDemo() {
                 <motion.span
                   key={currentVersion}
                   initial={{ scale: 1.3, color: '#a78bfa' }}
-                  animate={{ scale: 1, color: '#ffffff' }}
-                  className="text-lg font-black tabular-nums"
+                  animate={{ 
+                    scale: 1, 
+                    color: '#ffffff',
+                    backgroundColor: panel.state === 'conflict' ? ['rgba(239,68,68,0)', 'rgba(239,68,68,0.2)', 'rgba(239,68,68,0)'] : 'transparent'
+                  }}
+                  className="text-lg font-black tabular-nums px-1 rounded"
                 >
                   v{currentVersion}
                 </motion.span>
               </div>
             </div>
+
 
             {/* Error / conflict message */}
             <AnimatePresence>

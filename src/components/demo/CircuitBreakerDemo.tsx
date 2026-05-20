@@ -21,7 +21,7 @@ interface RequestLog {
   timestamp: Date;
   status: 'ok' | 'failed' | 'rejected';
   durationMs: number;
-  circuitState: CircuitState;
+  circuitState?: CircuitState;
 }
 
 const STATE_CONFIG: Record<CircuitState, { color: string; bg: string; border: string; glow: string; icon: typeof ShieldCheck; label: string; desc: string }> = {
@@ -31,16 +31,15 @@ const STATE_CONFIG: Record<CircuitState, { color: string; bg: string; border: st
 };
 
 export function CircuitBreakerDemo() {
-  const [logs, setLogs] = useState<RequestLog[]>([]);
+  const [withBreakerLogs, setWithBreakerLogs] = useState<RequestLog[]>([]);
+  const [withoutBreakerLogs, setWithoutBreakerLogs] = useState<RequestLog[]>([]);
   const [circuitState, setCircuitState] = useState<CircuitState>('Closed');
   const [prevState, setPrevState] = useState<CircuitState | null>(null);
-  const [metrics, setMetrics] = useState({ success: 0, failure: 0, rejected: 0 });
   const [isLoading, setIsLoading] = useState(false);
-  const [isFaultActive, setIsFaultActive] = useState(false);
   const [receipt, setReceipt] = useState<RequestMetadata | null>(null);
   const transitionTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { executeCommand, events, chaos, metadata } = useDemoSession('circuit-breaker');
+  const { executeCommand, events, metadata } = useDemoSession('circuit-breaker');
 
   useEffect(() => {
     if (events.length > 0) {
@@ -57,94 +56,93 @@ export function CircuitBreakerDemo() {
     }
   }, [events]);
 
-  const sendRequest = useCallback(async (shouldFail?: boolean) => {
-    setIsLoading(true);
+  const sendRequestWithBreaker = useCallback(async (shouldFail: boolean = true) => {
     const start = Date.now();
     try {
-      const res = await executeCommand('/circuit/request', { shouldFail: shouldFail ?? isFaultActive });
-      if (res?.traceId || res?.latencyMs) setReceipt(res as RequestMetadata);
+      const res = await executeCommand('/circuit/request', { shouldFail });
       const duration = Date.now() - start;
       const isRejected = res?.isRejected || res?.rejected;
       const isOk = res?.success && !isRejected;
-
-      const newState = (res?.circuitState as CircuitState) ?? circuitState;
-      if (newState !== circuitState) {
-        setPrevState(circuitState);
-        setCircuitState(newState);
-      }
-
-      setMetrics(prev => ({
-        success: prev.success + (isOk ? 1 : 0),
-        failure: prev.failure + (!isOk && !isRejected ? 1 : 0),
-        rejected: prev.rejected + (isRejected ? 1 : 0),
-      }));
-
       const status = isOk ? 'ok' as const : isRejected ? 'rejected' as const : 'failed' as const;
-      setLogs(prev => [{
+
+      setWithBreakerLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
         status,
         durationMs: res?.responseTimeMs ?? duration,
-        circuitState: newState,
-      }, ...prev].slice(0, 20));
+        circuitState: (res?.circuitState as CircuitState) ?? circuitState,
+      }, ...prev].slice(0, 8));
+      
+      if (res?.traceId) setReceipt(res as RequestMetadata);
     } catch {
-      setMetrics(prev => ({ ...prev, failure: prev.failure + 1 }));
-      setLogs(prev => [{
+      setWithBreakerLogs(prev => [{
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        status: 'failed' as const,
+        status: 'failed',
         durationMs: Date.now() - start,
         circuitState,
-      }, ...prev].slice(0, 20));
-    } finally {
-      setIsLoading(false);
+      }, ...prev].slice(0, 8));
     }
-  }, [executeCommand, circuitState, isFaultActive]);
+  }, [executeCommand, circuitState]);
 
-  const toggleFault = useCallback(async () => {
+  const sendRequestWithoutBreaker = useCallback(async () => {
+    const start = Date.now();
     try {
-      await executeCommand('/circuit/toggle-failure', { failureMode: !isFaultActive });
-      setIsFaultActive(!isFaultActive);
-    } catch { /* fire-and-forget: circuit state is reflected via polling, failure is non-fatal */ }
-  }, [executeCommand, isFaultActive]);
+      // Simulate timeout cliff by explicitly setting shouldFail: true 
+      // and letting it wait for the backend's simulated latency.
+      const res = await executeCommand('/circuit/request', { shouldFail: true });
+      const duration = Date.now() - start;
+      setWithoutBreakerLogs(prev => [{
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+        status: 'failed',
+        durationMs: res?.responseTimeMs ?? duration,
+      }, ...prev].slice(0, 8));
+    } catch {
+      setWithoutBreakerLogs(prev => [{
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+        status: 'failed',
+        durationMs: Date.now() - start,
+      }, ...prev].slice(0, 8));
+    }
+  }, [executeCommand]);
+
+  const fireHammer = useCallback(async () => {
+    setIsLoading(true);
+    
+    // Clear logs for fresh run
+    setWithBreakerLogs([]);
+    setWithoutBreakerLogs([]);
+
+    // Fire 6 parallel requests to both sides
+    const requests = [];
+    for (let i = 0; i < 6; i++) {
+      requests.push(sendRequestWithBreaker(true));
+      requests.push(sendRequestWithoutBreaker());
+    }
+
+    await Promise.all(requests);
+    setIsLoading(false);
+  }, [sendRequestWithBreaker, sendRequestWithoutBreaker]);
 
   const resetCircuit = useCallback(async () => {
     try {
       await executeCommand('/circuit/reset', {});
       setCircuitState('Closed');
-      setMetrics({ success: 0, failure: 0, rejected: 0 });
-      setIsFaultActive(false);
-    } catch { /* fire-and-forget: circuit state is reflected via polling, failure is non-fatal */ }
+      setWithBreakerLogs([]);
+      setWithoutBreakerLogs([]);
+    } catch {}
   }, [executeCommand]);
 
-  const spikeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  useEffect(() => () => spikeTimers.current.forEach(clearTimeout), []);
-
-  const fireSpike = useCallback(() => {
-    spikeTimers.current.forEach(clearTimeout);
-    spikeTimers.current = [];
-    for (let i = 0; i < 5; i++) {
-      spikeTimers.current.push(setTimeout(() => sendRequest(), i * 200));
-    }
-  }, [sendRequest]);
 
   const config = STATE_CONFIG[circuitState];
   const StateIcon = config.icon;
-  const total = metrics.success + metrics.failure + metrics.rejected;
 
   return (
     <div className="space-y-8">
       <RealSystemBanner metadata={metadata} />
       <WhatToWatch demoId="circuit" />
-
-      {/* Before/After callout */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 font-mono text-[10px] text-muted leading-relaxed">
-        <span className="shrink-0 text-error font-black uppercase tracking-widest">Without:</span>
-        <span>all requests wait on upstream timeout (&gt;30s)</span>
-        <span className="mx-3 text-white/10">|</span>
-        <span className="shrink-0 text-success font-black uppercase tracking-widest">With:</span>
-        <span>failures rejected in &lt;1ms once circuit opens</span>
-      </div>
 
       {/* State Machine Visualization */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -205,236 +203,136 @@ export function CircuitBreakerDemo() {
         })}
       </div>
 
-      {/* Transition arrows between states */}
-      <div className="hidden md:flex items-center justify-center gap-2 text-[9px] font-mono text-muted/50 uppercase tracking-widest -mt-4">
-        <span>2 failures</span>
-        <span className="text-error">→ open</span>
-        <span className="mx-4">|</span>
-        <span>6s cooldown</span>
-        <span className="text-warning">→ half-open</span>
-        <span className="mx-4">|</span>
-        <span>probe succeeds</span>
-        <span className="text-success">→ closed</span>
+      <div className="flex flex-col items-center gap-4">
+        <Button
+          variant="primary"
+          onClick={fireHammer}
+          disabled={isLoading}
+          className="h-auto py-5 px-10 font-black text-xs uppercase tracking-[0.3em] rounded-2xl flex items-center justify-center gap-3 bg-error hover:bg-error/90 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)] border-none group"
+        >
+          {isLoading ? (
+            <RotateCw className="w-5 h-5 animate-spin" />
+          ) : (
+            <Flame className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          )}
+          Trip & Hammer
+        </Button>
+        <button onClick={resetCircuit} className="text-[10px] font-mono text-muted hover:text-primary uppercase tracking-widest transition-colors">
+          Reset Environment
+        </button>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_1fr] gap-8">
-        {/* Left: Controls + Metrics */}
-        <Stack gap={6}>
-          <Card variant="panel-dark" padding="lg">
-            <Stack gap={6} className="font-mono">
-              {/* Fault injection toggle */}
-              <div className={cn(
-                "p-4 rounded-xl border flex items-center justify-between transition-all",
-                isFaultActive ? "bg-error/10 border-error/30" : "bg-white/[0.02] border-white/5"
-              )}>
-                <div className="flex items-center gap-3">
-                  <Flame className={cn("w-4 h-4", isFaultActive ? "text-error animate-pulse" : "text-muted")} />
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-widest">
-                      {isFaultActive ? 'Fault active' : 'No fault'}
-                    </div>
-                    <div className="text-[9px] text-muted mt-0.5">
-                      {isFaultActive ? 'catalog-svc returning 503s' : 'All upstreams healthy'}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant={isFaultActive ? "primary" : "secondary"}
-                  onClick={toggleFault}
-                  className={cn(
-                    "h-auto px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg",
-                    isFaultActive ? "bg-error border-error" : "border-error/20 text-error hover:bg-error/10"
-                  )}
-                >
-                  {isFaultActive ? 'Clear' : 'Inject'}
-                </Button>
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Without Breaker */}
+        <Stack gap={4}>
+           <div className="flex items-center justify-between">
+              <Heading variant="caption" className="text-error">Without Breaker</Heading>
+              <span className="text-[9px] font-mono text-muted uppercase">Sync Blocked</span>
+           </div>
+           <Card variant="panel-dark" padding="none" className="min-h-[400px] border-error/10">
+              <div className="p-4 bg-error/5 border-b border-error/10 flex items-center gap-2">
+                 <ShieldOff className="w-3.5 h-3.5 text-error" />
+                 <span className="text-[10px] font-black uppercase text-error tracking-widest">Timeout Cliff</span>
               </div>
-
-              {/* Action buttons */}
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant="primary"
-                  onClick={() => sendRequest()}
-                  disabled={isLoading}
-                  className="w-full h-auto py-4 font-black text-[10px] uppercase tracking-widest rounded-xl flex flex-col items-center justify-center gap-1.5"
-                >
-                  <Send className="w-4 h-4" />
-                  {isLoading
-                    ? circuitState === 'HalfOpen' ? 'Probing…'
-                    : 'Sending…'
-                    : circuitState === 'Open' ? 'Rejected'
-                    : 'Request'}
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={fireSpike}
-                  disabled={isLoading}
-                  className="w-full h-auto py-4 font-black text-[10px] uppercase tracking-widest rounded-xl flex flex-col items-center justify-center gap-1.5 border-warning/30 text-warning hover:bg-warning/10"
-                >
-                  <Zap className="w-4 h-4" />
-                  Spike 5x
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={resetCircuit}
-                  className="w-full h-auto py-4 font-black text-[10px] uppercase tracking-widest rounded-xl flex flex-col items-center justify-center gap-1.5"
-                >
-                  <RotateCw className="w-4 h-4" />
-                  Reset
-                </Button>
-              </div>
-
-              {/* Metric tiles */}
-              <div className="grid grid-cols-3 gap-3">
-                <MetricTile label="Success" value={metrics.success} color="text-success" total={total} />
-                <MetricTile label="Failed" value={metrics.failure} color="text-error" total={total} />
-                <MetricTile label="Rejected" value={metrics.rejected} color="text-warning" total={total} />
-              </div>
-
-              {/* Response time sparkline */}
-              {logs.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-[9px] font-black uppercase tracking-[0.3em] text-muted/60">
-                    Response latency (last {Math.min(logs.length, 20)})
-                  </div>
-                  <div className="flex items-end gap-px h-12">
-                    {(() => {
-                      const reversed = [...logs].reverse();
-                      const maxMs = Math.max(...reversed.map(l => l.durationMs), 1);
-                      return reversed.map((log) => {
-                      const height = Math.max(4, (log.durationMs / maxMs) * 100);
-                      return (
-                        <motion.div
-                          key={log.id}
-                          initial={{ height: 0 }}
-                          animate={{ height: `${height}%` }}
-                          className={cn(
-                            "flex-1 rounded-t-sm min-w-[3px]",
-                            log.status === 'ok' ? 'bg-success/60' :
-                            log.status === 'rejected' ? 'bg-warning/60' :
-                            'bg-error/60'
-                          )}
-                          title={`${log.durationMs}ms — ${log.status}`}
-                        />
-                      );
-                    });
-                    })()}
-                  </div>
-                  <div className="flex justify-between text-[8px] text-muted/60 font-mono">
-                    <span>oldest</span>
-                    <span>latest</span>
-                  </div>
-                </div>
-              )}
-              <RequestReceipt
-                traceId={receipt?.traceId}
-                latencyMs={receipt?.latencyMs}
-                statusCode={receipt?.statusCode}
-                service={receipt?.service}
-              />
-            </Stack>
-          </Card>
+              <TrafficTable logs={withoutBreakerLogs} showCircuit={false} />
+           </Card>
         </Stack>
 
-        {/* Right: Traffic Log */}
-        <Stack gap={6}>
-          <Heading variant="caption" className="flex items-center gap-2.5">
-            <Activity className="w-4 h-4 text-muted" />
-            Traffic Log
-          </Heading>
-
-          <Card variant="panel-dark" padding="none" className="h-[540px] flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto font-mono text-[11px]">
-              <table className="w-full text-left border-collapse">
-                <thead className="sticky top-0 bg-[#0d0d12] border-b border-white/10 z-10 text-muted/90 uppercase text-[10px] font-black tracking-widest">
-                  <tr>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Latency</th>
-                    <th className="px-4 py-3 text-right">Circuit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <AnimatePresence initial={false}>
-                    {logs.length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="py-24 text-center text-muted/80 italic uppercase tracking-[0.4em] font-black">
-                          Send traffic to view results
-                        </td>
-                      </tr>
-                    ) : (
-                      logs.map((req) => (
-                        <motion.tr
-                          key={req.id}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="group border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
-                        >
-                          <td className="px-4 py-3">
-                            {req.status === 'ok' ? (
-                              <span className="text-success uppercase font-black tracking-wider flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                                200 OK
-                              </span>
-                            ) : req.status === 'rejected' ? (
-                              <span className="text-warning uppercase font-black tracking-wider flex items-center gap-1.5">
-                                <ShieldOff className="w-3 h-3" />
-                                Rejected
-                              </span>
-                            ) : (
-                              <span className="text-error uppercase font-black tracking-wider flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-error" />
-                                503
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums">
-                            <span className={cn(
-                              req.status === 'rejected' ? 'text-warning' : 'text-muted/90'
-                            )}>
-                              {req.durationMs}ms
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <Pill
-                              variant={req.circuitState === 'Closed' ? 'success' : req.circuitState === 'Open' ? 'error' : 'warning'}
-                              className="text-[8px] px-1.5 py-0"
-                            >
-                              {req.circuitState}
-                            </Pill>
-                          </td>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="p-4 bg-white/[0.02] border-t border-white/5 font-mono text-[9px] text-muted/60 uppercase tracking-widest text-center">
-              Polly AsyncCircuitBreakerPolicy · 2 failures → open 6s · auto probe on half-open
-            </div>
-          </Card>
+        {/* With Breaker */}
+        <Stack gap={4}>
+           <div className="flex items-center justify-between">
+              <Heading variant="caption" className="text-success">With Breaker</Heading>
+              <span className="text-[9px] font-mono text-muted uppercase tracking-widest">Fail Fast</span>
+           </div>
+           <Card variant="panel-dark" padding="none" className="min-h-[400px] border-success/10">
+              <div className="p-4 bg-success/5 border-b border-success/10 flex items-center gap-2">
+                 <ShieldCheck className="w-3.5 h-3.5 text-success" />
+                 <span className="text-[10px] font-black uppercase text-success tracking-widest">Resilience Policy</span>
+              </div>
+              <TrafficTable logs={withBreakerLogs} showCircuit={true} />
+           </Card>
         </Stack>
       </div>
+
+      <RequestReceipt
+        traceId={receipt?.traceId}
+        latencyMs={receipt?.latencyMs}
+        statusCode={receipt?.statusCode}
+        service={receipt?.service}
+      />
     </div>
   );
 }
 
-function MetricTile({ label, value, color, total }: { label: string; value: number; color: string; total: number }) {
-  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+function TrafficTable({ logs, showCircuit }: { logs: RequestLog[]; showCircuit: boolean }) {
   return (
-    <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5 text-center">
-      <div className={cn("text-2xl font-black tabular-nums", color)}>{value}</div>
-      <div className="text-[9px] font-black uppercase tracking-widest text-muted mt-1">{label}</div>
-      {total > 0 && (
-        <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
-          <motion.div
-            className={cn("h-full rounded-full", color.replace('text-', 'bg-'))}
-            animate={{ width: `${pct}%` }}
-            transition={{ type: 'spring', stiffness: 100 }}
-          />
-        </div>
-      )}
+    <div className="font-mono text-[11px] overflow-y-auto max-h-[400px]">
+      <table className="w-full text-left border-collapse">
+        <thead className="sticky top-0 bg-[#0d0d12]/90 backdrop-blur border-b border-white/10 z-10 text-muted/90 uppercase text-[9px] font-black tracking-widest">
+          <tr>
+            <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3 text-right">Latency</th>
+            {showCircuit && <th className="px-4 py-3 text-right">Circuit</th>}
+          </tr>
+        </thead>
+        <tbody>
+          <AnimatePresence initial={false}>
+            {logs.length === 0 ? (
+              <tr>
+                <td colSpan={showCircuit ? 3 : 2} className="py-24 text-center text-muted/40 italic uppercase tracking-[0.4em] font-black text-[10px]">
+                  Idle
+                </td>
+              </tr>
+            ) : (
+              logs.map((req) => (
+                <motion.tr
+                  key={req.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="group border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
+                >
+                  <td className="px-4 py-3">
+                    {req.status === 'ok' ? (
+                      <span className="text-success uppercase font-black tracking-wider flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                        200 OK
+                      </span>
+                    ) : req.status === 'rejected' ? (
+                      <span className="text-warning uppercase font-black tracking-wider flex items-center gap-1.5">
+                        <ShieldOff className="w-3 h-3" />
+                        Rejected
+                      </span>
+                    ) : (
+                      <span className="text-error uppercase font-black tracking-wider flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-error" />
+                        503 ERR
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    <span className={cn(
+                      req.status === 'rejected' ? 'text-warning' : req.durationMs > 2000 ? 'text-error font-black' : 'text-muted/90'
+                    )}>
+                      {req.durationMs}ms
+                    </span>
+                  </td>
+                  {showCircuit && (
+                    <td className="px-4 py-3 text-right">
+                      <Pill
+                        variant={req.circuitState === 'Closed' ? 'success' : req.circuitState === 'Open' ? 'error' : 'warning'}
+                        className="text-[8px] px-1.5 py-0"
+                      >
+                        {req.circuitState}
+                      </Pill>
+                    </td>
+                  )}
+                </motion.tr>
+              )
+            ))}
+          </AnimatePresence>
+        </tbody>
+      </table>
     </div>
   );
 }
+

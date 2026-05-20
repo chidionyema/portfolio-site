@@ -8,7 +8,7 @@
 // Local-dev fallback. PUBLIC_API_URL is the source of truth (.env.local).
 // Was http://localhost:5000 — that port is squatted by macOS Control
 // Center (AirPlay Receiver) so it silently 404'd in dev.
-const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:5050';
 
 // ============================================================================
 // Types
@@ -611,6 +611,12 @@ export async function triggerChaos(scenario: string, durationSeconds: number) {
   return handleResponse<{ trace_id: string }>(response, start, path);
 }
 
-// getTrace + /api/traces/{traceId} removed alongside the hardcoded
-// distributed-tracing demo. Real OTel + Tempo will land separately
-// before the surface returns.
+/**
+ * Get trace by ID from Grafana Tempo (via Backend)
+ */
+export async function getTrace(traceId: string) {
+  const start = performance.now();
+  const path = `/api/traces/${traceId}`;
+  const response = await fetch(`${API_URL}${path}`);
+  return handleResponse<Trace>(response, start, path);
+}
