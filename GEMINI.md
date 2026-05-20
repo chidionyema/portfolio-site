@@ -22,7 +22,12 @@ npm run build
 *   **Full-File Rewrites:** For complex refactors, prefer `write_file` with the complete content over multiple surgical `replace` calls to ensure block-level integrity.
 *   **Validation is Finality:** A task is NOT complete until the build has been verified. Never assume success based on tool output alone.
 
-## 4. Industrial UX Standards
+## 4. Operational Efficiency
+*   **Direct Action:** For well-defined tasks (content updates, style tweaks), execute surgical changes immediately. Do not perform exhaustive audits or multi-turn research unless explicitly complex.
+*   **No Over-Thinking:** Prioritize momentum and delivery. If a task is clear, act on it in the first turn.
+*   **Concise Communication:** Keep text output minimal and focused on technical rationale.
+
+## 5. Industrial UX Standards
 Adhere strictly to the **Industrial Systems Console** aesthetic:
 *   Sharp corners (`rounded-none`).
 *   Pure black surfaces (`#000`).

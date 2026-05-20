@@ -57,15 +57,14 @@ export function Hero(_: HeroProps) {
               </Heading>
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
-                I'm a <strong className="text-primary">Principal Backend Engineer</strong> specialized in microservice platforms with real saga orchestration, 
-                transactional outboxes, and automated resilience. Not slides — running code.
+                I'm a <strong className="text-primary">Principal Backend Engineer</strong> specializing in microservice platforms with real saga orchestration, 
+                transactional outboxes, and automated resilience. This is running code, not just slides.
               </p>
 
               {/* Differentiator callout */}
               <p className="text-sm text-accent/80 mb-12 max-w-2xl leading-relaxed">
-                This portfolio is a <strong className="text-accent">live .NET 9 cluster on Fly.io</strong> — 
-                8 microservices, Postgres, RabbitMQ, Redis. Every demo hits real infrastructure. 
-                Break it, watch it recover.
+                This portfolio is a <strong className="text-accent">live .NET 9 cluster on Fly.io</strong> with 
+                8 microservices, Postgres, RabbitMQ, and Redis. Every demo hits real infrastructure.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4">
