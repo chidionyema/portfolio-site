@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CheckoutDemo } from "../demo/CheckoutDemo";
+import { RateLimiterDemo } from "../demo/RateLimiterDemo";
 import { Section } from "../ui/Section";
 import { Heading } from "../ui/Heading";
 import { Container } from "../ui/Container";
@@ -15,27 +15,26 @@ export function Proof() {
           <Stack gap={8}>
             <div className="max-w-2xl">
               <Heading variant="caption" className="mb-4">
-                Don't take my word for it — try it
+                Real infrastructure, real results
               </Heading>
               <Heading variant="section" className="mb-6" level={2}>
-                A distributed saga, running live.
+                Traffic control at scale.
               </Heading>
               <p className="text-lg text-secondary leading-relaxed">
-                This checkout orchestrates stock reservation, payment, and order creation 
-                across four real microservices. Click <strong>'Inject Fault'</strong> to 
-                crash a step mid-flow and watch the saga automatically compensate — 
-                stock released, payment reversed, no orphaned data.
+                Watch a real token-bucket rate limiter in action. Every request targets a live 
+                .NET 9 cluster. Send bursts of traffic to watch the tokens drain and the system 
+                automatically throttle excessive load.
               </p>
             </div>
 
             <div className="panel-dark rounded-2xl overflow-hidden shadow-2xl">
-              <CheckoutDemo />
+              <RateLimiterDemo />
             </div>
 
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted max-w-md">
-                Every request hits Fly.io → BFF → Catalog/Payments/Orders via RabbitMQ. 
-                Trace IDs, latency, and instance IDs are real.
+                Every request hits Fly.io → BFF → Distributed Cache. 
+                Trace IDs, latency, and system telemetry are real.
               </p>
               <Link variant="cta" href="/demos">
                 Explore all 13 patterns →
