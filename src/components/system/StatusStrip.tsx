@@ -58,7 +58,7 @@ export function StatusStrip(_: StatusStripProps) {
         type="button"
         aria-label="Open cluster status details"
         onClick={() => setIsTrayOpen(true)}
-        className="border-b border-white/5 bg-[#050508] relative z-50 overflow-hidden cursor-pointer group appearance-none w-full text-left"
+        className="border-b border-white/5 bg-[#050508] relative z-30 overflow-hidden cursor-pointer group appearance-none w-full text-left"
       >
         <div className={`absolute inset-0 opacity-20 bg-gradient-to-r transition-colors duration-1000 ${
           systemStatus === 'healthy' ? 'from-success/10 via-transparent to-accent/10' :
