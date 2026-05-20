@@ -48,7 +48,7 @@ export function Hero(_: HeroProps) {
                   <Zap className="w-3 h-3 text-warning" />
                   Available for contract
                 </Pill>
-                <span className="text-xs text-muted">London · Remote · 10+ years</span>
+                <span className="text-xs text-muted">London · Remote · 13+ years</span>
               </div>
 
               <Heading variant="display" level={1} className="mb-6">
@@ -57,7 +57,7 @@ export function Hero(_: HeroProps) {
               </Heading>
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
-                I design and build microservice platforms with real saga orchestration, 
+                I'm a <strong className="text-primary">Principal Backend Engineer</strong> specialized in microservice platforms with real saga orchestration, 
                 transactional outboxes, and automated resilience. Not slides — running code.
               </p>
 

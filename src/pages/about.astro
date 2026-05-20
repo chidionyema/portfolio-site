@@ -5,14 +5,14 @@ import { Container } from '../components/ui/Container';
 import { Stack } from '../components/ui/Stack';
 ---
 
-<BaseLayout title="About | Chidi Onyema" description="Senior .NET contractor. 10+ years building distributed systems. London-based, remote-friendly.">
+<BaseLayout title="About | Chidi Onyema" description="Principal Backend Engineer. 13+ years building distributed systems. London-based, remote-friendly.">
   <main class="pt-32 pb-24">
     <Container size="prose">
       <Stack gap={12}>
         <div>
           <Heading variant="hero" level={1}>About me</Heading>
           <p class="text-xl text-secondary leading-relaxed mt-6">
-            I'm a senior .NET contractor based in London, specializing in distributed systems
+            I'm a Principal Backend Engineer based in London, specializing in distributed systems
             that handle real money, real users, and real failure modes.
           </p>
         </div>
@@ -42,9 +42,15 @@ import { Stack } from '../components/ui/Stack';
             <a href="https://github.com/chidionyema/haworks-platform" target="_blank" class="text-accent hover:underline">GitHub</a>.
           </p>
 
+          <h2 class="text-lg font-semibold text-primary mt-8">Education & Certifications</h2>
+          <ul class="text-secondary space-y-2">
+            <li><strong>Professional Certificate in AI and Machine Learning</strong>, Imperial College Business School (2024)</li>
+            <li><strong>BSc (Hons) Computer Science</strong>, Queen Mary University of London</li>
+          </ul>
+
           <h2 class="text-lg font-semibold text-primary mt-8">Stack</h2>
           <div class="flex flex-wrap gap-2 not-prose">
-            {['C# / .NET 9', 'MassTransit', 'EF Core', 'PostgreSQL', 'RabbitMQ', 'Redis', 'Polly', 'HashiCorp Vault', 'Docker', 'Fly.io', 'Supabase', 'OpenTelemetry', 'xUnit', 'Pact', 'Aspire'].map(tech => (
+            {['C# / .NET 9', 'MassTransit', 'EF Core', 'PostgreSQL', 'RabbitMQ', 'Redis', 'Polly', 'HashiCorp Vault', 'Docker', 'Fly.io', 'Supabase', 'OpenTelemetry', 'xUnit', 'Pact', 'Aspire', 'AI / ML'].map(tech => (
               <span class="px-2.5 py-1 bg-surface-warm border border-border rounded text-[10px] uppercase tracking-wider font-mono text-muted">{tech}</span>
             ))}
           </div>
