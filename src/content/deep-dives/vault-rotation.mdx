@@ -12,17 +12,17 @@ import { VaultRotationDemo } from '../../components/demo/VaultRotationDemo';
 
 # The Challenge: Moving Targets
 
-In a modern high-security environment, credentials like database passwords or API keys shouldn't live for months. They should be rotated frequently—ideally daily or even hourly. But how do you rotate a database password while 50 API nodes are actively using it?
+In a modern high-security environment, credentials like database passwords or API keys should not live for months. They should be rotated frequently, ideally daily or even hourly. But rotating a database password while 50 API nodes are actively using it requires careful coordination.
 
 ## The Pattern: The Overlap Window
 
-The solution is a two-step rotation pattern managed by HashiCorp Vault. Instead of updating a single password, we manage a lifecycle of credentials.
+The solution is a two-step rotation pattern managed by HashiCorp Vault. Instead of updating a single password, we manage a credential lifecycle.
 
 ### 1. Generation
-Vault generates a new set of credentials for the target database. At this point, both the **old** and the **new** credentials are valid.
+Vault generates a new set of credentials for the target database. At this point, both the **old** and the **new** credentials remain valid.
 
 ### 2. Propagation
-The API nodes receive a SignalR notification or poll a configuration endpoint. They begin a "graceful transition," where new connections use the new credentials while existing ones finish their work with the old set.
+The API nodes receive a notification and begin a graceful transition. New connections use the new credentials while existing ones complete their work with the old set.
 
 ### 3. Revocation
 After a safe TTL (Time-to-Live) window, Vault revokes the old credentials.

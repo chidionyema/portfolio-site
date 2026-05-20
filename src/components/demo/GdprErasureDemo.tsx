@@ -22,8 +22,8 @@ const STATE_CONFIG: Record<ErasureState, { icon: typeof CheckCircle2; color: str
   idle:       { icon: ShieldOff,     color: 'text-muted',   bg: 'bg-white/5',    label: 'Idle',       desc: 'No active request' },
   Processing: { icon: Clock,         color: 'text-warning', bg: 'bg-warning/10', label: 'Processing', desc: 'Scrubbing services…' },
   Completed:  { icon: CheckCircle2,  color: 'text-success', bg: 'bg-success/10', label: 'Completed',  desc: 'All data erased' },
-  Failed:     { icon: XCircle,       color: 'text-error',   bg: 'bg-error/10',   label: 'Failed',     desc: 'Partial failure — ops review' },
-  Stalled:    { icon: AlertTriangle, color: 'text-error',   bg: 'bg-error/10',   label: 'Stalled',    desc: 'SLA breach — 7-day limit exceeded' },
+  Failed:     { icon: XCircle,       color: 'text-error',   bg: 'bg-error/10',   label: 'Failed',     desc: 'Partial failure: requires ops review' },
+  Stalled:    { icon: AlertTriangle, color: 'text-error',   bg: 'bg-error/10',   label: 'Stalled',    desc: 'SLA breach: 7-day limit exceeded' },
 };
 
 const SERVICES: Array<{ id: string; label: string }> = [

@@ -178,7 +178,7 @@ export function DemoHub() {
                        )}
                        title={
                          isConnected && !isOffline
-                           ? "SignalR live — events streaming"
+                           ? "SignalR live: events streaming"
                            : !isOffline && connectionError
                            ? "Realtime stream unavailable; updates via REST polling."
                            : "Cluster unreachable. Click to retry."

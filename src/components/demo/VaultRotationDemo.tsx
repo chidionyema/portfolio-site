@@ -29,7 +29,7 @@ const STAGE_CONFIG: Record<RotationStage, { icon: typeof Key; color: string; bg:
   activated:    { icon: KeyRound,       color: 'text-accent',  bg: 'bg-accent/10',  label: 'Activated',      desc: 'New credentials applied to service' },
   grace_period: { icon: Unlock,         color: 'text-primary',  bg: 'bg-primary/10', label: 'Dual-Key',       desc: 'Both old + new credentials valid' },
   revoked:      { icon: Lock,           color: 'text-success', bg: 'bg-success/10', label: 'Complete',       desc: 'Old credentials revoked on Postgres' },
-  failed:       { icon: XCircle,        color: 'text-error',   bg: 'bg-error/10',   label: 'Failed',         desc: 'Rotation failed — old credentials still active' },
+  failed:       { icon: XCircle,        color: 'text-error',   bg: 'bg-error/10',   label: 'Failed',         desc: 'Rotation failed: old credentials still active' },
 };
 
 const ROTATION_SEQUENCE: RotationStage[] = ['started', 'activated', 'grace_period', 'revoked'];

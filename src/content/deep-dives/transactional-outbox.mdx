@@ -7,15 +7,15 @@ iconKey: outbox
 related: ['saga-vs-2pc']
 ---
 
-There is a bug pattern in distributed systems that almost every team writes at least once. The code looks reasonable. The tests pass. It survives staging. Then, six weeks into production, support tickets start arriving for orders that were charged but never shipped, or shipped but never billed.
+There is a bug pattern in distributed systems that almost every team writes at least once. The code looks reasonable, tests pass, and it survives staging. Then, weeks into production, support tickets arrive for orders that were charged but never shipped, or shipped but never billed.
 
-The bug has a name: **dual-write**. The fix is a pattern with an unglamorous name: **the transactional outbox**.
+The bug is called **dual-write**. The fix is a pattern called **the transactional outbox**.
 
-This is short, mechanical, and once you have it, you stop seeing this bug.
+This is a mechanical fix that eliminates this class of bug once implemented.
 
 ## The shape of the bug
 
-Imagine an order service. A request comes in; you save the order, then publish an `OrderCreated` event so downstream services (payments, inventory, notifications) can react. The handler looks like this:
+Imagine an order service. A request comes in, you save the order, and then you publish an `OrderCreated` event so downstream services (payments, inventory, notifications) can react. The handler looks like this:
 
 ```csharp
 public async Task<OrderId> Handle(CreateOrder cmd, CancellationToken ct)
@@ -31,29 +31,29 @@ public async Task<OrderId> Handle(CreateOrder cmd, CancellationToken ct)
 }
 ```
 
-It looks atomic, but it is not. Steps **(1)** and **(2)** are independent. Three failure modes hide between them:
+This implementation is not atomic. Steps **(1)** and **(2)** are independent. Three failure modes exist between them:
 
-1. **DB commits, broker fails.** The row is saved; no event is ever published. Downstream services never learn about the order.
+1. **DB commits, broker fails.** The row is saved, but no event is ever published. Downstream services never learn about the order.
 2. **DB commits, process crashes before publish.** Same outcome, different cause.
-3. **Broker publishes, DB rolls back later.** Rare with most ORMs, but possible if you publish *before* `SaveChangesAsync` and a constraint fires on commit.
+3. **Broker publishes, DB rolls back later.** This is rare but possible if you publish before `SaveChangesAsync` and a constraint fails on commit.
 
-Whichever you pick, you are choosing between **lost events** and **phantom events**. Neither is acceptable.
+Both cases result in either **lost events** or **phantom events**, which are both unacceptable in critical systems.
 
-The reflexive fix is wrong: "I'll add a try/catch and retry the publish." Retries help with transient broker errors but cannot help with case (2) — the process is dead. They also cannot help with the inverse case, where the publish succeeded but the handler then throws and the DB rolls back. Retries make the window smaller, not zero.
+The standard fix is often wrong: "I'll add a try/catch and retry the publish." Retries address transient broker errors but cannot help if the process is dead. They also do not address cases where the publish succeeded but the handler then fails and the database rolls back. Retries reduce the error window but do not eliminate it.
 
-A second reflex is "I'll use a distributed transaction across the DB and the broker." That is two-phase commit. It works. It also locks up your database row until the broker coordinator is satisfied, and it requires both sides to support XA, which RabbitMQ does not. In practice, almost nobody runs 2PC against a message broker for production traffic.
+Another common approach is to use a distributed transaction across the database and the broker. This is two-phase commit. It works, but it locks the database row until the broker coordinator is satisfied and requires both sides to support XA. RabbitMQ does not support this. In practice, almost nobody runs 2PC against a message broker for production traffic.
 
-What you want is a pattern that:
+You need a pattern that:
 
-- Uses **only the database's** local transaction guarantees.
-- Survives crashes anywhere — handler, broker, network, host.
-- Eventually delivers every event, exactly to the broker, with no duplicates as far as the producer is concerned.
+- Uses only the database's local transaction guarantees.
+- Survives crashes across the handler, broker, network, or host.
+- Eventually delivers every event exactly once to the broker, with no duplicates from the producer's perspective.
 
-That is the transactional outbox.
+The transactional outbox meets these requirements.
 
-## The pattern in one paragraph
+## The pattern
 
-Don't publish in the handler. **Write the event into a table** — call it `outbox` — in the same transaction as the order. The event sits there as data, not as a network call. A separate process, the **outbox dispatcher**, polls the table, publishes pending rows to the broker, and marks them sent. If the dispatcher crashes mid-publish, the row is still there; on restart, it tries again. If the broker is down, retries handle it. If the publish succeeded but the dispatcher crashed before marking the row sent, the row gets re-published — which is fine if downstream consumers are idempotent (and they should be).
+Don't publish in the handler. Instead, **write the event into a table** (called `outbox`) in the same transaction as the order. The event is stored as data rather than a network call. A separate process, the **outbox dispatcher**, polls the table, publishes pending rows to the broker, and marks them as sent. If the dispatcher crashes mid-publish, the row remains in the table for the next attempt. If the broker is down, retries handle it. If the publish succeeded but the dispatcher crashed before marking the row sent, the row is re-published. Downstream consumers must be idempotent to handle these rare duplicates.
 
 That's the whole idea. Everything else is plumbing.
 
@@ -203,10 +203,8 @@ It's overkill when:
 - Events are best-effort metrics or analytics. Fire-and-forget is fine.
 - You haven't yet split the system into bounded contexts. Adding outboxes inside a monolith with a single database is mostly performance art.
 
-## What you actually get
+## Results
 
-The outbox is one of those patterns where the value is *what stops happening*. You stop having tickets that say "this order was charged but never appears in the warehouse system." You stop debugging by reading broker logs. New consumers can be added by a different team without coordinating with the producer — the producer's contract is the events in the outbox, and that contract is durable in your own database.
+The value of the outbox pattern is measured by the issues that no longer occur. Tickets for missing orders or inconsistent billing disappear. You no longer need to debug issues by reading broker logs. New consumers can be added by different teams without coordinating with the producer. The producer's contract is the events in the outbox, and that contract is durable in your own database.
 
-It is also one of the cheapest patterns to teach to a team. You can demo the failure modes (kill the broker, kill the dispatcher) and show that no events are lost. Most engineers, after they see that demo, stop dual-writing without anyone telling them not to.
-
-Which is, in the end, what makes it worth the small amount of plumbing.
+It is one of the most effective patterns to teach a team. Demonstrating failure modes like killing the broker or dispatcher shows that no events are lost. Most engineers stop dual-writing immediately once they see the pattern in action.

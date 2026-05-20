@@ -23,7 +23,7 @@ const STATE_CONFIG: Record<SagaState, { icon: typeof CheckCircle2; color: string
   Requested:                     { icon: Send,           color: 'text-accent',  bg: 'bg-accent/10',   label: 'Requested',      desc: 'Saga created, awaiting provider initiation' },
   AwaitingProviderConfirmation:  { icon: Clock,          color: 'text-warning', bg: 'bg-warning/10',  label: 'Awaiting',       desc: 'Provider processing refund (24h timeout)' },
   Refunded:                      { icon: CheckCircle2,   color: 'text-success', bg: 'bg-success/10',  label: 'Refunded',       desc: 'Provider confirmed, funds returned' },
-  RequiresReview:                { icon: AlertTriangle,  color: 'text-error',   bg: 'bg-error/10',    label: 'Review',         desc: 'Timed out or provider failed — ops review' },
+  RequiresReview:                { icon: AlertTriangle,  color: 'text-error',   bg: 'bg-error/10',    label: 'Review',         desc: 'Timed out or provider failed: requires review' },
   Cancelled:                     { icon: XCircle,        color: 'text-muted',   bg: 'bg-white/10',    label: 'Cancelled',      desc: 'Operator cancelled the refund' },
 };
 
