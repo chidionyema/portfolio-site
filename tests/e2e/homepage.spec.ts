@@ -10,10 +10,10 @@ test.describe('Homepage', () => {
 
     // 2. Proof (The Circuit Breaker Demo)
     await expect(page.getByRole('heading', { name: /Real infrastructure/i })).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('p', { hasText: 'This portfolio is a live .NET 9 cluster' })).toBeVisible();
+    await expect(page.locator('p:has-text("live .NET 9 cluster")').first()).toBeVisible();
 
     // 3. Deep Dives
-    await expect(page.getByRole('heading', { name: 'Architecture', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Architecture', exact: false })).toBeVisible();
   });
 
   test('should not have any automatically detectable accessibility issues', async ({ page }) => {

@@ -59,7 +59,7 @@ function buildSvg(title, subtitle) {
 
 const pages = [
   { file: 'og.png', title: 'Senior .NET Engineer', subtitle: 'Distributed microservices in production. Live demos, real metrics.' },
-  { file: 'og-demos.png', title: 'Live Infrastructure Demos', subtitle: '9 interactive demos hitting real .NET 9 microservices — not simulations.' },
+  { file: 'og-demos.png', title: 'Live Infrastructure Demos', subtitle: '9 interactive demos hitting real .NET 9 microservices.' },
   { file: 'og-architecture.png', title: 'Platform Architecture', subtitle: '50 Roslyn analyzers, 159 guards, double-entry ledger, GDPR saga, CDC pipeline.' },
 ];
 

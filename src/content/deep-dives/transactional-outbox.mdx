@@ -112,7 +112,7 @@ public async Task<OrderId> Handle(CreateOrder cmd, CancellationToken ct)
 }
 ```
 
-Notice what we **didn't** do: we didn't open a transaction explicitly, and we didn't talk to the broker. The first omission is intentional — EF Core groups changes into one implicit transaction per `SaveChangesAsync`. The second is the whole point.
+Notice what we **didn't** do: we didn't open a transaction explicitly, and we didn't talk to the broker. The first omission is intentional: EF Core groups changes into one implicit transaction per `SaveChangesAsync`. The second is the whole point.
 
 A useful refinement: rather than have every handler remember to write to the outbox, raise domain events on the aggregate and have a `SaveChangesInterceptor` translate them into outbox rows automatically. The handler becomes:
 
@@ -183,9 +183,9 @@ The batch shape (`limit 100 ... for update skip locked`) gives you back-pressure
 
 For a system processing tens of thousands of events per day, a nightly job that deletes everything in `outbox` with `status = 'dispatched' and dispatched_at < now() - interval '7 days'` is sufficient. If your audit needs are stricter, archive instead of delete. The point is: **decide pruning at design time**. Tables that grow unboundedly turn into incidents at the worst possible moment.
 
-## Idempotent consumers — why this works
+## Idempotent consumers: why this works
 
-The transactional outbox guarantees **at-least-once** delivery to the broker. It does not, and cannot, give you exactly-once delivery to a consumer — that's a distinct problem owned by the consumer side, usually solved with an `inbox` table that records which `(message_id)` it has already processed.
+The transactional outbox guarantees **at-least-once** delivery to the broker. It does not, and cannot, give you exactly-once delivery to a consumer: that's a distinct problem owned by the consumer side, usually solved with an `inbox` table that records which `(message_id)` it has already processed.
 
 This is the part new teams stumble on: they implement the outbox, see that messages occasionally arrive twice, and panic. They shouldn't. *Every* event-driven system is at-least-once. The fix is on the receiving side: each consumer dedupes by message id. If you treat that as a one-time investment when you build your first consumer, every consumer after it gets it for free.
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Network, Activity, Zap, ShieldAlert, ShieldCheck, ShieldOff, Send, Flame, RotateCw } from 'lucide-react';
+import { Activity, Zap, ShieldAlert, ShieldCheck, ShieldOff, Send, Flame, RotateCw } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -175,7 +175,7 @@ export function CircuitBreakerDemo() {
               )}
 
               <div className="flex items-center gap-3 mb-3">
-                <Icon className={cn("w-5 h-5", isActive ? cfg.color : 'text-muted/40')} />
+                <Icon className={cn("w-5 h-5", isActive ? cfg.color : 'text-muted/40')} aria-hidden="true" />
                 <span className={cn(
                   "text-xs font-black uppercase tracking-widest",
                   isActive ? cfg.color : 'text-muted/40'
@@ -211,9 +211,9 @@ export function CircuitBreakerDemo() {
           className="h-auto py-5 px-10 font-black text-xs uppercase tracking-[0.3em] rounded-2xl flex items-center justify-center gap-3 bg-error hover:bg-error/90 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)] border-none group"
         >
           {isLoading ? (
-            <RotateCw className="w-5 h-5 animate-spin" />
+            <RotateCw className="w-5 h-5 animate-spin" aria-hidden="true" />
           ) : (
-            <Flame className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <Flame className="w-5 h-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
           )}
           Trip & Hammer
         </Button>
