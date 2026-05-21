@@ -54,9 +54,9 @@ export function Hero(_: HeroProps) {
               </Heading>
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
-                This is a real .NET 9 microservices system running on Fly.io — not
-                a demo, not a diagram. Payments, orders, inventory, and event-driven
-                sagas, all wired together and open for you to explore.
+                This is a real .NET 9 microservices system running on Fly.io.
+                Payments, orders, inventory, and event-driven sagas, all wired
+                together and open for you to explore.
               </p>
 
               {/* What makes it different */}
@@ -64,7 +64,7 @@ export function Hero(_: HeroProps) {
                 Click a button, trigger a checkout across four services, inject a
                 failure mid-flow, and watch the system automatically roll back.
                 Every response comes from real infrastructure — Postgres, RabbitMQ,
-                Redis — with real trace IDs and latency.
+                Redis, with real trace IDs and latency.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">

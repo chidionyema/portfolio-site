@@ -1,16 +1,16 @@
 ---
-title: "High-Scale Event Streaming Platform"
+title: "Built a threat detection pipeline processing millions of events/minute"
 company: "OSL Technologies"
 role: "Senior Backend Engineer"
 period: "Jun 2024 – Jan 2025"
-description: "Delivered intelligent security platforms processing millions of telemetry events per minute with sub-second latency using Kafka distributed streaming clusters."
-technologies: ["Kafka", "Kubernetes", "OpenTelemetry", ".NET", "AI/ML"]
+description: "Designed the event streaming backbone for airport and stadium security — millions of telemetry events per minute, sub-second threat alerting, 30% fewer false positives through ML integration."
+technologies: ["Kafka", "Kubernetes", ".NET", "Elasticsearch", "AI/ML", "OpenTelemetry"]
 publishedAt: 2026-05-19
 ---
 
-Delivered security platforms processing millions of telemetry events per minute with sub-second latency for airports and stadiums using Kafka.
+Built the real-time event processing pipeline behind security monitoring for airports and large venues.
 
-- **High-Scale Event Streaming:** Established validation rules and schemas for upstream data feeds to prevent bad data ingestion.
-- **Reverse Search (Percolation):** Optimized real-time threat alerting by implementing percolation patterns against millions of risk profiles.
-- **AI Integration:** Orchestrated the deployment of ML-driven threat analytics to reduce false positives by 30%.
-- **Infrastructure:** Deployed containerized microservices via Kubernetes with 99.99% uptime.
+- **Millions of events per minute** from cameras, sensors, and access points, ingested through Kafka with strict schema validation to reject malformed data before it enters the pipeline.
+- **Sub-second threat alerting** using Elasticsearch percolation queries — incoming events are matched against millions of risk profiles in real time, not in batch.
+- **30% reduction in false positives** by integrating ML-driven analytics into the detection pipeline, letting security teams focus on real threats instead of noise.
+- **99.99% uptime** via Kubernetes-orchestrated microservices with automated scaling and self-healing. A node failure does not interrupt event processing.

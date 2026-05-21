@@ -1,16 +1,16 @@
 ---
-title: "Cash Deposit Platform Re-engineering"
+title: "Made a cash deposit platform's messaging bulletproof"
 company: "Flagstone (FinTech)"
 role: "Senior .NET Developer"
 period: "Jul 2022 – Mar 2023"
-description: "Developed cash deposit platforms applying CQRS and DDD; utilized Azure Service Bus alongside the Transactional Outbox pattern to guarantee zero-loss asynchronous messaging."
+description: "Re-engineered the event pipeline for a regulated cash deposit platform so that interest rate updates and deposit instructions could never be silently lost, even during infrastructure failures."
 technologies: [".NET", "Azure Service Bus", "CQRS", "DDD", "Prometheus", "Grafana"]
 publishedAt: 2026-05-17
 ---
 
-Developed cash deposit platforms using CQRS and DDD. Utilized Azure Service Bus with the Transactional Outbox pattern to guarantee zero-loss asynchronous messaging for critical interest rate updates.
+Worked on the backend of a cash deposit platform handling institutional deposits across multiple banks.
 
-- **Data Integrity:** Guaranteed zero-loss messaging using the Transactional Outbox pattern.
-- **API Governance:** Managed critical integrations and ensured no breaking changes through contract-driven testing.
-- **Observability:** Implemented monitoring via Prometheus and Grafana, reducing incident resolution time.
-- **DevOps Velocity:** Re-engineered CI/CD pipelines to reduce deployment times by 66%.
+- **Zero-loss messaging** for critical financial events (interest rate changes, deposit instructions) using the Transactional Outbox pattern with Azure Service Bus. A broker outage no longer means lost updates.
+- **Contract-driven API governance** ensuring no breaking changes between services. Consumer-driven tests caught incompatibilities before deploy, not after.
+- **66% faster deployments** by rebuilding the CI/CD pipeline — what used to be a 45-minute manual process became a 15-minute automated one.
+- **Operational visibility** through Prometheus metrics and Grafana dashboards, reducing mean time to resolution for production incidents.

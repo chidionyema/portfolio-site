@@ -1,16 +1,16 @@
 ---
-title: "Global Access Control Modernization"
+title: "Replaced a legacy access control system — zero downtime"
 company: "NSP Security"
 role: "Technical Lead"
 period: "Jul 2025 – Jan 2026"
-description: "Directed the end-to-end modernization of a global access control platform from legacy Delphi to .NET 8 microservices, supporting 1,000+ properties with zero-downtime."
+description: "Rebuilt a 15-year-old Delphi access control platform as .NET 8 microservices. 1,000+ properties migrated with no service interruptions, handling 10,000 concurrent IoT device connections."
 technologies: [".NET 8", "RabbitMQ", "MQTT", "IoT", "SQL Server"]
 publishedAt: 2026-05-20
 ---
 
-Directed the modernization of a global access control platform from legacy Delphi to .NET 8 microservices, supporting 1,000 properties with zero downtime.
+Led the full rewrite of a global physical access control system (door locks, card readers, CCTV integration) from a monolithic Delphi application to .NET 8 microservices.
 
-- **Architectural Modernization:** Directed the end-to-end transition from legacy Delphi to .NET 8 microservices.
-- **Event-Driven Resilience:** Implemented RabbitMQ to decouple core domain events with robust message schemas.
-- **IoT Engineering:** Engineered a fault-tolerant communication layer handling 10,000 concurrent device connections via MQTT.
-- **Distributed Integrity:** Enforced strict idempotency across lock-control APIs using request tracking.
+- **Zero-downtime migration** of 1,000+ properties from the legacy system. Each site was cut over individually with automatic fallback if the new system failed health checks.
+- **10,000 concurrent IoT connections** via MQTT, with fault-tolerant reconnection and message deduplication so a network blip never unlocks or locks a door twice.
+- **Event-driven architecture** using RabbitMQ to decouple door events, alarms, and audit logs. Services can be updated independently without taking the system offline.
+- **Idempotent lock-control APIs** ensuring that a retry (network timeout, duplicate webhook) never results in a door being toggled twice.

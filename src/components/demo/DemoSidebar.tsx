@@ -38,7 +38,7 @@ export const demoGroups: DemoGroup[] = [
     id: 'data',
     label: 'Reliable transactions',
     demos: [
-      { id: 'checkout',    label: 'Checkout saga',              desc: 'An order either completes fully or rolls back — no half-charges', valueProp: 'Orchestrates stock, payment, and order across 4 services', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc',
+      { id: 'checkout',    label: 'Checkout saga',              desc: 'An order either completes fully or rolls back cleanly', valueProp: 'Orchestrates stock, payment, and order across 4 services', Icon: DemoIcon.checkout, deepDiveSlug: 'saga-vs-2pc',
         sourcePath: 'src/CheckoutOrchestrator/CheckoutOrchestrator.Application/Sagas/CheckoutSaga.cs' },
       { id: 'events',      label: 'Event delivery guarantee',   desc: 'Events are never silently lost, even if the message broker crashes', valueProp: 'DB write + event publish commit as one atomic operation', Icon: DemoIcon.events, deepDiveSlug: 'transactional-outbox',
         sourcePath: 'src/Payments/Payments.Application/Consumers/PaymentSessionRequestedConsumer.cs' },
@@ -62,7 +62,7 @@ export const demoGroups: DemoGroup[] = [
     id: 'caching',
     label: 'Caching',
     demos: [
-      { id: 'stampede', label: 'Cache stampede protection',     desc: 'When a popular cache expires, only one request hits the DB — not thousands', valueProp: 'Memory + Redis tiers with lock-based repopulation', Icon: DemoIcon.stampede,
+      { id: 'stampede', label: 'Cache stampede protection',     desc: 'When a popular cache expires, only one request hits the database', valueProp: 'Memory + Redis tiers with lock-based repopulation', Icon: DemoIcon.stampede,
         sourcePath: 'src/Catalog/Catalog.Api/Controllers/DemoTestController.cs' },
       { id: 'cache',    label: 'Real-time cache sync',          desc: 'Update a product and every server sees it within milliseconds', valueProp: 'Redis pub/sub pushes invalidations to all nodes', Icon: DemoIcon.cache,
         sourcePath: 'src/Catalog/Catalog.Application/Commands/UpdateProductCommand.cs' },
@@ -72,7 +72,7 @@ export const demoGroups: DemoGroup[] = [
     id: 'sagas',
     label: 'Multi-step workflows',
     demos: [
-      { id: 'refund', label: 'Refund workflow',                 desc: 'A refund that fails at the payment provider escalates for review — never vanishes', valueProp: 'State machine with timeout, retry cap, and operator override', Icon: DemoIcon.checkout,
+      { id: 'refund', label: 'Refund workflow',                 desc: 'A refund that fails at the payment provider escalates for human review', valueProp: 'State machine with timeout, retry cap, and operator override', Icon: DemoIcon.checkout,
         sourcePath: 'src/Payments/Payments.Application/Sagas/RefundSaga.cs' },
     ],
   },
@@ -80,7 +80,7 @@ export const demoGroups: DemoGroup[] = [
     id: 'financial',
     label: 'Financial accounting',
     demos: [
-      { id: 'ledger', label: 'Double-entry ledger',             desc: 'Every payment is recorded as a debit and a credit — the books always balance', valueProp: 'Immutable ledger entries with balance invariant checks', Icon: DemoIcon.checkout,
+      { id: 'ledger', label: 'Double-entry ledger',             desc: 'Every payment is recorded as a debit and a credit that must sum to zero', valueProp: 'Immutable ledger entries with balance invariant checks', Icon: DemoIcon.checkout,
         sourcePath: 'src/Payouts/Payouts.Domain/Aggregates/LedgerEntry.cs' },
     ],
   },

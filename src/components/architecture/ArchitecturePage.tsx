@@ -24,13 +24,21 @@ export function ArchitecturePage() {
   return (
     <div className="space-y-24">
       {/* Hero */}
-      <motion.div {...fadeUp()} className="text-center max-w-3xl mx-auto">
-        <Heading variant="caption" className="mb-4">Platform Engineering</Heading>
+      <motion.div {...fadeUp()} className="max-w-3xl">
+        <Heading variant="caption" className="mb-4">How the platform is built</Heading>
         <Heading variant="section" level={1} className="mb-6">
-          16 microservices. 159 architecture guards. 50 custom analyzers.
+          The code enforces its own rules.
         </Heading>
-        <p className="text-lg text-secondary leading-relaxed">
-          Every line enforced in CI. No exceptions, no overrides, no "we'll fix it later."
+        <p className="text-lg text-secondary leading-relaxed mb-4">
+          Most architecture decisions end up as wiki pages nobody reads. In this
+          platform, they are compiler errors and CI gates. If you break a rule,
+          the build breaks — before code review, before merge, before deploy.
+        </p>
+        <p className="text-base text-secondary/70 leading-relaxed">
+          Below are the six areas where this matters most: how the code catches
+          its own mistakes, how money is tracked, how user data is deleted,
+          how search stays in sync, and how the whole thing runs locally with
+          one command.
         </p>
       </motion.div>
 
@@ -39,11 +47,16 @@ export function ArchitecturePage() {
         <motion.div {...fadeUp()}>
           <Heading variant="caption" className="mb-2 flex items-center gap-2">
             <Code2 className="w-4 h-4 text-accent" />
-            Compile-Time Enforcement
+            Catching bugs before they compile
           </Heading>
-          <Heading variant="panel" level={2} className="mb-8">
-            Custom Roslyn Analyzers (HWK001–050)
+          <Heading variant="panel" level={2} className="mb-4">
+            50 custom code analyzers
           </Heading>
+          <p className="text-secondary text-sm mb-8 max-w-2xl">
+            These are custom rules written as Roslyn analyzers. They run inside
+            the compiler and flag violations as build errors that stop the
+            build. Here are three examples:
+          </p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-4">
@@ -56,6 +69,7 @@ export function ArchitecturePage() {
                     <span className="text-error text-[9px] uppercase tracking-widest">build error</span>
                   </div>
                   <div className="text-[11px] font-bold text-primary leading-snug">{ex.title}</div>
+                  <p className="text-muted/70 text-[10px] leading-relaxed">{ex.why}</p>
 
                   {/* Bad code */}
                   <div className="p-3 rounded-lg bg-error/5 border border-error/10 relative">
@@ -72,10 +86,6 @@ export function ArchitecturePage() {
                       {ex.good}
                     </pre>
                   </div>
-
-                  <p className="text-muted/60 text-[9px] uppercase tracking-widest">
-                    Fires at compile time, not at code review.
-                  </p>
                 </div>
               </Card>
             </motion.div>
@@ -88,13 +98,15 @@ export function ArchitecturePage() {
         <motion.div {...fadeUp()}>
           <Heading variant="caption" className="mb-2 flex items-center gap-2">
             <Shield className="w-4 h-4 text-success" />
-            CI Enforcement
+            Blocking bad merges automatically
           </Heading>
           <Heading variant="panel" level={2} className="mb-4">
-            159 Architecture Guards + 12 NetArchTest Rules
+            159 rules checked on every pull request
           </Heading>
           <p className="text-secondary text-sm mb-8 max-w-2xl">
-            Regex patterns and assembly-level rules run on every PR. A single violation blocks the merge.
+            Beyond compiler checks, CI runs 159 regex patterns and 12 assembly-level
+            rules against every PR. A single violation blocks the merge. These catch
+            the mistakes that are correct C# but architecturally wrong:
           </p>
         </motion.div>
 
@@ -106,7 +118,7 @@ export function ArchitecturePage() {
                   <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                   <div>
                     <div className="font-bold text-primary mb-1">{guard.rule}</div>
-                    <div className="text-muted/70 leading-relaxed">{guard.desc}</div>
+                    <div className="text-muted/70 leading-relaxed">{guard.why}</div>
                   </div>
                 </div>
               </Glass>
@@ -132,11 +144,16 @@ export function ArchitecturePage() {
         <motion.div {...fadeUp()}>
           <Heading variant="caption" className="mb-2 flex items-center gap-2">
             <Database className="w-4 h-4 text-accent" />
-            Financial Integrity
+            Tracking every penny
           </Heading>
-          <Heading variant="panel" level={2} className="mb-8">
-            Double-Entry Ledger (Payouts Service)
+          <Heading variant="panel" level={2} className="mb-4">
+            Double-entry bookkeeping for payments
           </Heading>
+          <p className="text-secondary text-sm mb-8 max-w-2xl">
+            Every payment is recorded as two entries — a debit and a credit —
+            just like real accounting. The database enforces that they always
+            sum to zero. If they {"don't"}, the transaction is rejected.
+          </p>
         </motion.div>
 
         <motion.div {...fadeUp(0.1)}>
@@ -149,7 +166,7 @@ export function ArchitecturePage() {
               <LedgerRow type="credit" account="Bank (Stripe)" amount="+£39.99" desc="Wire initiated" />
               <div className="h-px bg-white/10" />
               <div className="text-center text-[10px] text-success font-black uppercase tracking-widest pt-2">
-                Sum of all entries = £0.00 (invariant enforced by DB CHECK constraint)
+                Sum of all entries = £0.00 (enforced by a database constraint)
               </div>
             </div>
           </Card>
@@ -161,11 +178,16 @@ export function ArchitecturePage() {
         <motion.div {...fadeUp()}>
           <Heading variant="caption" className="mb-2 flex items-center gap-2">
             <Lock className="w-4 h-4 text-error" />
-            Compliance Engineering
+            Deleting user data across 8 services
           </Heading>
-          <Heading variant="panel" level={2} className="mb-8">
-            GDPR Article 17 Erasure Saga
+          <Heading variant="panel" level={2} className="mb-4">
+            GDPR right-to-be-forgotten
           </Heading>
+          <p className="text-secondary text-sm mb-8 max-w-2xl">
+            When a user requests data deletion, a saga coordinates erasure across
+            every service that holds their information. It tracks progress, detects
+            stalls, and produces an audit trail, all within the 7-day legal deadline.
+          </p>
         </motion.div>
 
         <motion.div {...fadeUp(0.1)}>
@@ -182,7 +204,7 @@ export function ArchitecturePage() {
               ))}
             </div>
             <p className="text-center text-[10px] text-muted/60 mt-6 font-mono uppercase tracking-widest">
-              7-day compliance window · stall detection at 24h · audit records anonymized, not deleted
+              Completes within 7 days · stall detection at 24h · audit records anonymized, not deleted
             </p>
           </Card>
         </motion.div>
@@ -193,11 +215,14 @@ export function ArchitecturePage() {
         <motion.div {...fadeUp()}>
           <Heading variant="caption" className="mb-2 flex items-center gap-2">
             <Workflow className="w-4 h-4 text-accent" />
-            Event Backbone
+            Keeping search in sync without polling
           </Heading>
-          <Heading variant="panel" level={2} className="mb-8">
-            CDC Pipeline (Debezium → Kafka → Elasticsearch)
+          <Heading variant="panel" level={2} className="mb-4">
+            Database changes stream to search automatically
           </Heading>
+          <p className="text-secondary text-sm mb-8 max-w-2xl">
+            {"When a product is updated in Postgres, the change appears in Elasticsearch within seconds. The application does not write to two places. Instead, Postgres's own change log feeds the pipeline:"}
+          </p>
         </motion.div>
 
         <motion.div {...fadeUp(0.1)}>
@@ -215,37 +240,45 @@ export function ArchitecturePage() {
               ))}
             </div>
             <p className="text-center text-[10px] text-muted/60 mt-6 font-mono uppercase tracking-widest">
-              No dual-write, no polling. The WAL is the source of truth. Sub-second propagation.
+              No dual-write risk. The database change log is the single source of truth.
             </p>
           </Card>
         </motion.div>
       </section>
 
-      {/* Section F: Contract Testing */}
+      {/* Section F: Test Strategy */}
       <section>
         <motion.div {...fadeUp()}>
           <Heading variant="caption" className="mb-2 flex items-center gap-2">
             <FlaskConical className="w-4 h-4 text-warning" />
-            Test Strategy
+            Testing across service boundaries
           </Heading>
-          <Heading variant="panel" level={2} className="mb-8">
-            Consumer-Driven Contract Tests (Pact)
+          <Heading variant="panel" level={2} className="mb-4">
+            13 test suites, from unit to end-to-end
           </Heading>
+          <p className="text-secondary text-sm mb-8 max-w-2xl">
+            Unit tests verify business logic. Integration tests run against real
+            Postgres and RabbitMQ in containers. Contract tests (Pact) ensure two
+            services agree on message format before deploy. All run in CI on every PR.
+          </p>
         </motion.div>
 
         <motion.div {...fadeUp(0.1)}>
           <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto font-mono text-[10px]">
             <Glass intensity="low" className="p-5 text-center border-none">
               <div className="text-2xl font-black text-primary mb-1">13</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted font-black">Contract Suites</div>
+              <div className="text-[9px] uppercase tracking-widest text-muted font-black">Test Suites</div>
+              <div className="text-[9px] text-muted/50 mt-1">Unit, integration, contract, E2E</div>
             </Glass>
             <Glass intensity="low" className="p-5 text-center border-none">
               <div className="text-2xl font-black text-success mb-1">159</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted font-black">Arch Guards</div>
+              <div className="text-[9px] uppercase tracking-widest text-muted font-black">Architecture Rules</div>
+              <div className="text-[9px] text-muted/50 mt-1">Checked on every pull request</div>
             </Glass>
             <Glass intensity="low" className="p-5 text-center border-none">
               <div className="text-2xl font-black text-accent mb-1">50</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted font-black">Roslyn Rules</div>
+              <div className="text-[9px] uppercase tracking-widest text-muted font-black">Compiler Rules</div>
+              <div className="text-[9px] text-muted/50 mt-1">Custom Roslyn analyzers</div>
             </Glass>
           </div>
         </motion.div>
@@ -256,11 +289,16 @@ export function ArchitecturePage() {
         <motion.div {...fadeUp()}>
           <Heading variant="caption" className="mb-2 flex items-center gap-2">
             <Server className="w-4 h-4 text-accent" />
-            Developer Experience
+            Running the whole platform locally
           </Heading>
-          <Heading variant="panel" level={2} className="mb-8">
-            .NET Aspire Orchestration
+          <Heading variant="panel" level={2} className="mb-4">
+            One command starts everything
           </Heading>
+          <p className="text-secondary text-sm mb-8 max-w-2xl">
+            .NET Aspire orchestrates all 8 services and their infrastructure
+            (Postgres, RabbitMQ, Redis, Kafka) with a single command. No Docker
+            Compose file to maintain, no manual startup order.
+          </p>
         </motion.div>
 
         <motion.div {...fadeUp(0.1)}>
@@ -269,7 +307,7 @@ export function ArchitecturePage() {
               <span className="text-muted">$</span> dotnet run --project AppHost{'\n'}
               {'\n'}
               <span className="text-accent">13</span> infrastructure containers{'\n'}
-              <span className="text-accent">16</span> microservices{'\n'}
+              <span className="text-accent"> 8</span> microservices{'\n'}
               <span className="text-accent"> 1</span> command{'\n'}
               {'\n'}
               <span className="text-success">Dashboard: http://localhost:15888</span>
@@ -282,7 +320,7 @@ export function ArchitecturePage() {
       <motion.div {...fadeUp()} className="text-center py-12">
         <p className="text-lg text-secondary mb-6">Want to see these patterns in action?</p>
         <Link variant="cta" href="/demos">
-          Try the Live Demos →
+          Try the interactive demos →
         </Link>
       </motion.div>
     </div>
@@ -313,31 +351,34 @@ function LedgerRow({ type, account, amount, desc }: { type: 'debit' | 'credit'; 
 const ANALYZER_EXAMPLES = [
   {
     id: 'HWK001',
-    title: 'No SaveChangesAsync in MassTransit consumers',
+    title: 'No manual database saves in message consumers',
+    why: 'The messaging outbox handles the save. Doing it manually breaks the atomic guarantee — events can be lost.',
     bad: `await _dbContext.SaveChangesAsync();\n// Outbox commits automatically`,
     good: `// Mutations via EF tracked entities\n// MassTransit outbox commits on success`,
   },
   {
     id: 'HWK002',
-    title: 'No Guid.NewGuid() inside Polly retry',
+    title: 'No random IDs inside retry loops',
+    why: 'A new ID on each retry means the provider sees each attempt as a different request — causing duplicate charges.',
     bad: `policy.ExecuteAsync(() => {\n  var key = Guid.NewGuid(); // new per retry!\n});`,
     good: `var key = Guid.NewGuid();\npolicy.ExecuteAsync(() => {\n  Call(key); // same across retries\n});`,
   },
   {
     id: 'HWK035',
     title: 'No hardcoded currency strings',
+    why: 'A hardcoded "USD" breaks for customers in other countries. Currency must come from configuration.',
     bad: `var amount = new Money(100, "USD");\n// What about GBP, EUR customers?`,
     good: `var amount = new Money(\n  100, options.DefaultCurrency\n); // From config`,
   },
 ];
 
 const GUARD_EXAMPLES = [
-  { rule: 'No PublishAsync without SaveChanges', desc: 'Events written to outbox must be flushed' },
-  { rule: 'No BeginTransactionAsync in consumers', desc: 'MassTransit outbox provides the transaction' },
-  { rule: 'No localhost fallback in config', desc: 'Containers resolve via service mesh, not loopback' },
-  { rule: 'No positional records for events', desc: 'MassTransit cannot deserialize positional constructors' },
-  { rule: 'No raw Testcontainers in tests', desc: 'Must use SharedTestPostgres singleton' },
-  { rule: 'No idempotency key inside Polly retry', desc: 'Key changes per attempt, defeating idempotency' },
+  { rule: 'No publishing events without saving first', why: 'If the save fails, the event is already sent — downstream services act on data that was rolled back' },
+  { rule: 'No manual transactions in message consumers', why: 'The messaging framework wraps each consumer in a transaction. A second one conflicts and can lose messages.' },
+  { rule: 'No localhost URLs in configuration', why: 'Services run in containers and resolve each other by name. Localhost means "myself" inside a container.' },
+  { rule: 'No constructor-based event records', why: 'The message serializer cannot reconstruct them. The event arrives empty on the other side.' },
+  { rule: 'No raw database containers in tests', why: 'Each test suite must share a single container. Creating new ones per test exhausts Docker resources in CI.' },
+  { rule: 'No generating retry keys inside the retry loop', why: 'The key changes every attempt, so the provider thinks each retry is a new request. Charges happen twice.' },
 ];
 
 const ERASURE_STEPS = [
@@ -350,8 +391,8 @@ const ERASURE_STEPS = [
 ];
 
 const CDC_PIPELINE = [
-  { name: 'PostgreSQL', detail: 'WAL stream', icon: Database },
-  { name: 'Debezium', detail: 'CDC connector', icon: GitBranch },
-  { name: 'Kafka', detail: 'Event log', icon: Server },
+  { name: 'PostgreSQL', detail: 'Change log', icon: Database },
+  { name: 'Debezium', detail: 'Streams changes', icon: GitBranch },
+  { name: 'Kafka', detail: 'Event bus', icon: Server },
   { name: 'Elasticsearch', detail: 'Search index', icon: Globe },
 ];
