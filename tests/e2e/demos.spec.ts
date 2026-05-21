@@ -187,7 +187,7 @@ test.describe('Homepage', () => {
   test('hero renders with heading and CTA', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1')).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-    await expect(page.getByRole('link', { name: /demos/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /demos/i }).first()).toBeVisible();
   });
 });
 

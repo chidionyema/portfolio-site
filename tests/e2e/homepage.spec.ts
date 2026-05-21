@@ -9,13 +9,13 @@ test.describe('Homepage', () => {
     await expect(page.locator('h1')).toBeVisible();
 
     // Primary CTA exists and links to demos
-    await expect(page.getByRole('link', { name: /demos/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /demos/i }).first()).toBeVisible();
 
     // Proof section renders with the checkout demo
     await expect(page.locator('#proof')).toBeVisible({ timeout: 15000 });
 
     // Navigation links are present
-    await expect(page.getByRole('link', { name: /architecture/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /architecture/i }).first()).toBeVisible();
   });
 
   test('should not have any automatically detectable accessibility issues', async ({ page }) => {
