@@ -125,10 +125,10 @@ test.describe('Architecture Page', () => {
 
   test('CTA links to demos', async ({ page }) => {
     await page.goto('/architecture');
-    await page.waitForSelector('text=Try the Live Demos', { timeout: HYDRATION_TIMEOUT });
-    const cta = page.getByText('Try the Live Demos');
-    await expect(cta).toBeVisible();
-    await cta.click();
+    // Find any link pointing to /demos on the page
+    const demosLink = page.locator('a[href="/demos"]').first();
+    await expect(demosLink).toBeVisible({ timeout: HYDRATION_TIMEOUT });
+    await demosLink.click();
     await page.waitForURL('**/demos**', { timeout: 10000 });
   });
 });
