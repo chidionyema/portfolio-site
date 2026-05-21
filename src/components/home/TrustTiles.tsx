@@ -3,33 +3,33 @@ import { Server, Shield, FlaskConical, Activity } from 'lucide-react';
 import { Glass } from '../ui/Glass';
 
 const tiles = [
-  { 
-    icon: Server, 
-    value: '8', 
-    label: 'Live Services', 
-    detail: 'Running on Fly.io right now',
-    color: 'text-accent' 
+  {
+    icon: Server,
+    value: '8',
+    label: 'Microservices',
+    detail: 'Deployed and running on Fly.io',
+    color: 'text-accent'
   },
-  { 
-    icon: Shield, 
-    value: '159', 
-    label: 'Arch Guards', 
-    detail: 'Regex + NetArchTest rules in CI',
-    color: 'text-success' 
+  {
+    icon: Shield,
+    value: '159',
+    label: 'Automated Rules',
+    detail: 'Enforce architecture in every build',
+    color: 'text-success'
   },
-  { 
-    icon: FlaskConical, 
-    value: '13', 
-    label: 'Test Suites', 
-    detail: 'Unit · Integration · Contract · E2E',
-    color: 'text-warning' 
+  {
+    icon: FlaskConical,
+    value: '13',
+    label: 'Test Suites',
+    detail: 'Unit, integration, contract, and E2E',
+    color: 'text-warning'
   },
-  { 
-    icon: Activity, 
-    value: '50', 
-    label: 'Roslyn Analyzers', 
-    detail: 'Custom compile-time enforcement',
-    color: 'text-primary' 
+  {
+    icon: Activity,
+    value: '13',
+    label: 'Interactive Demos',
+    detail: 'Try them — they hit real services',
+    color: 'text-primary'
   },
 ];
 

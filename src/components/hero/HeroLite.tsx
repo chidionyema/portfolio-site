@@ -42,38 +42,38 @@ export function Hero(_: HeroProps) {
         <Reveal delay={0.1}>
           <Stack gap={12}>
             <div className="max-w-4xl">
-              {/* Credibility signal */}
-              <div className="flex items-center gap-3 mb-8">
-                <Pill variant="status" className="gap-1.5 px-3 py-1 text-[10px] tracking-widest uppercase font-bold">
-                  <Zap className="w-3 h-3 text-warning" />
-                  Available for contract
-                </Pill>
-                <span className="text-xs text-muted">London · Remote · 13+ years</span>
-              </div>
+              {/* Context: what this IS — the first thing anyone reads */}
+              <p className="text-sm text-accent font-semibold tracking-wide uppercase mb-6">
+                Engineering Portfolio — Chidi Onyema
+              </p>
 
               <Heading variant="display" level={1} className="mb-6">
-                .NET distributed systems<br className="hidden sm:block" />
-                that don't break at&nbsp;3am.
+                I built an 8-service platform<br className="hidden sm:block" />
+                and deployed it live so you<br className="hidden sm:block" />
+                can break it yourself.
               </Heading>
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
-                I'm a <strong className="text-primary">Principal Backend Engineer</strong> specializing in microservice platforms with real saga orchestration, 
-                transactional outboxes, and automated resilience. This is running code.
+                This is a real .NET 9 microservices system running on Fly.io — not
+                a demo, not a diagram. Payments, orders, inventory, and event-driven
+                sagas, all wired together and open for you to explore.
               </p>
 
-              {/* Differentiator callout */}
-              <p className="text-sm text-accent/80 mb-12 max-w-2xl leading-relaxed">
-                This portfolio is a <strong className="text-accent">live .NET 9 cluster on Fly.io</strong> with 
-                8 microservices, Postgres, RabbitMQ, and Redis. Every demo hits real infrastructure.
+              {/* What makes it different */}
+              <p className="text-base text-secondary/70 mb-10 max-w-2xl leading-relaxed">
+                Click a button, trigger a checkout across four services, inject a
+                failure mid-flow, and watch the system automatically roll back.
+                Every response comes from real infrastructure — Postgres, RabbitMQ,
+                Redis — with real trace IDs and latency.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
                 <a href="/demos" className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
                   Try the live demos
                   <ArrowRight className="w-5 h-5" />
                 </a>
                 <a href="/architecture" className={cn(buttonVariants({ variant: "secondary" }), "px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
-                  Architecture deep dives
+                  {"How it's built"}
                 </a>
                 <div className="flex items-center gap-2">
                   <a
@@ -95,6 +95,15 @@ export function Hero(_: HeroProps) {
                     <GithubIcon className="w-5 h-5" />
                   </a>
                 </div>
+              </div>
+
+              {/* About me — compact */}
+              <div className="flex items-center gap-3 pt-6 border-t border-border/50">
+                <Pill variant="status" className="gap-1.5 px-3 py-1 text-[10px] tracking-widest uppercase font-bold">
+                  <Zap className="w-3 h-3 text-warning" />
+                  Available for contract
+                </Pill>
+                <span className="text-xs text-muted">Principal Backend Engineer · London / Remote · 10+ years</span>
               </div>
             </div>
           </Stack>
