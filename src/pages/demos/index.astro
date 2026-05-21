@@ -12,10 +12,11 @@ import { DemoStatusGrid } from '../../components/demo/DemoStatusGrid';
   <main class="pt-20 overflow-x-hidden">
     <div class="container px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-primary mb-2">Live demos</h1>
+        <h1 class="text-3xl font-bold text-primary mb-2">Interactive demos</h1>
         <p class="text-secondary max-w-2xl">
-          13 patterns, real infrastructure. Every button hits a live .NET 9 cluster on Fly.io —
-          no mocks, no recordings. Pick a demo below or use the sidebar to explore by category.
+          Each demo solves a real problem — failed payments, duplicate charges, cache
+          stampedes, GDPR compliance. Click a button and it runs against the live
+          cluster (Fly.io, Postgres, RabbitMQ). Nothing is mocked.
         </p>
       </div>
       <DemoStatusGrid client:load />

@@ -5,60 +5,72 @@ import { Container } from '../components/ui/Container';
 import { Stack } from '../components/ui/Stack';
 ---
 
-<BaseLayout title="About | Chidi Onyema" description="Principal Backend Engineer. 13+ years building distributed systems. London-based, remote-friendly.">
+<BaseLayout title="About | Chidi Onyema" description="Principal Backend Engineer. 10+ years building distributed systems. London-based, remote-friendly.">
   <main class="pt-32 pb-24">
     <Container size="prose">
       <Stack gap={12}>
         <div>
           <Heading variant="hero" level={1}>About me</Heading>
           <p class="text-xl text-secondary leading-relaxed mt-6">
-            I'm a Principal Backend Engineer based in London. I specialize in distributed systems
-            that handle real money, real users, and real failure modes.
+            I'm Chidi — a backend engineer in London who builds the systems
+            behind payments, orders, and financial platforms. The kind of
+            systems where a bug means someone loses money.
           </p>
         </div>
 
         <div class="prose prose-primary max-w-none">
-          <h2 class="text-lg font-semibold text-primary">What I do</h2>
+          <h2 class="text-lg font-semibold text-primary">Why I built this</h2>
           <p class="text-secondary">
-            I design and build microservice platforms where payments can't silently
-            disappear, refunds don't get stuck without escalation, and cache stampedes don't
-            take down the database. My focus is on the hard problems: distributed transactions,
-            saga orchestration, idempotency, and zero-downtime deployments.
+            Early in my career I watched a payment system silently drop transactions
+            during a deploy. No errors, no alerts — customers were charged but orders
+            never created. It took three days to find the root cause: a message broker
+            restart wiped unconfirmed messages, and there was no outbox to recover them.
+          </p>
+          <p class="text-secondary">
+            That experience shaped everything I've done since. I don't trust happy-path
+            demos or architecture diagrams. I want to see the failure, trigger it myself,
+            and verify the system recovers. That's why this portfolio is a live cluster
+            you can actually break.
           </p>
 
-          <h2 class="text-lg font-semibold text-primary mt-8">How I work</h2>
+          <h2 class="text-lg font-semibold text-primary mt-8">What I focus on</h2>
+          <p class="text-secondary">
+            The problems I care about are the ones that wake people up at 3am:
+          </p>
           <ul class="text-secondary space-y-2">
-            <li><strong>Architecture-first:</strong> I start with failure modes, not happy paths. Every design decision maps to a production failure I've actually seen.</li>
-            <li><strong>Automated enforcement:</strong> 159 architecture guards and 50 Roslyn analyzers catch violations at compile time, not in code review.</li>
-            <li><strong>Observable by default:</strong> OpenTelemetry tracing, structured logging, and health endpoints on every service.</li>
-            <li><strong>Test pyramid:</strong> Unit, Integration, Contract, and E2E. 13 CI suites, all green.</li>
+            <li><strong>Transactions that span multiple services</strong> — making sure an order either completes fully or rolls back cleanly, with no orphaned charges or phantom inventory.</li>
+            <li><strong>Failure recovery</strong> — when a service goes down mid-operation, the system compensates automatically. No manual database fixes.</li>
+            <li><strong>Financial correctness</strong> — every payment, refund, and payout is accounted for with double-entry bookkeeping. The books balance or the build breaks.</li>
+            <li><strong>Automated enforcement</strong> — 159 architecture rules and 50 custom analyzers run on every build. The patterns are not documented guidelines; they are compiler errors.</li>
           </ul>
 
           <h2 class="text-lg font-semibold text-primary mt-8">This portfolio</h2>
           <p class="text-secondary">
-            This portfolio is a live .NET 9 cluster with 8 microservices
-            on Fly.io, PostgreSQL on Supabase, RabbitMQ on CloudAMQP, and Redis on Upstash. Every demo
-            hits real infrastructure. The source is on
-            <a href="https://github.com/chidionyema/haworks-platform" target="_blank" class="text-accent hover:underline">GitHub</a>.
+            The platform running this site is 8 .NET 9 microservices deployed on
+            Fly.io, with PostgreSQL, RabbitMQ, and Redis. Every demo you try
+            sends real HTTP requests through the full stack. The
+            <a href="https://github.com/chidionyema/haworks-platform" target="_blank" class="text-accent hover:underline">source code</a> is
+            public — including the saga state machines, the outbox configuration,
+            the architecture guards, and the CI pipeline.
           </p>
 
-          <h2 class="text-lg font-semibold text-primary mt-8">Education & Certifications</h2>
+          <h2 class="text-lg font-semibold text-primary mt-8">Education</h2>
           <ul class="text-secondary space-y-2">
-            <li><strong>Professional Certificate in AI and Machine Learning</strong>, Imperial College Business School (2024)</li>
-            <li><strong>BSc (Hons) Computer Science</strong>, Queen Mary University of London</li>
+            <li><strong>AI and Machine Learning</strong> — Professional Certificate, Imperial College Business School (2024)</li>
+            <li><strong>Computer Science BSc (Hons)</strong> — Queen Mary University of London</li>
           </ul>
 
           <h2 class="text-lg font-semibold text-primary mt-8">Stack</h2>
           <div class="flex flex-wrap gap-2 not-prose">
-            {['C# / .NET 9', 'MassTransit', 'EF Core', 'PostgreSQL', 'RabbitMQ', 'Redis', 'Polly', 'HashiCorp Vault', 'Docker', 'Fly.io', 'Supabase', 'OpenTelemetry', 'xUnit', 'Pact', 'Aspire', 'AI / ML'].map(tech => (
+            {['C# / .NET 9', 'MassTransit', 'EF Core', 'PostgreSQL', 'RabbitMQ', 'Redis', 'Polly', 'HashiCorp Vault', 'Docker', 'Fly.io', 'OpenTelemetry', 'xUnit', 'Pact', 'Aspire'].map(tech => (
               <span class="px-2.5 py-1 bg-surface-warm border border-border rounded text-[10px] uppercase tracking-wider font-mono text-muted">{tech}</span>
             ))}
           </div>
 
           <h2 class="text-lg font-semibold text-primary mt-8">Availability</h2>
           <p class="text-secondary">
-            Currently available for contract engagements. London-based, comfortable with
-            remote and hybrid. Day rate on request.
+            Available for contract engagements. London-based, comfortable fully
+            remote. Happy to discuss day rate and scope.
           </p>
           <p class="mt-4">
             <a href="/contact" class="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-primary text-base-inverse hover:bg-secondary transition-all">
