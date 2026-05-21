@@ -66,7 +66,7 @@ export function CircuitBreakerDemo() {
       const status = isOk ? 'ok' as const : isRejected ? 'rejected' as const : 'failed' as const;
 
       setWithBreakerLogs(prev => [{
-        id: crypto.randomUUID(),
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
         status,
         durationMs: res?.responseTimeMs ?? duration,
@@ -76,7 +76,7 @@ export function CircuitBreakerDemo() {
       if (res?.traceId) setReceipt(res as RequestMetadata);
     } catch {
       setWithBreakerLogs(prev => [{
-        id: crypto.randomUUID(),
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
         status: 'failed',
         durationMs: Date.now() - start,
@@ -93,14 +93,14 @@ export function CircuitBreakerDemo() {
       const res = await executeCommand('/circuit/request', { shouldFail: true });
       const duration = Date.now() - start;
       setWithoutBreakerLogs(prev => [{
-        id: crypto.randomUUID(),
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
         status: 'failed',
         durationMs: res?.responseTimeMs ?? duration,
       }, ...prev].slice(0, 8));
     } catch {
       setWithoutBreakerLogs(prev => [{
-        id: crypto.randomUUID(),
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
         status: 'failed',
         durationMs: Date.now() - start,

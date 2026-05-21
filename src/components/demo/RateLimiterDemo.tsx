@@ -83,7 +83,7 @@ export function RateLimiterDemo() {
       }
       
       const log: RequestLog = {
-        id: crypto.randomUUID(),
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
         status: tokens >= amount ? 'allowed' : 'limited',
         remaining: Math.max(0, tokens - amount),
