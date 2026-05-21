@@ -15,18 +15,16 @@ export function Proof() {
           <Stack gap={8}>
             <div className="max-w-2xl">
               <Heading variant="caption" className="mb-4">
-                See it work, then break it
+                Checkout demo
               </Heading>
               <Heading variant="section" className="mb-6" level={2}>
-                A real checkout across four services.
+                Four services, one transaction.
               </Heading>
               <p className="text-lg text-secondary leading-relaxed">
-                This demo runs a full purchase flow: reserve stock in Catalog,
-                create a payment session in Payments, confirm the order in Orders,
-                all coordinated by a saga in CheckoutOrchestrator. Click{' '}
-                <strong>{"'Inject Fault'"}</strong> to kill a step mid-flow and watch
-                the saga automatically undo everything — stock released, payment
-                reversed, no orphaned data.
+                Reserves stock in Catalog, creates a payment session in Payments,
+                confirms the order in Orders. A saga in CheckoutOrchestrator
+                coordinates the steps. Use <strong>{"'Inject Fault'"}</strong> to
+                fail a step and see the saga roll back.
               </p>
             </div>
 
@@ -36,12 +34,10 @@ export function Proof() {
 
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted max-w-md">
-                Not a simulation. Every request travels: your browser → Cloudflare →
-                Fly.io BFF → RabbitMQ → microservice → Postgres. Trace IDs and
-                latency are real.
+                Request path: browser → Cloudflare → Fly.io BFF → RabbitMQ → service → Postgres.
               </p>
               <Link variant="cta" href="/demos">
-                Explore all 13 demos →
+                All 13 demos →
               </Link>
             </div>
           </Stack>

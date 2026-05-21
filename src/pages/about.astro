@@ -10,54 +10,46 @@ import { Stack } from '../components/ui/Stack';
     <Container size="prose">
       <Stack gap={12}>
         <div>
-          <Heading variant="hero" level={1}>About me</Heading>
+          <Heading variant="hero" level={1}>About</Heading>
           <p class="text-xl text-secondary leading-relaxed mt-6">
-            I'm Chidi — a backend engineer in London who builds the systems
-            behind payments, orders, and financial platforms. The kind of
-            systems where a bug means someone loses money.
+            Backend engineer in London. 10+ years. I work on payment systems,
+            order platforms, and the infrastructure between them.
           </p>
         </div>
 
         <div class="prose prose-primary max-w-none">
           <h2 class="text-lg font-semibold text-primary">Why I built this</h2>
           <p class="text-secondary">
-            Early in my career I watched a payment system silently drop transactions
-            during a deploy. No errors, no alerts — customers were charged but orders
-            never created. It took three days to find the root cause: a message broker
-            restart wiped unconfirmed messages, and there was no outbox to recover them.
+            A few years ago I was on a team where a deploy took out the message
+            broker. Customers were charged but orders were never created. No
+            alerts fired. It took three days to find the root cause: unconfirmed
+            messages were lost on restart, and there was no outbox.
           </p>
           <p class="text-secondary">
-            That experience shaped everything I've done since. I don't trust happy-path
-            demos or architecture diagrams. I want to see the failure, trigger it myself,
-            and verify the system recovers. That's why this portfolio is a live cluster
-            you can actually break.
+            Since then I have been focused on making sure that does not happen.
+            This portfolio exists so I can show the work rather than just
+            describe it.
           </p>
 
-          <h2 class="text-lg font-semibold text-primary mt-8">What I focus on</h2>
-          <p class="text-secondary">
-            The problems I care about are the ones that wake people up at 3am:
-          </p>
+          <h2 class="text-lg font-semibold text-primary mt-8">Focus areas</h2>
           <ul class="text-secondary space-y-2">
-            <li><strong>Transactions that span multiple services</strong> — making sure an order either completes fully or rolls back cleanly, with no orphaned charges or phantom inventory.</li>
-            <li><strong>Failure recovery</strong> — when a service goes down mid-operation, the system compensates automatically. No manual database fixes.</li>
-            <li><strong>Financial correctness</strong> — every payment, refund, and payout is accounted for with double-entry bookkeeping. The books balance or the build breaks.</li>
-            <li><strong>Automated enforcement</strong> — 159 architecture rules and 50 custom analyzers run on every build. The patterns are not documented guidelines; they are compiler errors.</li>
+            <li><strong>Cross-service transactions</strong> that complete fully or roll back cleanly.</li>
+            <li><strong>Automatic failure recovery</strong> so a crashed service does not leave orphaned data.</li>
+            <li><strong>Financial correctness</strong> with double-entry bookkeeping and balance invariants.</li>
+            <li><strong>Compile-time enforcement</strong> of architecture rules (159 CI guards, 50 Roslyn analyzers).</li>
           </ul>
 
-          <h2 class="text-lg font-semibold text-primary mt-8">This portfolio</h2>
+          <h2 class="text-lg font-semibold text-primary mt-8">The platform</h2>
           <p class="text-secondary">
-            The platform running this site is 8 .NET 9 microservices deployed on
-            Fly.io, with PostgreSQL, RabbitMQ, and Redis. Every demo you try
-            sends real HTTP requests through the full stack. The
-            <a href="https://github.com/chidionyema/haworks-platform" target="_blank" class="text-accent hover:underline">source code</a> is
-            public — including the saga state machines, the outbox configuration,
-            the architecture guards, and the CI pipeline.
+            8 .NET 9 microservices on Fly.io, PostgreSQL, RabbitMQ, Redis.
+            Source is on
+            <a href="https://github.com/chidionyema/haworks-platform" target="_blank" class="text-accent hover:underline">GitHub</a>.
           </p>
 
           <h2 class="text-lg font-semibold text-primary mt-8">Education</h2>
           <ul class="text-secondary space-y-2">
-            <li><strong>AI and Machine Learning</strong> — Professional Certificate, Imperial College Business School (2024)</li>
-            <li><strong>Computer Science BSc (Hons)</strong> — Queen Mary University of London</li>
+            <li><strong>AI and Machine Learning</strong>, Professional Certificate, Imperial College Business School (2024)</li>
+            <li><strong>Computer Science BSc (Hons)</strong>, Queen Mary University of London</li>
           </ul>
 
           <h2 class="text-lg font-semibold text-primary mt-8">Stack</h2>
@@ -69,8 +61,7 @@ import { Stack } from '../components/ui/Stack';
 
           <h2 class="text-lg font-semibold text-primary mt-8">Availability</h2>
           <p class="text-secondary">
-            Available for contract engagements. London-based, comfortable fully
-            remote. Happy to discuss day rate and scope.
+            Available for contract work. London or remote.
           </p>
           <p class="mt-4">
             <a href="/contact" class="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-primary text-base-inverse hover:bg-secondary transition-all">

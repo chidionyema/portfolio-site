@@ -17,11 +17,11 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     mechanism:
       'A saga turns the cross-service transaction into a sequence of local commits, each paired with a compensating action that runs on failure. State lives in the saga itself, not a distributed lock.',
     watch:
-      'When a step fails, every prior step is reversed in order. The system never half-commits — it either reaches the end or unwinds cleanly back to the start.',
+      'When a step fails, prior steps are reversed in order. The system either reaches the end or unwinds back to the start.',
     problemSummary: 'Cross-service crashes leave data inconsistent.',
     mechanismSummary: 'Chained local commits with rollback logic.',
     withoutPattern: 'Partial commits: customer charged but no order created. Manual reconciliation required.',
-    businessOutcome: 'Zero lost orders — every checkout either completes fully or rolls back cleanly.',
+    businessOutcome: 'Every checkout either completes fully or rolls back cleanly.',
     strategy: 'Stateful Saga Orchestration',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/CheckoutOrchestrator/CheckoutOrchestrator.Application/Sagas/CheckoutSaga.cs',
   },

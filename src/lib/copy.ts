@@ -36,7 +36,7 @@ export const CHECKOUT_COPY = {
   RECEIPT_VIEW_LINK: 'View order details',
   RECEIPT_VIEW_TOOLTIP: 'Demo only — there is no real order page',
   RUN_ANOTHER: 'Run another',
-  ENGINEERING_HEADER: 'Behind the scenes · CheckoutSaga.cs',
+  ENGINEERING_HEADER: 'Server events',
   COMPENSATION_HEADER: 'Compensation',
   SCENARIO_LABELS: {
     success: 'Pay',

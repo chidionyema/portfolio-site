@@ -42,29 +42,24 @@ export function Hero(_: HeroProps) {
         <Reveal delay={0.1}>
           <Stack gap={12}>
             <div className="max-w-4xl">
-              {/* Context: what this IS — the first thing anyone reads */}
               <p className="text-sm text-accent font-semibold tracking-wide uppercase mb-6">
-                Engineering Portfolio — Chidi Onyema
+                Portfolio / Chidi Onyema
               </p>
 
               <Heading variant="display" level={1} className="mb-6">
-                I built an 8-service platform<br className="hidden sm:block" />
-                and deployed it live so you<br className="hidden sm:block" />
-                can break it yourself.
+                8 microservices on Fly.io.<br className="hidden sm:block" />
+                Payments, orders, sagas.<br className="hidden sm:block" />
+                All live, all open source.
               </Heading>
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
-                This is a real .NET 9 microservices system running on Fly.io.
-                Payments, orders, inventory, and event-driven sagas, all wired
-                together and open for you to explore.
+                A .NET 9 platform with Postgres, RabbitMQ, and Redis.
+                The demos below run against it. The source is on GitHub.
               </p>
 
-              {/* What makes it different */}
               <p className="text-base text-secondary/70 mb-10 max-w-2xl leading-relaxed">
-                Click a button, trigger a checkout across four services, inject a
-                failure mid-flow, and watch the system automatically roll back.
-                Every response comes from real infrastructure — Postgres, RabbitMQ,
-                Redis, with real trace IDs and latency.
+                Each demo sends real HTTP requests through the full stack.
+                Trace IDs and latency in the responses are from the actual services.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
@@ -73,7 +68,7 @@ export function Hero(_: HeroProps) {
                   <ArrowRight className="w-5 h-5" />
                 </a>
                 <a href="/architecture" className={cn(buttonVariants({ variant: "secondary" }), "px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
-                  {"How it's built"}
+                  {"Architecture"}
                 </a>
                 <div className="flex items-center gap-2">
                   <a

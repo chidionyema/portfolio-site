@@ -153,8 +153,6 @@ export function CheckoutDemo() {
 
   return (
     <div className="space-y-8 relative">
-      <RealSystemBanner metadata={metadata} />
-      <WhatToWatch demoId="checkout" />
       <div className="grid lg:grid-cols-[45fr_55fr] gap-12 items-start">
         {/* Left Pane - Customer context */}
         <Stack gap={6}>
@@ -265,11 +263,10 @@ export function CheckoutDemo() {
                 <Stack gap={4}>
                   <div>
                     <Heading variant="caption" level={4} className="mb-2 font-mono tracking-[0.3em] text-secondary/90">
-                      Choreography · cross-service event flow
+                      Event log
                     </Heading>
                     <p className="text-[10px] text-secondary/90 leading-relaxed font-mono">
-                      Each row is one message — direct HTTP at the top,
-                      RabbitMQ events between services after that. No central transaction.
+                      Each row is one message between services.
                     </p>
                   </div>
                   <SagaSequenceView sagaState={sagaState} localEvents={localEvents} />

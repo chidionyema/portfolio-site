@@ -25,20 +25,17 @@ export function ArchitecturePage() {
     <div className="space-y-24">
       {/* Hero */}
       <motion.div {...fadeUp()} className="max-w-3xl">
-        <Heading variant="caption" className="mb-4">How the platform is built</Heading>
+        <Heading variant="caption" className="mb-4">Architecture</Heading>
         <Heading variant="section" level={1} className="mb-6">
-          The code enforces its own rules.
+          Compile-time rules, CI gates, automated enforcement.
         </Heading>
         <p className="text-lg text-secondary leading-relaxed mb-4">
-          Most architecture decisions end up as wiki pages nobody reads. In this
-          platform, they are compiler errors and CI gates. If you break a rule,
-          the build breaks — before code review, before merge, before deploy.
+          Architecture decisions are encoded as compiler errors and CI checks.
+          A rule violation fails the build.
         </p>
         <p className="text-base text-secondary/70 leading-relaxed">
-          Below are the six areas where this matters most: how the code catches
-          its own mistakes, how money is tracked, how user data is deleted,
-          how search stays in sync, and how the whole thing runs locally with
-          one command.
+          Six sections: code analyzers, CI guards, financial bookkeeping, GDPR
+          deletion, search sync, and local orchestration.
         </p>
       </motion.div>
 
