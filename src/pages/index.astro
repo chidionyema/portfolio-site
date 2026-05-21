@@ -2,11 +2,9 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { Hero } from '../components/hero/HeroLite';
-import { LiveHealthStrip } from '../components/home/LiveHealthStrip';
-import { TrustTiles } from '../components/home/TrustTiles';
-import { TechStack } from '../components/home/TechStack';
-import { ArchitecturePreview } from '../components/home/ArchitecturePreview';
-import { Proof } from '../components/home/Proof';
+import { CredibilityStrip } from '../components/home/CredibilityStrip';
+import { Challenges } from '../components/home/Challenges';
+import { SagaAnimation } from '../components/home/SagaAnimation';
 import { Dives } from '../components/home/Dives';
 const dd = await getCollection('deep-dives', ({ data }) => !data.draft);
 dd.sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
@@ -22,13 +20,9 @@ const dives = dd.slice(0, 3).map((e) => ({
 <BaseLayout>
   <main>
     <Hero client:load />
-    <LiveHealthStrip client:load />
-    <section class="py-12 px-6 max-w-6xl mx-auto">
-      <TrustTiles client:load />
-      <TechStack client:visible />
-      <ArchitecturePreview client:visible />
-    </section>
-    <Proof client:visible />
+    <CredibilityStrip client:visible />
+    <Challenges client:visible />
+    <SagaAnimation client:visible />
     <Dives dives={dives} client:visible />
   </main>
 </BaseLayout>

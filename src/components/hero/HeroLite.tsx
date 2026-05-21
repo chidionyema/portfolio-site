@@ -1,6 +1,5 @@
 import { ArrowRight, Zap } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "../../lib/brand-icons";
-import { useClusterState } from "../../hooks/useClusterState";
 import { buttonVariants } from "../ui/Button";
 import { Heading } from "../ui/Heading";
 import { Container } from "../ui/Container";
@@ -17,58 +16,39 @@ interface HeroProps {
 }
 
 export function Hero(_: HeroProps) {
-  const { systemStatus } = useClusterState();
-
   return (
     <section data-hero className="relative bg-base overflow-hidden border-b border-border">
-      <div className="absolute top-6 right-6 z-30">
-        <Pill variant="status" className="gap-2 px-3.5 py-1.5 backdrop-blur">
-          <span
-            className={cn(
-              "w-1.5 h-1.5 rounded-full",
-              systemStatus === "healthy"
-                ? "bg-success"
-                : systemStatus === "degraded"
-                  ? "bg-warning"
-                  : "bg-muted/40",
-              systemStatus === "healthy" && "animate-pulse"
-            )}
-          />
-          <span className="font-medium">cluster: {systemStatus ?? "connecting"}</span>
-        </Pill>
-      </div>
-
-      <Container size="wide" className="pt-32 pb-24 lg:pt-48 lg:pb-40">
+      <Container size="wide" className="pt-32 pb-24 lg:pt-48 lg:pb-32">
         <Reveal delay={0.1}>
-          <Stack gap={12}>
-            <div className="max-w-4xl">
+          <Stack gap={10}>
+            <div className="max-w-3xl">
               <p className="text-sm text-accent font-semibold tracking-wide uppercase mb-6">
-                Portfolio / Chidi Onyema
+                Chidi Onyema · Principal Backend Engineer
               </p>
 
               <Heading variant="display" level={1} className="mb-6">
-                8 microservices on Fly.io.<br className="hidden sm:block" />
-                Payments, orders, sagas.<br className="hidden sm:block" />
-                All live, all open source.
+                I build backend systems<br className="hidden sm:block" />
+                that don't break<br className="hidden sm:block" />
+                under pressure.
               </Heading>
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
-                A .NET 9 platform with Postgres, RabbitMQ, and Redis.
-                The demos below run against it. The source is on GitHub.
+                Distributed transactions, fault tolerance, financial integrity.
+                This portfolio is a live, open-source .NET 9 platform — not slides, not diagrams.
               </p>
 
               <p className="text-base text-secondary/70 mb-10 max-w-2xl leading-relaxed">
-                Each demo sends real HTTP requests through the full stack.
-                Trace IDs and latency in the responses are from the actual services.
+                Every demo below sends real HTTP requests through 8 microservices
+                on Fly.io. The trace IDs and latency in the responses are from actual production services.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
-                <a href="/demos" className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
-                  Try the live demos
+                <a href="#challenges" className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
+                  See what I built
                   <ArrowRight className="w-5 h-5" />
                 </a>
                 <a href="/architecture" className={cn(buttonVariants({ variant: "secondary" }), "px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
-                  {"Architecture"}
+                  How it works
                 </a>
                 <div className="flex items-center gap-2">
                   <a
@@ -92,13 +72,12 @@ export function Hero(_: HeroProps) {
                 </div>
               </div>
 
-              {/* About me — compact */}
               <div className="flex items-center gap-3 pt-6 border-t border-border/50">
                 <Pill variant="status" className="gap-1.5 px-3 py-1 text-[10px] tracking-widest uppercase font-bold">
                   <Zap className="w-3 h-3 text-warning" />
                   Available for contract
                 </Pill>
-                <span className="text-xs text-muted">Principal Backend Engineer · London / Remote · 10+ years</span>
+                <span className="text-xs text-muted">London / Remote · 10+ years</span>
               </div>
             </div>
           </Stack>
