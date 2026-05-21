@@ -33,7 +33,7 @@ const BUDGETS = [
 // ChaosReceipts, ChaosDrillController, ArchitectureCanvas, SagaMessageFlow,
 // ResilienceScoreboard. Each is small (<3KB) but they add up. Tighten back
 // down once any panels get demolished.
-const TOTAL_JS_GZIP_BUDGET = 240_000;
+const TOTAL_JS_GZIP_BUDGET = 245_000;
 
 let failures = 0;
 let totalJsGzip = 0;
