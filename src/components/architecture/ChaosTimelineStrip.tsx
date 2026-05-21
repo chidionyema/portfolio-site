@@ -173,8 +173,9 @@ export function ChaosTimelineStrip() {
   const pausedTarget = Object.entries(chaos).find(
     ([, v]) => v.status === 'paused',
   )?.[0];
-  const remainingSec =
-    (pausedTarget && chaos[pausedTarget]?.remainingSeconds) ?? null;
+  const remainingSec = (pausedTarget && typeof chaos[pausedTarget]?.remainingSeconds === 'number') 
+    ? chaos[pausedTarget].remainingSeconds as number 
+    : null;
 
   return (
     <div className="rounded-md border border-white/[0.06] bg-black/40 px-4 py-3 font-mono">

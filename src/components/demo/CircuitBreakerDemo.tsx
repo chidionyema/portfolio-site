@@ -63,7 +63,7 @@ export function CircuitBreakerDemo() {
       const duration = Date.now() - start;
       const isRejected = res?.isRejected || res?.rejected;
       const isOk = res?.success && !isRejected;
-      const status = isOk ? 'ok' as const : isRejected ? 'rejected' as const : 'failed' as const;
+      const status: 'ok' | 'failed' | 'rejected' = isOk ? 'ok' : isRejected ? 'rejected' : 'failed';
 
       setWithBreakerLogs(prev => [{
         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
@@ -78,7 +78,7 @@ export function CircuitBreakerDemo() {
       setWithBreakerLogs(prev => [{
         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
-        status: 'failed',
+        status: 'failed' as const,
         durationMs: Date.now() - start,
         circuitState,
       }, ...prev].slice(0, 8));
@@ -95,14 +95,14 @@ export function CircuitBreakerDemo() {
       setWithoutBreakerLogs(prev => [{
         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
-        status: 'failed',
+        status: 'failed' as const,
         durationMs: res?.responseTimeMs ?? duration,
       }, ...prev].slice(0, 8));
     } catch {
       setWithoutBreakerLogs(prev => [{
         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         timestamp: new Date(),
-        status: 'failed',
+        status: 'failed' as const,
         durationMs: Date.now() - start,
       }, ...prev].slice(0, 8));
     }

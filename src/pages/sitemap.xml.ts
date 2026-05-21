@@ -15,7 +15,7 @@ export const GET: APIRoute = async () => {
     { loc: `${SITE}/contact`, changefreq: 'monthly', priority: '0.8' },
     { loc: `${SITE}/demos`, changefreq: 'weekly', priority: '0.9' },
     ...dives.map((d: DeepDive) => ({
-      loc: `${SITE}/deep-dives/${d.slug}/`,
+      loc: `${SITE}/deep-dives/${d.id}/`,
       lastmod: (d.data.updatedAt ?? d.data.publishedAt).toISOString().slice(0, 10),
       changefreq: 'monthly',
       priority: '0.8',

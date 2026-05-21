@@ -1,8 +1,8 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "../../lib/utils";
 
-export interface RevealProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface RevealProps extends HTMLMotionProps<"div"> {
   delay?: number;
   direction?: "up" | "down" | "left" | "right";
 }

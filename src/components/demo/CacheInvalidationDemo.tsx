@@ -48,10 +48,10 @@ export function CacheInvalidationDemo() {
 
   const { executeCommand, events, metadata } = useDemoSession('cache-invalidation');
 
-  const [tiers, setTiers] = useState([
-    { id: 'l1', label: 'L1 (Memory)', color: 'text-accent', status: 'cached' as const },
-    { id: 'l2', label: 'L2 (Redis)', color: 'text-primary', status: 'cached' as const },
-    { id: 'db', label: 'PostgreSQL', color: 'text-success', status: 'origin' as const },
+  const [tiers, setTiers] = useState<Array<{ id: string; label: string; color: string; status: 'cached' | 'origin' | 'serving' }>>([
+    { id: 'l1', label: 'L1 (Memory)', color: 'text-accent', status: 'cached' },
+    { id: 'l2', label: 'L2 (Redis)', color: 'text-primary', status: 'cached' },
+    { id: 'db', label: 'PostgreSQL', color: 'text-success', status: 'origin' },
   ]);
 
   const [waveActive, setWaveActive] = useState(false);

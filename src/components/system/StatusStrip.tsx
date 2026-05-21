@@ -44,11 +44,11 @@ export function StatusStrip(_: StatusStripProps) {
       name: s.name,
       status: s.displayStatus,
       latencyMs: s.latencyMs,
-      message: s.chaosPaused ? 'paused via topology' : s.message,
+      message: (s.chaosPaused ? 'paused via topology' : s.message) || undefined,
     })),
-    systemStatus,
+    systemStatus: systemStatus === 'healthy' ? 'healthy' : (systemStatus === 'degraded' ? 'degraded' : 'down'),
     p99LatencyMs: 0,
-    availability: null,
+    availability: 100,
     timestamp: new Date().toISOString(),
   };
 
