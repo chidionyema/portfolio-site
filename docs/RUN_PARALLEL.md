@@ -27,7 +27,7 @@ You can run any subset of the nine prompts. Suggested first batch
 - Branch 7 (concurrency conflict animation) — small, ~1h
 - Branch 2 (rate limiter token bucket) — medium, ~1.5h
 - Branch 6 (vault cred swap) — medium, ~1.5h
-- Branch 9 (backend payment mock) — runs against ritualworks-platform, doesn't conflict with frontend branches
+- Branch 9 (backend payment mock) — runs against haworks-platform-platform, doesn't conflict with frontend branches
 
 That's four parallel sessions, three of which finish in ~90 minutes
 each, all touching different files. Merge them sequentially as they
@@ -44,7 +44,7 @@ preamble's exact wording matters.
 
 ```
 You are working on a single branch in /Users/chidionyema/Documents/code/portfolio-site
-(or its sibling ritualworks-platform repo for backend branches).
+(or its sibling haworks-platform-platform repo for backend branches).
 
 Read these four docs end-to-end before your first edit:
 1. docs/PARALLEL_DEMO_WORK.md   — file ownership, frozen list, merge protocol
@@ -283,10 +283,10 @@ Push feat/eventflow-polish.
 
 ```
 [paste the standard preamble, but adapt: this branch is in
-/Users/chidionyema/Documents/code/ritualworks-platform, not portfolio-site.]
+/Users/chidionyema/Documents/code/haworks-platform-platform, not portfolio-site.]
 
 Branch: feat/checkout-payment-mock
-Base:   ritualworks-platform feat/portfolio-ui-completion-gemini
+Base:   haworks-platform-platform feat/portfolio-ui-completion-gemini
 Brief:  /Users/chidionyema/Documents/code/portfolio-site/docs/CHECKOUT_REDESIGN.md
         § "Backend work — PaymentSessionRequestedConsumer (demo mode)"
 Status: /Users/chidionyema/Documents/code/portfolio-site/docs/status/feat-checkout-payment-mock.md

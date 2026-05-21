@@ -491,7 +491,7 @@ Emit every 2s. SSE so the same connection style as Feature 1.
 
 **None.** This is build-time static.
 
-The Astro build pulls source from `ritualworks` (sibling repo) at build time:
+The Astro build pulls source from `haworks-platform` (sibling repo) at build time:
 
 ```ts
 // astro.config.mjs — add a plugin
@@ -499,7 +499,7 @@ The Astro build pulls source from `ritualworks` (sibling repo) at build time:
   name: 'inline-source',
   buildStart() {
     const files = require('./scripts/code-manifest.json'); // { demoId: [ { lang, repoPath, label } ] }
-    // For each entry, read the file from ../ritualworks/... pin to a SHA, write to src/content/code/{demoId}/{label}.json
+    // For each entry, read the file from ../haworks-platform/... pin to a SHA, write to src/content/code/{demoId}/{label}.json
     //   { lang, label, source, githubUrl: "https://github.com/.../blob/{sha}/{path}" }
   }
 }

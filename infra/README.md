@@ -142,7 +142,7 @@ portfolio-infra/
 
 1. **Deploy the API**:
    ```bash
-   cd ../ritualworks
+   cd ../haworks-platform
    fly deploy --app portfolio-api
    ```
 

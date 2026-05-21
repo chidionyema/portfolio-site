@@ -7,7 +7,7 @@
 ## 1. The "Ambient Pulse" Engine (.NET 9)
 
 ### 1.1 TrafficGeneratorWorker.cs
-A background service (`IHostedService`) in the `ritualworks` Api project.
+A background service (`IHostedService`) in the `haworks-platform` Api project.
 
 *   **Role:** Every 15-60 seconds (randomized jitter), it dispatches a real MediatR command (e.g., `ProcessOrderCommand` or `RefreshCacheCommand`).
 *   **Tenant:** These commands are marked with a specific `System_Automated` tenant ID.

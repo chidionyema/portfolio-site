@@ -1,6 +1,6 @@
 # Backend Database Migrations: Demo Schema
 
-To support the interactive Production Playground, the `ritualworks` backend cluster requires the following PostgreSQL schema. This ensures session isolation and real-world persistence for the Concurrency and Outbox demos.
+To support the interactive Production Playground, the `haworks-platform` backend cluster requires the following PostgreSQL schema. This ensures session isolation and real-world persistence for the Concurrency and Outbox demos.
 
 ---
 

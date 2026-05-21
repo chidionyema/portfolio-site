@@ -1,6 +1,6 @@
 # Backend Implementation: Complete Feature Integration
 
-This document provides the implementation logic for the remaining HAWorks UI modules. Add these actions to your `DemoController.cs` in the **ritualworks** Api project.
+This document provides the implementation logic for the remaining HAWorks UI modules. Add these actions to your `DemoController.cs` in the **haworks-platform** Api project.
 
 ---
 

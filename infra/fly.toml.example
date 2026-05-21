@@ -1,7 +1,7 @@
 # =============================================================================
 # Fly.io Configuration for Portfolio API
 # =============================================================================
-# Copy this to your ritualworks/fly.toml and customize
+# Copy this to your haworks-platform/fly.toml and customize
 
 app = "portfolio-api"
 primary_region = "lhr"

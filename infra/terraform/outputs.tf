@@ -74,7 +74,7 @@ output "next_steps" {
 
     Next steps:
     1. Build and push API image:
-       cd ../ritualworks
+       cd ../haworks-platform
        fly deploy --app portfolio-api
 
     2. Deploy static site to Cloudflare Pages:

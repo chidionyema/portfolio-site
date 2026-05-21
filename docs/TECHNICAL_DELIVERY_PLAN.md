@@ -1014,7 +1014,7 @@ echo "=== All tests passed! ==="
 
 ## Part 8: File Structure
 
-### Backend (ritualworks repo additions)
+### Backend (haworks-platform repo additions)
 
 ```
 src/

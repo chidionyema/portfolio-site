@@ -34,14 +34,14 @@ npm run build
 npm run preview
 ```
 
-### Local dev with the ritualworks backend (Aspire)
+### Local dev with the haworks-platform backend (Aspire)
 
-The five interactive demos call into the `ritualworks` monolith's
+The five interactive demos call into the `haworks-platform` backend's
 `DemoController` + `DemoHub` SignalR hub. To run them locally:
 
 ```bash
 # Terminal 1 — bring up the backend (Aspire)
-cd ../ritualworks
+cd ../haworks-platform
 git checkout feature/ha-portfolio-integration
 dotnet run --project src/haworks.AppHost
 # API binds to http://localhost:5050 (and https://localhost:5051)
@@ -56,14 +56,14 @@ npm install && npm run dev
 ```
 
 CORS for `http://localhost:4321` (Astro's default) is allow-listed by the
-ritualworks AppHost in dev mode. No auth or API key needed for the demo
+haworks-platform AppHost in dev mode. No auth or API key needed for the demo
 endpoints — they're all `[AllowAnonymous]`.
 
 ## Deployment
 
 Auto-deploys to Cloudflare Pages via GitHub Actions on every push to `main`,
 gated on CI passing. Mirrors the backend's Fly auto-deploy pattern (see
-`ritualworks-platform/.github/workflows/deploy.yml`).
+`haworks-platform/.github/workflows/deploy.yml`).
 
 ### One-time setup
 
@@ -72,7 +72,7 @@ gated on CI passing. Mirrors the backend's Fly auto-deploy pattern (see
 
    ```bash
    npx wrangler login
-   npx wrangler pages project create ritualworks --production-branch main
+   npx wrangler pages project create haworks-platform --production-branch main
    ```
 
 2. In **GitHub repo → Settings → Secrets and variables → Actions**:
@@ -84,17 +84,17 @@ gated on CI passing. Mirrors the backend's Fly auto-deploy pattern (see
      `Account → Cloudflare Pages → Edit`).
    - `CLOUDFLARE_ACCOUNT_ID` — copy from any Cloudflare dashboard URL.
    - `PUBLIC_API_URL` — production BFF URL, e.g.
-     `https://ritualworks-bffweb.fly.dev`. Inlined into the build at
+     `https://haworks-bffweb.fly.dev`. Inlined into the build at
      compile time, so it's a secret rather than a variable.
 
    **Variables** (visible in build logs, easy to tweak):
-   - `CLOUDFLARE_PAGES_PROJECT` — defaults to `ritualworks`. Override
+   - `CLOUDFLARE_PAGES_PROJECT` — defaults to `haworks-platform`. Override
      here if you renamed the Pages project.
    - `PUBLIC_SIGNALR_URL` — same host as `PUBLIC_API_URL`, hub path, e.g.
-     `https://ritualworks-bffweb.fly.dev/hubs/demo`.
+     `https://haworks-bffweb.fly.dev/hubs/demo`.
    - `PUBLIC_CLUSTER_LABEL` — optional; defaults to `production`.
 
-3. In **Cloudflare dashboard → Pages → ritualworks → Custom domains**,
+3. In **Cloudflare dashboard → Pages → haworks-platform → Custom domains**,
    add `chidionyema.dev` and follow the DNS instructions.
 
 That's it. After this, every merge to `main` triggers CI, and on success
@@ -107,8 +107,8 @@ For one-off emergency or first-deploy from a developer machine:
 
 ```bash
 CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... \
-PUBLIC_API_URL=https://ritualworks-bffweb.fly.dev \
-PUBLIC_SIGNALR_URL=https://ritualworks-bffweb.fly.dev/hubs/demo \
+PUBLIC_API_URL=https://haworks-bffweb.fly.dev \
+PUBLIC_SIGNALR_URL=https://haworks-bffweb.fly.dev/hubs/demo \
 npm run deploy
 ```
 
@@ -135,6 +135,6 @@ See [`.env.example`](./.env.example) for the full contract. Production
 defaults are baked into the deploy; local dev overrides via `.env.local`:
 
 ```bash
-PUBLIC_API_URL=http://localhost:5050        # ritualworks API on Aspire
+PUBLIC_API_URL=http://localhost:5050        # haworks-platform API on Aspire
 PUBLIC_SIGNALR_URL=http://localhost:5050/hubs/demo
 ```
