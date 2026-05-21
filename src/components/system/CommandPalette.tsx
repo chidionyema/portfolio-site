@@ -183,7 +183,7 @@ export function CommandPalette({ deepDives }: Props) {
           <button
             onClick={dismissHint}
             aria-label="Dismiss hint"
-            className="text-muted hover:text-primary transition-colors -mr-1 -mt-1 p-1"
+            className="text-secondary hover:text-primary transition-colors -mr-1 -mt-1 p-1"
           >
             ×
           </button>

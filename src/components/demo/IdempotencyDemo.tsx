@@ -13,8 +13,7 @@ import {
   Swords,
 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
-import { RealSystemBanner } from './RealSystemBanner';
-import { WhatToWatch } from './WhatToWatch';
+import { DemoIntro } from './DemoIntro';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Heading } from '../ui/Heading';
@@ -206,8 +205,7 @@ export function IdempotencyDemo() {
 
   return (
     <div className="space-y-6">
-      <RealSystemBanner metadata={metadata} />
-      <WhatToWatch demoId="idempotency" />
+      <DemoIntro demoId="idempotency" />
     <div className="grid lg:grid-cols-2 gap-8">
       <Stack gap={6}>
         <div className="flex items-center justify-between">
@@ -254,7 +252,7 @@ export function IdempotencyDemo() {
                         "focus-ring flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all disabled:opacity-60",
                         ttlPreset === t
                           ? "bg-accent border-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-                          : "bg-white/10 border-white/5 text-muted hover:text-secondary hover:bg-white/10"
+                          : "bg-white/10 border-white/5 text-secondary/70 hover:text-primary hover:bg-white/10"
                       )}
                     >
                       {t}s

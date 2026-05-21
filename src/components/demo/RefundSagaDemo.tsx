@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Undo2, Loader2, CheckCircle2, XCircle, AlertTriangle, Clock, Send, ShieldAlert } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { DemoIntro } from './DemoIntro';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Heading } from '../ui/Heading';
@@ -102,6 +103,7 @@ export function RefundSagaDemo() {
 
   return (
     <div className="space-y-8">
+      <DemoIntro demoId="refund" />
       {/* State Machine Timeline */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {(['Requested', 'AwaitingProviderConfirmation', 'Refunded', 'RequiresReview', 'Cancelled'] as SagaState[]).map((state) => {

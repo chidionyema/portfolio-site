@@ -39,9 +39,15 @@ export const CHECKOUT_COPY = {
   ENGINEERING_HEADER: 'Server events',
   COMPENSATION_HEADER: 'Compensation',
   SCENARIO_LABELS: {
-    success: 'Pay',
-    stockFailure: 'Sold out',
-    paymentFailure: 'Card declined',
-    stockRace: 'Two browsers, one item',
+    success: 'Happy path',
+    stockFailure: 'Out of stock',
+    paymentFailure: 'Payment fails',
+    stockRace: 'Race condition',
   },
+  SCENARIO_HINTS: {
+    success: 'All services succeed. Order completes.',
+    stockFailure: 'Catalog says item is sold out. Saga stops early.',
+    paymentFailure: 'Payment is declined. Saga releases the reserved stock.',
+    stockRace: 'Two orders for the last item. One wins, one rolls back.',
+  } as Record<string, string>,
 } as const;

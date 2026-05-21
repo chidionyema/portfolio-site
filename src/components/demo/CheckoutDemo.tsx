@@ -14,6 +14,7 @@ import {
 import { useDemoSession } from '../../hooks/useDemoSession';
 import { signalRClient } from '../../lib/api/signalr';
 import type { SagaStepEvent } from '../../lib/api/signalr';
+import { DemoIntro } from './DemoIntro';
 import { ChaosButton } from './ChaosButton';
 import { RequestReceipt, RequestReceiptHistory } from './RequestReceipt';
 import { RealSystemBanner } from './RealSystemBanner';
@@ -153,6 +154,8 @@ export function CheckoutDemo() {
 
   return (
     <div className="space-y-8 relative">
+      <DemoIntro demoId="checkout" />
+
       <div className="grid lg:grid-cols-[45fr_55fr] gap-12 items-start">
         {/* Left Pane - Customer context */}
         <Stack gap={6}>
@@ -175,28 +178,36 @@ export function CheckoutDemo() {
                 >
                   <Card variant="panel-dark" padding="lg" className="shadow-2xl space-y-8">
                     {/* Scenario picker */}
-                    <div
-                      role="radiogroup"
-                      aria-label="Saga scenario"
-                      className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
-                    >
-                      {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => setScenario(s)}
-                          disabled={isProcessing}
-                          role="radio"
-                          aria-checked={scenario === s}
-                          className={cn(
-                            "focus-ring py-2.5 px-2 rounded-lg text-[10px] sm:text-[9px] font-bold uppercase tracking-widest transition-all",
-                            scenario === s
-                              ? 'bg-white/10 text-white shadow-sm'
-                              : 'text-muted hover:text-secondary hover:bg-white/10'
-                          )}
-                        >
-                          {CHECKOUT_COPY.SCENARIO_LABELS[s]}
-                        </button>
-                      ))}
+                    <div>
+                      <p className="text-[10px] text-secondary/60 uppercase tracking-widest font-bold mb-2">
+                        1. Pick a scenario
+                      </p>
+                      <div
+                        role="radiogroup"
+                        aria-label="Saga scenario"
+                        className="grid grid-cols-2 gap-1 p-1 bg-black/40 border border-white/[0.06] rounded-xl"
+                      >
+                        {(Object.keys(CHECKOUT_COPY.SCENARIO_LABELS) as Scenario[]).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setScenario(s)}
+                            disabled={isProcessing}
+                            role="radio"
+                            aria-checked={scenario === s}
+                            className={cn(
+                              "focus-ring py-2.5 px-2 rounded-lg text-[10px] sm:text-[9px] font-bold uppercase tracking-widest transition-all",
+                              scenario === s
+                                ? 'bg-white/10 text-white shadow-sm'
+                                : 'text-secondary/70 hover:text-primary hover:bg-white/10'
+                            )}
+                          >
+                            {CHECKOUT_COPY.SCENARIO_LABELS[s]}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-secondary/50 mt-2 leading-relaxed">
+                        {CHECKOUT_COPY.SCENARIO_HINTS[scenario]}
+                      </p>
                     </div>
 
                     {/* Cart Item */}
@@ -226,8 +237,11 @@ export function CheckoutDemo() {
                       </div>
                     </div>
 
+                    <p className="text-[10px] text-secondary/60 uppercase tracking-widest font-bold">
+                      2. Run it
+                    </p>
                     <Button
-                      variant={sagaState === 'completed' || sagaState === 'finalized' ? 'primary' : 
+                      variant={sagaState === 'completed' || sagaState === 'finalized' ? 'primary' :
                                sagaState === 'stock_failed' || sagaState === 'payment_failed' || sagaState === 'compensated' ? 'secondary' : 'primary'}
                       onClick={runSimulation}
                       disabled={isProcessing}
@@ -423,7 +437,7 @@ function ConfirmationCard({ orderId, onReset }: { orderId: string | null; onRese
 
           <button
             onClick={onReset}
-            className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-colors border-t border-white/5 pt-6 w-full font-mono"
+            className="text-[10px] font-black uppercase tracking-widest text-secondary hover:text-primary transition-colors border-t border-white/5 pt-6 w-full font-mono"
           >
             {CHECKOUT_COPY.RUN_ANOTHER}
           </button>
@@ -496,7 +510,7 @@ function RaceModeCustomerPane({
       {allFinished && !isProcessing && (
         <button
           onClick={onReset}
-          className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary transition-colors border border-dashed border-white/10 rounded-xl mt-2 font-mono"
+          className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-secondary hover:text-primary transition-colors border border-dashed border-white/10 rounded-xl mt-2 font-mono"
         >
           {CHECKOUT_COPY.RUN_ANOTHER}
         </button>

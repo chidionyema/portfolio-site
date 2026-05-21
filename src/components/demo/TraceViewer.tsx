@@ -207,7 +207,7 @@ export function TraceViewer({ traceId }: TraceViewerProps) {
                               Span_Details: {selectedSpan.operation}
                             </h4>
                           </div>
-                          <button onClick={() => setSelectedSpan(null)} className="text-[9px] text-muted hover:text-primary uppercase font-bold">Close</button>
+                          <button onClick={() => setSelectedSpan(null)} className="text-[9px] text-secondary hover:text-primary uppercase font-bold">Close</button>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-6 text-[10px] font-mono">

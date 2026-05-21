@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Loader2, CheckCircle2, XCircle, AlertTriangle, Clock, ShieldOff } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { DemoIntro } from './DemoIntro';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Heading } from '../ui/Heading';
@@ -142,6 +143,7 @@ export function GdprErasureDemo() {
 
   return (
     <div className="space-y-8">
+      <DemoIntro demoId="erasure" />
       {/* State timeline */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {(['Processing', 'Completed', 'Failed', 'Stalled'] as ErasureState[]).map((state) => {

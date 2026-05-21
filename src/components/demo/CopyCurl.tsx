@@ -52,7 +52,7 @@ export function CopyCurl({ method, path, headers, body }: CopyCurlProps) {
         "flex items-center gap-1.5 px-2 py-1 rounded border text-[9px] font-black uppercase tracking-widest transition-all",
         copied
           ? "bg-success/10 border-success/20 text-success"
-          : "bg-white/5 border-white/10 text-muted hover:text-secondary hover:bg-white/10"
+          : "bg-white/5 border-white/10 text-secondary/70 hover:text-primary hover:bg-white/10"
       )}
     >
       {copied ? <Check className="w-3 h-3" /> : <Terminal className="w-3 h-3" />}

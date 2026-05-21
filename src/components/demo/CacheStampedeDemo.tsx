@@ -10,8 +10,7 @@ import { Pill } from '../ui/Pill';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
-import { RealSystemBanner } from './RealSystemBanner';
-import { WhatToWatch } from './WhatToWatch';
+import { DemoIntro } from './DemoIntro';
 
 interface StampedeResult {
   id: string;
@@ -95,8 +94,7 @@ export function CacheStampedeDemo() {
 
   return (
     <div className="space-y-6">
-      <RealSystemBanner metadata={metadata} />
-      <WhatToWatch demoId="stampede" />
+      <DemoIntro demoId="stampede" />
     <div className="grid lg:grid-cols-2 gap-8">
       <Stack gap={6}>
         <div className="flex items-center justify-between">

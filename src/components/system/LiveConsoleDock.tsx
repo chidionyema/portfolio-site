@@ -493,7 +493,7 @@ export const LiveConsoleDock: React.FC = () => {
                   </span>
                   <button
                     onClick={() => copyCurl(ev)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted hover:text-primary shrink-0"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-secondary hover:text-primary shrink-0"
                     title="Copy curl reproducer"
                     aria-label="Copy curl reproducer"
                   >

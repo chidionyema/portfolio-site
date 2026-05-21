@@ -75,7 +75,7 @@ export function Hero(_: HeroProps) {
                     href="https://linkedin.com/in/chidionyema"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 text-muted hover:text-primary transition-colors bg-surface-warm rounded-full"
+                    className="p-3 text-secondary hover:text-primary transition-colors bg-surface-warm rounded-full"
                     aria-label="LinkedIn"
                   >
                     <LinkedinIcon className="w-5 h-5" />
@@ -84,7 +84,7 @@ export function Hero(_: HeroProps) {
                     href="https://github.com/chidionyema"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 text-muted hover:text-primary transition-colors bg-surface-warm rounded-full"
+                    className="p-3 text-secondary hover:text-primary transition-colors bg-surface-warm rounded-full"
                     aria-label="GitHub"
                   >
                     <GithubIcon className="w-5 h-5" />

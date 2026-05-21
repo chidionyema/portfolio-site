@@ -11,8 +11,7 @@ import { Glass } from '../ui/Glass';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
-import { RealSystemBanner } from './RealSystemBanner';
-import { WhatToWatch } from './WhatToWatch';
+import { DemoIntro } from './DemoIntro';
 
 type CircuitState = 'Closed' | 'Open' | 'HalfOpen';
 
@@ -141,8 +140,7 @@ export function CircuitBreakerDemo() {
 
   return (
     <div className="space-y-8">
-      <RealSystemBanner metadata={metadata} />
-      <WhatToWatch demoId="circuit" />
+      <DemoIntro demoId="circuit" />
 
       {/* State Machine Visualization */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -217,7 +215,7 @@ export function CircuitBreakerDemo() {
           )}
           Trip & Hammer
         </Button>
-        <button onClick={resetCircuit} className="text-[10px] font-mono text-muted hover:text-primary uppercase tracking-widest transition-colors">
+        <button onClick={resetCircuit} className="text-[10px] font-mono text-secondary hover:text-primary uppercase tracking-widest transition-colors">
           Reset Environment
         </button>
       </div>

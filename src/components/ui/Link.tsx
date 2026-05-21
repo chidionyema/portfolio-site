@@ -9,7 +9,7 @@ const linkVariants = cva(
       variant: {
         default: "text-primary hover:text-secondary underline underline-offset-4 decoration-border-strong hover:decoration-secondary",
         cta: "text-primary font-medium hover:text-secondary",
-        subtle: "text-muted hover:text-primary",
+        subtle: "text-secondary hover:text-primary",
       }
     },
     defaultVariants: {

@@ -10,8 +10,7 @@ import { Pill } from '../ui/Pill';
 import { cn } from '../../lib/utils';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
-import { RealSystemBanner } from './RealSystemBanner';
-import { WhatToWatch } from './WhatToWatch';
+import { DemoIntro } from './DemoIntro';
 
 interface ConcurrencyResult {
   id: string;
@@ -184,8 +183,7 @@ export function ConcurrencyDemo() {
 
   return (
     <div className="space-y-8">
-      <RealSystemBanner metadata={metadata} />
-      <WhatToWatch demoId="concurrency" />
+      <DemoIntro demoId="concurrency" />
 
       {/* Split-panel user editors */}
       <div className="grid md:grid-cols-2 gap-4">
@@ -261,7 +259,7 @@ export function ConcurrencyDemo() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setter(p => ({ ...p, quantity: Math.max(1, p.quantity - 5) }))}
-                    className="w-10 h-10 rounded bg-white/10 text-muted hover:text-primary text-sm flex items-center justify-center"
+                    className="w-10 h-10 rounded bg-white/10 text-secondary hover:text-primary text-sm flex items-center justify-center"
                     disabled={panel.state === 'pending' || isRacing}
                   >−</button>
                   <motion.span 
@@ -275,7 +273,7 @@ export function ConcurrencyDemo() {
                   </motion.span>
                   <button
                     onClick={() => setter(p => ({ ...p, quantity: p.quantity + 5 }))}
-                    className="w-10 h-10 rounded bg-white/10 text-muted hover:text-primary text-sm flex items-center justify-center"
+                    className="w-10 h-10 rounded bg-white/10 text-secondary hover:text-primary text-sm flex items-center justify-center"
                     disabled={panel.state === 'pending' || isRacing}
                   >+</button>
                 </div>

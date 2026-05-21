@@ -24,8 +24,7 @@ import { CLUSTER_LABEL } from '../../lib/copy';
 import type { EventFlowEvent } from '../../lib/api/signalr';
 import type { RequestMetadata } from '../../lib/api/demo-client';
 import { RequestReceipt } from './RequestReceipt';
-import { RealSystemBanner } from './RealSystemBanner';
-import { WhatToWatch } from './WhatToWatch';
+import { DemoIntro } from './DemoIntro';
 
 const API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 
@@ -199,8 +198,7 @@ export function EventFlowDemo() {
 
   return (
     <div className="space-y-8">
-      <RealSystemBanner metadata={metadata} />
-      <WhatToWatch demoId="events" />
+      <DemoIntro demoId="events" />
 
       {/* Pipeline diagram */}
       <Card variant="panel-dark" padding="lg">

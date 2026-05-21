@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, Loader2, BookOpen, CheckCircle2 } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { DemoIntro } from './DemoIntro';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Heading } from '../ui/Heading';
@@ -81,6 +82,7 @@ export function LedgerDemo() {
 
   return (
     <div className="space-y-8">
+      <DemoIntro demoId="ledger" />
       {/* Running balance header */}
       <div className="grid grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 text-center">

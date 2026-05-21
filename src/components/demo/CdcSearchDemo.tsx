@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, Package, Zap, Database, ArrowRight } from 'lucide-react';
 import { useDemoSession } from '../../hooks/useDemoSession';
+import { DemoIntro } from './DemoIntro';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Heading } from '../ui/Heading';
@@ -122,6 +123,7 @@ export function CdcSearchDemo() {
 
   return (
     <div className="space-y-8">
+      <DemoIntro demoId="cdcsearch" />
       {/* CDC Pipeline diagram */}
       <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5">
         <div className="text-[9px] font-black uppercase tracking-widest text-muted/50 mb-4">CDC pipeline</div>

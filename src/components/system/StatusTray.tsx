@@ -54,7 +54,7 @@ export function StatusTray({ isOpen, onClose, snapshot }: StatusTrayProps) {
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/5 rounded-full transition-colors text-muted hover:text-primary"
+                  className="p-2 hover:bg-white/5 rounded-full transition-colors text-secondary hover:text-primary"
                 >
                   <X className="w-6 h-6" />
                 </button>

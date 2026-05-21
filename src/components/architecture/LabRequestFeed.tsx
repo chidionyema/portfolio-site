@@ -289,7 +289,7 @@ function ExpandedDetail({
         </code>
         <button
           onClick={() => onCopy(curl, rowKey)}
-          className="text-muted hover:text-primary p-1"
+          className="text-secondary hover:text-primary p-1"
           title="Copy curl"
         >
           {copiedKey === rowKey ? (
