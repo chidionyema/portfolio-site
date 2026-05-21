@@ -328,7 +328,7 @@ export function EventFlowDemo() {
           <div className="flex items-center justify-between">
             <Heading variant="caption" className="flex items-center gap-2.5">
               <Database className="w-4 h-4 text-accent" />
-              Transactional outbox
+              Event delivery guarantee
             </Heading>
             <Pill variant={relay.isPaused ? 'warning' : 'success'}>
               Relay {relay.isPaused ? `paused (${relay.queuedCount})` : 'live'}

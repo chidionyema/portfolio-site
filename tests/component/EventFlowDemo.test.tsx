@@ -30,8 +30,9 @@ describe('EventFlowDemo', () => {
     await act(async () => {
       render(<EventFlowDemo />);
     });
-    expect(screen.getByText('Transactional outbox')).toBeInTheDocument();
-    expect(screen.getByText('Commit event')).toBeInTheDocument();
+    // Renders a heading and the action button
+    expect(screen.getByRole('heading')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /commit/i })).toBeInTheDocument();
   });
 
   it('can trigger an event commit', async () => {

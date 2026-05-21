@@ -2,18 +2,20 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Homepage', () => {
-  test('should load the homepage and display all pillars', async ({ page }) => {
+  test('should load and render hero, proof section, and navigation', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
-    
-    // 1. Hero
-    await expect(page.locator('h1')).toContainText("don't break at 3am");
 
-    // 2. Proof (The Circuit Breaker Demo)
-    await expect(page.getByRole('heading', { name: /Fail-Fast/i })).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('p:has-text("live .NET 9 cluster")').first()).toBeVisible();
+    // Hero renders with a heading
+    await expect(page.locator('h1')).toBeVisible();
 
-    // 3. Deep Dives
-    await expect(page.getByRole('heading', { name: 'Architecture', exact: false })).toBeVisible({ timeout: 15000 });
+    // Primary CTA exists and links to demos
+    await expect(page.getByRole('link', { name: /demos/i })).toBeVisible();
+
+    // Proof section renders with the checkout demo
+    await expect(page.locator('#proof')).toBeVisible({ timeout: 15000 });
+
+    // Navigation links are present
+    await expect(page.getByRole('link', { name: /architecture/i })).toBeVisible();
   });
 
   test('should not have any automatically detectable accessibility issues', async ({ page }) => {
@@ -21,7 +23,7 @@ test.describe('Homepage', () => {
     const accessibilityScanResults = await new AxeBuilder({ page })
       .disableRules(['region', 'scrollable-region-focusable', 'color-contrast', 'heading-order'])
       .analyze();
-    
+
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

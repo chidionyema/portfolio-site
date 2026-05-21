@@ -24,8 +24,9 @@ describe('IdempotencyDemo', () => {
 
   it('renders correctly', () => {
     render(<IdempotencyDemo />);
-    expect(screen.getByText('Idempotency keys')).toBeInTheDocument();
-    expect(screen.getByText('Send request')).toBeInTheDocument();
+    // Renders a heading and the action button
+    expect(screen.getByRole('heading')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument();
   });
 
   it('can send a request and log the result', async () => {

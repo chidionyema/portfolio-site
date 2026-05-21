@@ -213,7 +213,7 @@ export function IdempotencyDemo() {
         <div className="flex items-center justify-between">
           <Heading variant="caption" className="flex items-center gap-2.5">
             <Fingerprint className="w-4 h-4 text-accent" />
-            Idempotency keys
+            Safe retries
           </Heading>
         </div>
 
