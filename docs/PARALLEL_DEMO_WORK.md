@@ -69,7 +69,7 @@ branch's own `docs/status/<branch>.md`).
 | 6 | `feat/vault-cred-swap` | VaultRotation v(n)/v(n+1) layout, foreground trigger | `src/components/demo/VaultRotationDemo.tsx` | M (1–2h) | — |
 | 7 | `feat/concurrency-conflict-anim` | Concurrency loser-shake / winner-snap animation | `src/components/demo/ConcurrencyDemo.tsx` | S (~1h) | — |
 | 8 | `feat/eventflow-polish` | EventFlow visible queue depth + pause/resume narrative | `src/components/demo/EventFlowDemo.tsx` | S (~1h) | — |
-| 9 | `feat/checkout-payment-mock` (backend) | Payments demo-mode consumer | `ritualworks-platform/src/Payments/Payments.Application/Consumers/PaymentSessionRequestedConsumer.cs` (new) + Payments DI registration | M (1–2h) | Branch 1 (only at MERGE time, not implementation time) |
+| 9 | `feat/checkout-payment-mock` (backend) | Payments demo-mode consumer | `haworks-platform-platform/src/Payments/Payments.Application/Consumers/PaymentSessionRequestedConsumer.cs` (new) + Payments DI registration | M (1–2h) | Branch 1 (only at MERGE time, not implementation time) |
 
 `feat/distributed-tracing-promote` and `IdempotencyDemo` are intentionally
 absent from the matrix — both are already in good shape per the earlier
@@ -165,6 +165,6 @@ green, acceptance pasted):
   independent of frontend branches. It can run in parallel. Its
   acceptance test (saga goes to `Completed`) doesn't require any
   frontend branch to have shipped.
-- **Anything in `ritualworks-platform` other than the payment consumer.**
+- **Anything in `haworks-platform-platform` other than the payment consumer.**
   All other backend work (saga compensations, observability, tracing)
   is out of scope for this parallel cycle.

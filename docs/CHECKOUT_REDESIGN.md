@@ -2,7 +2,7 @@
 
 This doc is the source of truth for the checkout/saga demo redesign. It
 covers both the frontend layout work (in this repo) and the matching
-backend payment consumer (in the sibling `ritualworks-platform` repo).
+backend payment consumer (in the sibling `haworks-platform-platform` repo).
 **Implementing agent: read this file end-to-end before touching code.**
 
 ## Why we're redesigning
@@ -192,7 +192,7 @@ Define these as `const` exports at the top of `CheckoutDemo.tsx` (or in
 
 ## Backend work — `PaymentSessionRequestedConsumer` (demo mode)
 
-Repo: `/Users/chidionyema/Documents/code/ritualworks-platform`
+Repo: `/Users/chidionyema/Documents/code/haworks-platform-platform`
 Branch: off `feat/portfolio-ui-completion-gemini`, working branch
 `feat/checkout-payment-mock`.
 

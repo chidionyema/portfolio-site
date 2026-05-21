@@ -12,7 +12,7 @@ This checklist tracks the implementation of all 9 demos connecting the portfolio
 - `src/hooks/useDemo.ts` - React hooks for each demo
 
 **RitualWorks Integration Plan:**
-- `ritualworks/docs/DEMO_INTEGRATION_PLAN.md` - Backend integration plan
+- `haworks-platform/docs/DEMO_INTEGRATION_PLAN.md` - Backend integration plan
 
 ---
 

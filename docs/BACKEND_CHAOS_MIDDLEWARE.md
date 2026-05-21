@@ -1,6 +1,6 @@
 # Backend Implementation: Chaos Middleware (.NET 9)
 
-Add this middleware to your `ritualworks` **Api** project to enable the Production Playground's interactive fault injection.
+Add this middleware to your `haworks-platform` **Api** project to enable the Production Playground's interactive fault injection.
 
 ---
 

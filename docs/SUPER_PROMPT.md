@@ -94,7 +94,7 @@ Branch 1 (feat/checkout-redesign):
 Branch 9 (feat/checkout-payment-mock):
   Read docs/CHECKOUT_REDESIGN.md § "Backend work — PaymentSessionRequestedConsumer".
   Your subtasks are P3.1 through P3.8 in docs/CHECKOUT_REDESIGN_STATUS.md.
-  Switch to the backend repo: cd /Users/chidionyema/Documents/code/ritualworks-platform
+  Switch to the backend repo: cd /Users/chidionyema/Documents/code/haworks-platform-platform
   Base branch is: feat/portfolio-ui-completion-gemini (NOT main).
   Re-run your branch creation against THAT base:
     git checkout feat/portfolio-ui-completion-gemini
@@ -120,7 +120,7 @@ For each unticked subtask in your status file:
      your status file).
   2. Build:
        Frontend: cd portfolio-site && npm run build
-       Backend:  cd ritualworks-platform && dotnet build src/Payments/Payments.Api/Payments.Api.csproj -c Debug
+       Backend:  cd haworks-platform-platform && dotnet build src/Payments/Payments.Api/Payments.Api.csproj -c Debug
   3. If build is GREEN: paste the literal tail of the build output
      into your status file's "Last build output" section. Tick the
      subtask checkbox.

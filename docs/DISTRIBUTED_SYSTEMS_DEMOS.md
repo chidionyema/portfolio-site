@@ -742,7 +742,7 @@ All demos broadcast events to the shared SignalR hub:
 
 ## Implementation Checklist
 
-### Backend (ritualworks repo)
+### Backend (haworks-platform repo)
 
 - [ ] Add `DemoController` endpoints for all 5 demos
 - [ ] Implement Redis-backed idempotency

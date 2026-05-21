@@ -8,7 +8,7 @@ last_reviewed: 2026-05-04
 
 Working roadmap captured after a top-to-bottom review on 2026-05-04. Source of truth is the **code**; this doc tracks intent and gaps. Update as items land or change.
 
-The site has nine interactive demos backed by the ritualworks .NET 9 API. The shell, aesthetic, and demo plumbing (REST + SignalR) are in good shape. The remaining work splits into three buckets: UX fixes, deepening existing demos, and surfacing backend capabilities that are currently invisible.
+The site has nine interactive demos backed by the haworks-platform .NET 9 API. The shell, aesthetic, and demo plumbing (REST + SignalR) are in good shape. The remaining work splits into three buckets: UX fixes, deepening existing demos, and surfacing backend capabilities that are currently invisible.
 
 ---
 
@@ -135,7 +135,7 @@ Outstanding from the 2026-05-04 session. Substantial code shipped across both re
 
 ```bash
 # terminal 1 — backend
-cd /path/to/ritualworks
+cd /path/to/haworks-platform
 dotnet run --project src/haworks.AppHost --launch-profile https
 
 # wait for the Aspire dashboard to show all resources green
@@ -267,7 +267,7 @@ Listed in priority order for portfolio impact. *Distributed tracing already ship
 ### Tier 6 — Smaller cleanups (bundle when convenient)
 
 - **T6.1 — Demo header competing chrome.** Status pill + Node label + System/Source toggle + Inject_Chaos all sit at full visual weight. Demote secondary info (Node label, view toggle background) so the demo title wins. **Est: 30min.**
-- **T6.2 — Drop `stash@{0}`** in ritualworks. Flow B's `DemoResilienceRegistry` is now in HEAD. Stash is redundant. **Est: 1 command.**
+- **T6.2 — Drop `stash@{0}`** in haworks-platform. Flow B's `DemoResilienceRegistry` is now in HEAD. Stash is redundant. **Est: 1 command.**
 - **T6.3 — Onboarding "start here" hint** on the default-loaded saga demo. Currently a tooltip appears after 3 seconds of inaction; consider a subtle persistent "👇 click Dispatch_New_Order to fire your first saga" line until the first run completes. **Est: 30min.**
 - **T6.4 — Document the `.env.development` convention.** The frontend depends on a gitignored `.env.development` that was set to `7123` (wrong) in someone's local clone. Add an `.env.example` with the right defaults so a fresh clone runs against the right port. **Est: 15min.**
 

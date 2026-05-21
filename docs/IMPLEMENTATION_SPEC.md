@@ -6,7 +6,7 @@ This document provides complete, copy-paste ready code for implementing all demo
 
 ## Prerequisites
 
-### Required NuGet Packages (ritualworks)
+### Required NuGet Packages (haworks-platform)
 ```xml
 <!-- Already installed - verify these exist in .csproj -->
 <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
@@ -26,7 +26,7 @@ npm install @microsoft/signalr
 
 ### 1.1 Create DemoHub
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Api/Hubs/DemoHub.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Api/Hubs/DemoHub.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -94,7 +94,7 @@ public sealed class DemoHub : Hub
 
 ### 1.2 Create IDemoHubNotifier Interface
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Application/Interfaces/IDemoHubNotifier.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Application/Interfaces/IDemoHubNotifier.cs`
 
 ```csharp
 namespace haworks.Application.Interfaces;
@@ -181,7 +181,7 @@ public sealed record RateLimitEvent(
 
 ### 1.3 Create SignalRDemoHubNotifier Implementation
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Api/Hubs/SignalRDemoHubNotifier.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Api/Hubs/SignalRDemoHubNotifier.cs`
 
 ```csharp
 using haworks.Application.Interfaces;
@@ -257,7 +257,7 @@ public sealed class SignalRDemoHubNotifier : IDemoHubNotifier
 
 ### 1.4 Create DemoOptions
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Options/DemoOptions.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Options/DemoOptions.cs`
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -330,7 +330,7 @@ public sealed class DemoOptions
 
 ### 1.5 Create Demo Session State
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Demo/DemoSessionState.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Demo/DemoSessionState.cs`
 
 ```csharp
 using System.Collections.Concurrent;
@@ -439,7 +439,7 @@ public sealed class DemoSessionStore
 
 ### 1.6 Create DemoController
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Api/Controllers/DemoController.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Api/Controllers/DemoController.cs`
 
 ```csharp
 using haworks.Application.Interfaces;
@@ -1504,7 +1504,7 @@ public sealed class CachedIdempotencyResult
 
 ### 1.7 Register Services
 
-**File to modify**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Extensions/InfrastructureExtensions.cs`
+**File to modify**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Extensions/InfrastructureExtensions.cs`
 
 **Add these lines** in the `AddInfrastructureServices` method:
 
@@ -1536,7 +1536,7 @@ using haworks.Infrastructure.Options;
 
 ### 1.8 Map SignalR Hub
 
-**File to modify**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Extensions/MiddlewareExtensions.cs`
+**File to modify**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Extensions/MiddlewareExtensions.cs`
 
 **Add this line** after `app.MapControllers();`:
 
@@ -1555,7 +1555,7 @@ using haworks.Api.Hubs;
 
 ### 1.9 Add CORS Configuration
 
-**File to modify**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Extensions/SecurityExtensions.cs`
+**File to modify**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Extensions/SecurityExtensions.cs`
 
 **Find the CORS policy configuration** and add portfolio site origins:
 
@@ -1576,7 +1576,7 @@ policy.WithOrigins(
 
 ### 1.10 Add Demo Config to appsettings.json
 
-**File to modify**: `/Users/roseonyema/Documents/code/ritualworks/src/Api/appsettings.json`
+**File to modify**: `/Users/roseonyema/Documents/code/haworks-platform/src/Api/appsettings.json`
 
 **Add this section**:
 
@@ -1622,7 +1622,7 @@ PUBLIC_SIGNALR_URL=https://api.chidionyema.dev/hubs/demo
 
 After implementation, verify:
 
-1. [ ] `dotnet build` succeeds in ritualworks
+1. [ ] `dotnet build` succeeds in haworks-platform
 2. [ ] `npm run dev` succeeds in portfolio-site
 3. [ ] API responds at `http://localhost:5000/api/demo/saga/start`
 4. [ ] SignalR connects at `http://localhost:5000/hubs/demo`
@@ -1685,7 +1685,7 @@ This phase replaces in-memory simulations with actual PostgreSQL and Redis.
 
 ### 3.1 PostgreSQL Entity for Concurrency Demo
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Domain/Entities/Demo/DemoInventory.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Domain/Entities/Demo/DemoInventory.cs`
 
 ```csharp
 namespace haworks.Domain.Entities.Demo;
@@ -1734,7 +1734,7 @@ public sealed class DemoInventory
 
 ### 3.2 EF Core Configuration for xmin
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Persistence/Configurations/DemoInventoryConfiguration.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Persistence/Configurations/DemoInventoryConfiguration.cs`
 
 ```csharp
 using haworks.Domain.Entities.Demo;
@@ -1800,7 +1800,7 @@ public sealed class DemoInventoryConfiguration : IEntityTypeConfiguration<DemoIn
 
 ### 3.3 Add DbSet to DemoDbContext
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Persistence/DemoDbContext.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Persistence/DemoDbContext.cs`
 
 ```csharp
 using haworks.Domain.Entities.Demo;
@@ -1854,7 +1854,7 @@ dotnet ef migrations add AddDemoInventory \
   -o Infrastructure/Persistence/Migrations/Demo
 ```
 
-**Or create manually** in `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Persistence/Migrations/Demo/`:
+**Or create manually** in `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Persistence/Migrations/Demo/`:
 
 ```csharp
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -2114,7 +2114,7 @@ private async Task<DemoInventory> GetOrCreateDefaultInventoryAsync(CancellationT
 
 ### 3.7 Redis Idempotency Service
 
-**File**: `/Users/roseonyema/Documents/code/ritualworks/src/Infrastructure/Demo/RedisIdempotencyService.cs`
+**File**: `/Users/roseonyema/Documents/code/haworks-platform/src/Infrastructure/Demo/RedisIdempotencyService.cs`
 
 ```csharp
 using StackExchange.Redis;

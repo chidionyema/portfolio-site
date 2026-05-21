@@ -17,15 +17,15 @@ fi
 
 echo "Running database migrations..."
 
-# Navigate to ritualworks project
-RITUALWORKS_DIR="$SCRIPT_DIR/../../ritualworks"
+# Navigate to haworks-platform project
+HAWORKS_DIR="$SCRIPT_DIR/../../ritualworks"
 
-if [ ! -d "$RITUALWORKS_DIR" ]; then
-    echo "Error: ritualworks directory not found at $RITUALWORKS_DIR"
+if [ ! -d "$HAWORKS_DIR" ]; then
+    echo "Error: haworks-platform directory not found at $HAWORKS_DIR"
     exit 1
 fi
 
-cd "$RITUALWORKS_DIR"
+cd "$HAWORKS_DIR"
 
 # Run migrations for each context
 for CONTEXT in Catalog Order Payment Content Identity; do

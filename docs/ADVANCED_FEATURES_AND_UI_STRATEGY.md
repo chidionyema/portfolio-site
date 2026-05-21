@@ -85,5 +85,5 @@ To match the engineering depth, the UI must feel like a premium developer tool (
 ## Part 3: Next Steps for Implementation
 
 1.  **UI Component Prototyping:** We need to design the React components for these new visualizations (Node Graph for Sagas, Tiered Dashboard for HybridCache, Race Track for Hedging).
-2.  **API Expansion:** The `ritualworks` backend needs endpoints and SignalR events tailored to expose this specific data (e.g., emitting State Machine transitions, not just generic steps).
+2.  **API Expansion:** The `haworks-platform` backend needs endpoints and SignalR events tailored to expose this specific data (e.g., emitting State Machine transitions, not just generic steps).
 3.  **The Hook (`useDemoSession`):** Build the robust React hook to manage the real-time SignalR connection and session isolation, serving as the foundation for all these interactive components.

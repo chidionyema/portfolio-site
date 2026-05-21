@@ -15,7 +15,7 @@ state.
 
 - **Phase**: COMPLETE
 - **Branch (frontend)**: `feat/checkout-redesign` (off portfolio-site `main`)
-- **Branch (backend)**: `feat/checkout-payment-mock` (off ritualworks-platform `feat/portfolio-ui-completion-gemini`)
+- **Branch (backend)**: `feat/checkout-payment-mock` (off haworks-platform-platform `feat/portfolio-ui-completion-gemini`)
 - **Last subtask completed**: P2.2 (Integrated smoke test)
 - **Next subtask**: —
 - **Last verified `npm run build` (frontend)**: 2026-05-06 00:07
@@ -44,7 +44,7 @@ build is green.
 - [x] **P2.2** — Manual smoke (BFF integrated): click Pay. Confirm the customer pane transitions and engineering ladder lights up. **Commit:** `chore(checkout): integrated smoke verification`.
 - [x] **P2.3** — Push branch `feat/checkout-redesign`.
 
-### P3 — Backend payment mock (ritualworks-platform)
+### P3 — Backend payment mock (haworks-platform-platform)
 
 - [x] **P3.1** — Find Payments' MassTransit registration site.
 - [x] **P3.2** — Write `PaymentSessionRequestedConsumer.cs`. **Commit:** `feat(payments): demo-mode PaymentSessionRequested consumer`.

@@ -87,7 +87,7 @@ A persistent control panel in the UI to inject real faults:
 ## 5. Verification Commands
 ```bash
 # Verify Backend Build
-dotnet build ritualworks.sln
+dotnet build haworks-platform.sln
 
 # Verify Frontend Integrity
 npm run build
