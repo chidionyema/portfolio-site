@@ -14,7 +14,7 @@ export function Proof() {
         <Reveal>
           <Stack gap={8}>
             <div className="max-w-2xl">
-              <Heading variant="caption" className="mb-4">
+              <Heading variant="caption" className="mb-4 text-primary">
                 Distributed Resilience in Action
               </Heading>
               <Heading variant="section" className="mb-6" level={2}>
