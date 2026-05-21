@@ -8,9 +8,9 @@ test.describe('Homepage', () => {
     // 1. Hero
     await expect(page.locator('h1')).toContainText("don't break at 3am");
 
-    // 2. Proof (The Saga Demo)
-    await expect(page.getByRole('heading', { name: "Don't take my word" })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('A live .NET 9 cluster')).toBeVisible();
+    // 2. Proof (The Circuit Breaker Demo)
+    await expect(page.getByRole('heading', { name: "Real infrastructure" })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('This portfolio is a live .NET 9 cluster')).toBeVisible();
 
     // 3. Deep Dives
     await expect(page.getByRole('heading', { name: 'Architecture', exact: true })).toBeVisible();
