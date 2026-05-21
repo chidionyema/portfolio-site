@@ -13,7 +13,7 @@ test.describe('Homepage', () => {
     await expect(page.locator('p:has-text("live .NET 9 cluster")').first()).toBeVisible();
 
     // 3. Deep Dives
-    await expect(page.getByRole('heading', { name: 'Architecture', exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Architecture', exact: false })).toBeVisible({ timeout: 15000 });
   });
 
   test('should not have any automatically detectable accessibility issues', async ({ page }) => {

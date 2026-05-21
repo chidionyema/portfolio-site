@@ -34,3 +34,9 @@ Adhere strictly to the **Industrial Systems Console** aesthetic:
 *   Monospace dominance (JetBrains Mono).
 *   High data density (minimal padding).
 *   Monochromatic status indicators (Color = State, not decoration).
+
+## 6. Deployment & CI Integrity
+*   **Project Name:** Standardized as `haworks-platform` in `package.json` and CI configs to match Cloudflare targets.
+*   **CI Browser Fallbacks:** Always provide a fallback for `crypto.randomUUID()` to support non-secure headless CI environments (e.g. `Math.random().toString(36)`).
+*   **Resilient E2E:** Prefer `locator('p:has-text(...)')` or regex over strict `{ name: '...' }` for headings that may be split by tags like `<strong>`.
+*   **Accessibility Gates:** Lighthouse accessibility scans the root `/`. Ensure all level-2 headings on the landing page have high contrast (`text-primary` or equivalent).
