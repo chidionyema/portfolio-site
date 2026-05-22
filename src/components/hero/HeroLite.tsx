@@ -34,7 +34,7 @@ export function Hero(_: HeroProps) {
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
                 Distributed transactions, fault tolerance, financial integrity.
-                This portfolio is a live, open-source .NET 9 platform — not slides, not diagrams.
+                This portfolio is a live, open-source .NET 9 platform. Not slides, not diagrams.
               </p>
 
               <p className="text-base text-secondary/70 mb-10 max-w-2xl leading-relaxed">

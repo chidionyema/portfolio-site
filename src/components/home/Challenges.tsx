@@ -11,7 +11,7 @@ const challenges = [
   {
     icon: ShieldAlert,
     problem: "Payment succeeds, but stock reservation fails.",
-    solution: "A saga rolls back every step automatically — no orphaned charges, no manual cleanup.",
+    solution: "A saga rolls back every step automatically. No orphaned charges, no manual cleanup.",
     demo: "/demos/checkout-saga",
     demoLabel: "Try the checkout saga",
     color: "border-red-500/30",
