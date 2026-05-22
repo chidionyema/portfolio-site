@@ -3,9 +3,6 @@ import { allDemos } from "./DemoSidebar";
 import { DEMO_CONTEXT } from "../../lib/demo-context";
 
 // Map demo IDs to the service key that must be present in the health snapshot
-// Map demos to services in the health snapshot.
-// Services not in the snapshot (payouts, privacy, search) are mapped to
-// a core service they depend on, or null (BFF-only, always live).
 const DEMO_SERVICE_MAP: Record<string, string | null> = {
   checkout:    "catalog",
   circuit:     "catalog",
@@ -16,10 +13,10 @@ const DEMO_SERVICE_MAP: Record<string, string | null> = {
   refund:      "payments",
   idempotency: "orders",
   vault:       "identity",
-  ratelimit:   null,
-  ledger:      null,        // payouts not in health snapshot
-  erasure:     null,        // privacy not in health snapshot
-  cdcsearch:   null,        // search not in health snapshot
+  ratelimit:   null,          // BFF-only, always live
+  ledger:      "payouts",
+  erasure:     "privacy",
+  cdcsearch:   "search",
 };
 
 interface ServiceHealth {
