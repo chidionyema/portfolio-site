@@ -33,13 +33,13 @@ export function Hero(_: HeroProps) {
               </Heading>
 
               <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mb-4 font-normal">
-                Distributed transactions, fault tolerance, financial integrity.
-                This portfolio is a live, open-source .NET 9 platform. Not slides, not diagrams.
+                Payments that never double-charge. Orders that roll back cleanly.
+                Services that stay up when dependencies fail. This is a live platform, not a slide deck.
               </p>
 
               <p className="text-base text-secondary/70 mb-10 max-w-2xl leading-relaxed">
-                Every demo below sends real HTTP requests through 8 microservices
-                on Fly.io. The trace IDs and latency in the responses are from actual production services.
+                Every demo sends real requests through 8 microservices running on Fly.io.
+                The response times and trace IDs come from actual production services.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">

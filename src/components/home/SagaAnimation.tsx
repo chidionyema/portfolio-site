@@ -115,11 +115,12 @@ export function SagaAnimation() {
               Watch it work
             </Heading>
             <Heading variant="section" className="mb-4" level={2}>
-              A saga across four services in 3 seconds.
+              What happens when checkout fails halfway through?
             </Heading>
             <p className="text-base text-secondary leading-relaxed">
-              Toggle the scenario to see what happens when a payment fails mid-checkout.
-              The saga automatically compensates every completed step.
+              A checkout touches three services: stock, payments, and orders.
+              Toggle "Payment fails" to see the system automatically undo
+              everything that already happened. No stuck orders, no ghost charges.
             </p>
           </div>
         </Reveal>
