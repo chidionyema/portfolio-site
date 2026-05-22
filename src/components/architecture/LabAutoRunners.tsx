@@ -63,7 +63,7 @@ const RUNNERS: RunnerSpec[] = [
     intervalMs: 6000,
     run: () => {
       const key = `lab-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      return rawFetch('/api/demo/idempotency/process', {
+      return rawFetch('/api/v1/demo/idempotency/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const RUNNERS: RunnerSpec[] = [
     name: 'Cache invalidation',
     what: 'GET /cache/product/demo · catalog HybridCache',
     intervalMs: 4000,
-    run: () => rawFetch('/api/demo/cache/product/demo'),
+    run: () => rawFetch('/api/v1/demo/cache/product/demo'),
   },
   {
     id: 'concurrency',
@@ -87,10 +87,10 @@ const RUNNERS: RunnerSpec[] = [
     what: 'GET /inventory · catalog Product · EF xmin',
     intervalMs: 5000,
     run: async () => {
-      const seed = await rawFetch('/api/demo/cache/product/demo');
+      const seed = await rawFetch('/api/v1/demo/cache/product/demo');
       const id = seed.body?.id;
       if (!id) return seed;
-      return rawFetch(`/api/demo/inventory/${id}`);
+      return rawFetch(`/api/v1/demo/inventory/${id}`);
     },
   },
   {
@@ -99,7 +99,7 @@ const RUNNERS: RunnerSpec[] = [
     what: 'POST /circuit/request · Polly + catalog',
     intervalMs: 5000,
     run: () =>
-      rawFetch('/api/demo/circuit/request', {
+      rawFetch('/api/v1/demo/circuit/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: null, bypassBreaker: false }),
@@ -111,7 +111,7 @@ const RUNNERS: RunnerSpec[] = [
     what: 'POST /ratelimit/request · sliding window',
     intervalMs: 2500,
     run: () =>
-      rawFetch('/api/demo/ratelimit/request', {
+      rawFetch('/api/v1/demo/ratelimit/request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,14 +130,14 @@ const RUNNERS: RunnerSpec[] = [
   //   name: 'Vault status',
   //   what: 'GET /vault/status · live /v1/sys/health probe',
   //   intervalMs: 7000,
-  //   run: () => rawFetch('/api/demo/vault/status'),
+  //   run: () => rawFetch('/api/v1/demo/vault/status'),
   // },
   {
     id: 'events',
     name: 'Event flow relay',
     what: 'GET /events/relay-status · payments outbox',
     intervalMs: 5000,
-    run: () => rawFetch('/api/demo/events/relay-status'),
+    run: () => rawFetch('/api/v1/demo/events/relay-status'),
   },
   {
     id: 'saga',
@@ -145,7 +145,7 @@ const RUNNERS: RunnerSpec[] = [
     what: 'POST /saga/start · checkout → catalog → payments',
     intervalMs: 12000,
     run: () =>
-      rawFetch('/api/demo/saga/start', {
+      rawFetch('/api/v1/demo/saga/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -160,7 +160,7 @@ const RUNNERS: RunnerSpec[] = [
     what: 'POST /cache/stampede · HybridCache singleflight',
     intervalMs: 15000,
     run: () =>
-      rawFetch('/api/demo/cache/stampede', {
+      rawFetch('/api/v1/demo/cache/stampede', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -29,14 +29,14 @@ interface RunnerDep {
 }
 
 const RUNNER_DEPS: RunnerDep[] = [
-  { name: 'Idempotency',     pathPrefix: '/api/demo/idempotency',     deps: ['orders', 'postgres'] },
-  { name: 'Cache',           pathPrefix: '/api/demo/cache/product',   deps: ['catalog', 'postgres'] },
-  { name: 'Concurrency',     pathPrefix: '/api/demo/inventory',       deps: ['catalog', 'postgres'] },
-  { name: 'Circuit breaker', pathPrefix: '/api/demo/circuit',         deps: ['catalog'] },
-  { name: 'Vault',           pathPrefix: '/api/demo/vault',           deps: ['identity', 'vault'] },
-  { name: 'Events',          pathPrefix: '/api/demo/events',          deps: ['payments', 'rabbitmq'] },
-  { name: 'Saga',            pathPrefix: '/api/demo/saga',            deps: ['checkout', 'catalog', 'payments', 'rabbitmq'] },
-  { name: 'Cache stampede',  pathPrefix: '/api/demo/cache/stampede',  deps: ['catalog', 'redis'] },
+  { name: 'Idempotency',     pathPrefix: '/api/v1/demo/idempotency',     deps: ['orders', 'postgres'] },
+  { name: 'Cache',           pathPrefix: '/api/v1/demo/cache/product',   deps: ['catalog', 'postgres'] },
+  { name: 'Concurrency',     pathPrefix: '/api/v1/demo/inventory',       deps: ['catalog', 'postgres'] },
+  { name: 'Circuit breaker', pathPrefix: '/api/v1/demo/circuit',         deps: ['catalog'] },
+  { name: 'Vault',           pathPrefix: '/api/v1/demo/vault',           deps: ['identity', 'vault'] },
+  { name: 'Events',          pathPrefix: '/api/v1/demo/events',          deps: ['payments', 'rabbitmq'] },
+  { name: 'Saga',            pathPrefix: '/api/v1/demo/saga',            deps: ['checkout', 'catalog', 'payments', 'rabbitmq'] },
+  { name: 'Cache stampede',  pathPrefix: '/api/v1/demo/cache/stampede',  deps: ['catalog', 'redis'] },
 ];
 
 const RECOVERY_DISPLAY_MS = 12_000;

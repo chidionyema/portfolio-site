@@ -40,14 +40,14 @@ interface PhaseEntry {
 // transition. Same map LabRequestFeed uses; intentionally local so this
 // component owns its own coupling to chaos targets.
 const PATH_DEPS: Array<{ prefix: string; targets: string[] }> = [
-  { prefix: '/api/demo/idempotency', targets: ['orders', 'postgres'] },
-  { prefix: '/api/demo/cache/product', targets: ['catalog', 'postgres'] },
-  { prefix: '/api/demo/cache/stampede', targets: ['catalog', 'redis'] },
-  { prefix: '/api/demo/inventory', targets: ['catalog', 'postgres'] },
-  { prefix: '/api/demo/circuit', targets: ['catalog'] },
-  { prefix: '/api/demo/vault', targets: ['identity', 'vault'] },
-  { prefix: '/api/demo/events', targets: ['payments', 'rabbitmq'] },
-  { prefix: '/api/demo/saga', targets: ['checkout', 'catalog', 'payments', 'rabbitmq'] },
+  { prefix: '/api/v1/demo/idempotency', targets: ['orders', 'postgres'] },
+  { prefix: '/api/v1/demo/cache/product', targets: ['catalog', 'postgres'] },
+  { prefix: '/api/v1/demo/cache/stampede', targets: ['catalog', 'redis'] },
+  { prefix: '/api/v1/demo/inventory', targets: ['catalog', 'postgres'] },
+  { prefix: '/api/v1/demo/circuit', targets: ['catalog'] },
+  { prefix: '/api/v1/demo/vault', targets: ['identity', 'vault'] },
+  { prefix: '/api/v1/demo/events', targets: ['payments', 'rabbitmq'] },
+  { prefix: '/api/v1/demo/saga', targets: ['checkout', 'catalog', 'payments', 'rabbitmq'] },
 ];
 
 function depsForPath(path?: string): string[] | null {

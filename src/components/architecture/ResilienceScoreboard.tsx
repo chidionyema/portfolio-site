@@ -8,19 +8,19 @@ import { useClusterState } from '../../hooks/useClusterState';
  * Continuously runs three proofs against the live cluster:
  *
  *   1. Idempotency — submits the same X-Idempotency-Key repeatedly
- *      to /api/demo/idempotency/process. The Orders service uses a
+ *      to /api/v1/demo/idempotency/process. The Orders service uses a
  *      Postgres ON CONFLICT (key) DO UPDATE ... RETURNING claim_id,
  *      (xmax = 0) AS isWinner. The proof is: every successful response
  *      returns the SAME claim_id for the same key. If we ever see two
  *      different claim_ids → invariant violated.
  *
- *   2. Saga atomicity — kicks off a saga, polls /api/demo/saga/{id}
+ *   2. Saga atomicity — kicks off a saga, polls /api/v1/demo/saga/{id}
  *      until it reaches a terminal state (Completed | Abandoned). The
  *      proof is: every saga reaches terminal state within a bounded
  *      time. None stays in progress, none vanishes.
  *
  *   3. Concurrency (OCC) — fires N concurrent PUTs to
- *      /api/demo/inventory/{id} carrying the same xmin in If-Match.
+ *      /api/v1/demo/inventory/{id} carrying the same xmin in If-Match.
  *      Catalog uses Postgres xmin as EF's concurrency token. The
  *      proof is: exactly ONE PUT returns 200, the rest return 412
  *      Precondition Failed. Lost-update is impossible.
@@ -105,7 +105,7 @@ const idempotencySpec: ProofSpec = {
     state.attempts++;
     const key = `${SESSION_KEY_PREFIX}-fixed`;
     try {
-      const r = await rawFetch('/api/demo/idempotency/process', {
+      const r = await rawFetch('/api/v1/demo/idempotency/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,7 +153,7 @@ const sagaSpec: ProofSpec = {
   run: async (state) => {
     state.attempts++;
     try {
-      const start = await rawFetch('/api/demo/saga/start', {
+      const start = await rawFetch('/api/v1/demo/saga/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,7 +177,7 @@ const sagaSpec: ProofSpec = {
       let terminalStatus: string | null = null;
       for (let i = 0; i < 12; i++) {
         await new Promise((r) => setTimeout(r, 1000));
-        const poll = await rawFetch(`/api/demo/saga/${sessionId}`);
+        const poll = await rawFetch(`/api/v1/demo/saga/${sessionId}`);
         if (!poll.ok) continue;
         const pb = await poll.json();
         const status = pb?.status as string | undefined;
@@ -223,7 +223,7 @@ const concurrencySpec: ProofSpec = {
     state.attempts++;
     try {
       // Seed the demo product (idempotent on the catalog side) and grab id + xmin.
-      const seed = await rawFetch('/api/demo/cache/product/demo');
+      const seed = await rawFetch('/api/v1/demo/cache/product/demo');
       if (!seed.ok) {
         state.errCount++;
         return;
@@ -235,7 +235,7 @@ const concurrencySpec: ProofSpec = {
         return;
       }
 
-      const inv = await rawFetch(`/api/demo/inventory/${id}`);
+      const inv = await rawFetch(`/api/v1/demo/inventory/${id}`);
       if (!inv.ok) {
         state.errCount++;
         return;
@@ -250,7 +250,7 @@ const concurrencySpec: ProofSpec = {
 
       const N = 5;
       const requests = Array.from({ length: N }, () =>
-        rawFetch(`/api/demo/inventory/${id}`, {
+        rawFetch(`/api/v1/demo/inventory/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

@@ -78,7 +78,7 @@ export function EventFlowDemo() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_URL}/api/demo/events/relay-status`)
+    fetch(`${API_URL}/api/v1/demo/events/relay-status`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data: RelayStatus | null) => {
         if (!cancelled && data) setRelay(data);

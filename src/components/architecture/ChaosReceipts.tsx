@@ -87,7 +87,7 @@ export function ChaosReceipts() {
         return (
           Number.isFinite(eMs) &&
           eMs >= windowStart &&
-          e.path?.startsWith('/api/demo/saga/') &&
+          e.path?.startsWith('/api/v1/demo/saga/') &&
           e.method === 'GET'
         );
       });

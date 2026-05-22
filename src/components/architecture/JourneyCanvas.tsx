@@ -190,7 +190,7 @@ function SagaLadder({
   isLive: boolean;
   events: ConsoleEvent[];
 }) {
-  // Find the journey's POST /api/demo/saga/start row to get the sagaId we
+  // Find the journey's POST /api/v1/demo/saga/start row to get the sagaId we
   // can match later events against. Without it we still render the ladder
   // statically; with it we can highlight by progress.
   const sagaEvents = useMemo(() => {
@@ -199,7 +199,7 @@ function SagaLadder({
       const ts = Date.parse(ev.ts);
       if (!Number.isFinite(ts)) return false;
       if (ts < journeyStart - 500) return false; // small slack for clock skew
-      return ev.path?.startsWith('/api/demo/saga/');
+      return ev.path?.startsWith('/api/v1/demo/saga/');
     });
   }, [events, journey.startedAt]);
 
@@ -311,7 +311,7 @@ function IdempotencyTrace({
             Number.isFinite(ts) &&
             ts >= start - 500 &&
             ev.method === 'POST' &&
-            ev.path === '/api/demo/idempotency/process'
+            ev.path === '/api/v1/demo/idempotency/process'
           );
         })
         .slice(0, 5)
@@ -431,7 +431,7 @@ function OccRaceBoard({
             Number.isFinite(ts) &&
             ts >= start - 500 &&
             ev.method === 'PUT' &&
-            ev.path?.startsWith('/api/demo/inventory/')
+            ev.path?.startsWith('/api/v1/demo/inventory/')
           );
         })
         .slice(0, 5)

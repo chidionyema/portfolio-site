@@ -243,7 +243,7 @@ export async function startSagaDemo(
   simulatedDelayMs = 500
 ) {
   const start = performance.now();
-  const path = '/api/demo/saga/start';
+  const path = '/api/v1/demo/saga/start';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -257,7 +257,7 @@ export async function startSagaDemo(
  */
 export async function getSagaStatus(sessionId: string) {
   const start = performance.now();
-  const path = `/api/demo/saga/${sessionId}`;
+  const path = `/api/v1/demo/saga/${sessionId}`;
   const response = await fetch(`${API_URL}${path}`);
   return handleResponse<{
     sessionId: string;
@@ -277,7 +277,7 @@ export async function triggerEventFlow(
   payload: Record<string, unknown> = {}
 ) {
   const start = performance.now();
-  const path = '/api/demo/events/trigger';
+  const path = '/api/v1/demo/events/trigger';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -294,7 +294,7 @@ export async function circuitBreakerRequest(
   shouldFail = false
 ) {
   const start = performance.now();
-  const path = '/api/demo/circuit/request';
+  const path = '/api/v1/demo/circuit/request';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -311,7 +311,7 @@ export async function toggleCircuitFailure(
   failureMode: boolean
 ) {
   const start = performance.now();
-  const path = '/api/demo/circuit/toggle-failure';
+  const path = '/api/v1/demo/circuit/toggle-failure';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -325,7 +325,7 @@ export async function toggleCircuitFailure(
  */
 export async function resetCircuit(sessionId: string) {
   const start = performance.now();
-  const path = '/api/demo/circuit/reset';
+  const path = '/api/v1/demo/circuit/reset';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -339,7 +339,7 @@ export async function resetCircuit(sessionId: string) {
  */
 export async function getVaultStatus() {
   const start = performance.now();
-  const path = '/api/demo/vault/status';
+  const path = '/api/v1/demo/vault/status';
   const response = await fetch(`${API_URL}${path}`);
   return handleResponse<VaultStatusResponse>(response, start, path);
 }
@@ -349,7 +349,7 @@ export async function getVaultStatus() {
  */
 export async function triggerVaultRotation() {
   const start = performance.now();
-  const path = '/api/demo/vault/rotate';
+  const path = '/api/v1/demo/vault/rotate';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
   });
@@ -369,7 +369,7 @@ export async function processIdempotentRequest(
   payload: Record<string, unknown>
 ) {
   const start = performance.now();
-  const path = '/api/demo/idempotency/process';
+  const path = '/api/v1/demo/idempotency/process';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: {
@@ -386,7 +386,7 @@ export async function processIdempotentRequest(
  */
 export async function getIdempotencyKeyStatus(key: string) {
   const start = performance.now();
-  const path = `/api/demo/idempotency/key/${encodeURIComponent(key)}`;
+  const path = `/api/v1/demo/idempotency/key/${encodeURIComponent(key)}`;
   const response = await fetch(`${API_URL}${path}`);
   return handleResponse<{
     key: string;
@@ -406,7 +406,7 @@ export async function simulateStampede(
   simulatedDbLatencyMs = 100
 ) {
   const start = performance.now();
-  const path = '/api/demo/cache/stampede';
+  const path = '/api/v1/demo/cache/stampede';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -425,7 +425,7 @@ export async function simulateStampede(
  */
 export async function getDemoProduct() {
   const start = performance.now();
-  const path = '/api/demo/cache/product/demo';
+  const path = '/api/v1/demo/cache/product/demo';
   const response = await fetch(`${API_URL}${path}`);
   return handleResponse<{ id: string }>(response, start, path);
 }
@@ -435,7 +435,7 @@ export async function getDemoProduct() {
  */
 export async function getCachedProduct(productId: string) {
   const start = performance.now();
-  const path = `/api/demo/cache/product/${productId}`;
+  const path = `/api/v1/demo/cache/product/${productId}`;
   const response = await fetch(`${API_URL}${path}`);
   return handleResponse<CachedProductResponse>(response, start, path);
 }
@@ -448,7 +448,7 @@ export async function updateProduct(
   updates: { price?: number; name?: string }
 ) {
   const start = performance.now();
-  const path = `/api/demo/cache/product/${productId}`;
+  const path = `/api/v1/demo/cache/product/${productId}`;
   const response = await fetch(`${API_URL}${path}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -468,7 +468,7 @@ export async function updateProduct(
  */
 export async function invalidateCache(productId: string) {
   const start = performance.now();
-  const path = `/api/demo/cache/product/${productId}`;
+  const path = `/api/v1/demo/cache/product/${productId}`;
   const response = await fetch(`${API_URL}${path}`, {
     method: 'DELETE',
   });
@@ -484,7 +484,7 @@ export async function invalidateCache(productId: string) {
  */
 export async function getInventory(inventoryId: string) {
   const start = performance.now();
-  const path = `/api/demo/inventory/${inventoryId}`;
+  const path = `/api/v1/demo/inventory/${inventoryId}`;
   const response = await fetch(`${API_URL}${path}`);
   return handleResponse<InventoryResponse>(response, start, path);
 }
@@ -498,7 +498,7 @@ export async function updateInventory(
   expectedVersion: number
 ) {
   const start = performance.now();
-  const path = `/api/demo/inventory/${inventoryId}`;
+  const path = `/api/v1/demo/inventory/${inventoryId}`;
   const response = await fetch(`${API_URL}${path}`, {
     method: 'PUT',
     headers: {
@@ -519,7 +519,7 @@ export async function configureRateLimit(
   sessionId?: string
 ) {
   const start = performance.now();
-  const path = '/api/demo/ratelimit/configure';
+  const path = '/api/v1/demo/ratelimit/configure';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -533,7 +533,7 @@ export async function configureRateLimit(
  */
 export async function rateLimitedRequest(sessionId?: string) {
   const start = performance.now();
-  const path = '/api/demo/ratelimit/request';
+  const path = '/api/v1/demo/ratelimit/request';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -550,7 +550,7 @@ export async function sendRateLimitBurst(
   delayMs = 50
 ) {
   const start = performance.now();
-  const path = '/api/demo/ratelimit/burst';
+  const path = '/api/v1/demo/ratelimit/burst';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -602,7 +602,7 @@ export function getMetricsStreamUrl(): string {
  */
 export async function triggerChaos(scenario: string, durationSeconds: number) {
   const start = performance.now();
-  const path = '/api/demo/chaos/trigger';
+  const path = '/api/v1/demo/chaos/trigger';
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

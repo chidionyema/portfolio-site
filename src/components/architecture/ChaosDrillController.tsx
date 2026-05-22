@@ -13,7 +13,7 @@ import { useClusterState } from '../../hooks/useClusterState';
  *   • Drive — disables the auto-loop. Visitor clicks topology nodes
  *     to fault-inject manually.
  *
- * Backed entirely by the existing /api/demo/chaos/{target}/pause and
+ * Backed entirely by the existing /api/v1/demo/chaos/{target}/pause and
  * /resume endpoints — no new BFF route needed. Pause requests are
  * fire-and-forget; the controller doesn't track responses, just tracks
  * its own clock-driven state machine.
@@ -47,7 +47,7 @@ export function ChaosDrillController() {
       const target = DRILL_TARGETS[cycleIndexRef.current % DRILL_TARGETS.length];
       cycleIndexRef.current++;
       try {
-        await fetch(`${API_URL}/api/demo/chaos/${target}/pause`, {
+        await fetch(`${API_URL}/api/v1/demo/chaos/${target}/pause`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ durationSeconds: PAUSE_DURATION_S }),

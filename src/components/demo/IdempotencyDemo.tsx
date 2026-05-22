@@ -97,7 +97,7 @@ export function IdempotencyDemo() {
   const sendRequest = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/demo/idempotency/process`, {
+      const response = await fetch(`${API_URL}/api/v1/demo/idempotency/process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ export function IdempotencyDemo() {
     setIsRacing(true);
     setLastRace(null);
     try {
-      const response = await fetch(`${API_URL}/api/demo/idempotency/race`, {
+      const response = await fetch(`${API_URL}/api/v1/demo/idempotency/race`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

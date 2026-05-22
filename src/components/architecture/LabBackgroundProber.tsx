@@ -24,14 +24,14 @@ const API_URL = (
 
 const PROBE_PATHS: string[] = [
   '/api/health/snapshot',
-  '/api/demo/cache/product/demo',
-  // /api/demo/vault/status removed: no prod Vault server provisioned,
+  '/api/v1/demo/cache/product/demo',
+  // /api/v1/demo/vault/status removed: no prod Vault server provisioned,
   // so the call always 503s. Hammering it on a 1.5s tick was filling
   // the BFF's resilience-handler failure window enough to trip the
   // identity-svc circuit breaker, which then briefly fails *other*
   // calls routed through identity. Add back once a real Vault is up.
-  '/api/demo/events/relay-status',
-  '/api/demo/ratelimit/request',
+  '/api/v1/demo/events/relay-status',
+  '/api/v1/demo/ratelimit/request',
 ];
 
 const TICK_MS = 1500;
@@ -48,7 +48,7 @@ export function LabBackgroundProber() {
       // POST for ratelimit (it's the only POST in the rotation),
       // GET for the rest. cache:'no-store' so the BFF actually sees
       // the request rather than the browser short-circuiting.
-      const isPost = path === '/api/demo/ratelimit/request';
+      const isPost = path === '/api/v1/demo/ratelimit/request';
       // X-Demo-Session must parse as Guid? on the BFF (SessionRequest /
       // [FromHeader] binding). Sending 'lab-bg' as plain string previously
       // gave 400 Bad Request from ASP.NET's model binder. Omit the header

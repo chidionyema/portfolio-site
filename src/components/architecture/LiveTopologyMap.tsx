@@ -167,22 +167,22 @@ interface DemoDependency {
 }
 
 const DEMOS: DemoDependency[] = [
-  { id: 'idempotency',  name: 'Idempotency',     paths: ['/api/demo/idempotency/'],    deps: [],                                       anchorId: 'demo-idempotency' },
-  { id: 'checkout',     name: 'Saga checkout',   paths: ['/api/demo/saga/', '/api/checkout/'], deps: ['catalog','orders','payments','rabbitmq','postgres'], anchorId: 'demo-checkout' },
-  { id: 'ratelimit',    name: 'Rate limit',      paths: ['/api/demo/ratelimit/'],      deps: [],                                       anchorId: 'demo-ratelimit' },
+  { id: 'idempotency',  name: 'Idempotency',     paths: ['/api/v1/demo/idempotency/'],    deps: [],                                       anchorId: 'demo-idempotency' },
+  { id: 'checkout',     name: 'Saga checkout',   paths: ['/api/v1/demo/saga/', '/api/checkout/'], deps: ['catalog','orders','payments','rabbitmq','postgres'], anchorId: 'demo-checkout' },
+  { id: 'ratelimit',    name: 'Rate limit',      paths: ['/api/v1/demo/ratelimit/'],      deps: [],                                       anchorId: 'demo-ratelimit' },
   // Vault, cache, and events have safe read-only endpoints we can
   // probe automatically while chaos is active — fires the actual
   // backend round-trip so the visitor sees real failures land.
-  { id: 'vault',        name: 'Vault rotation',  paths: ['/api/demo/vault/'],          deps: ['vault','identity'],                     anchorId: 'demo-vault',       probePath: '/api/demo/vault/status' },
-  { id: 'stampede',     name: 'Cache stampede',  paths: ['/api/demo/cache/stampede'],  deps: ['catalog','redis'],                      anchorId: 'demo-stampede' },
+  { id: 'vault',        name: 'Vault rotation',  paths: ['/api/v1/demo/vault/'],          deps: ['vault','identity'],                     anchorId: 'demo-vault',       probePath: '/api/v1/demo/vault/status' },
+  { id: 'stampede',     name: 'Cache stampede',  paths: ['/api/v1/demo/cache/stampede'],  deps: ['catalog','redis'],                      anchorId: 'demo-stampede' },
   // id matches DemoHubLite's switch case ('cache') so the dispatch
   // event below selects the right demo card.
-  { id: 'cache',        name: 'Cache invalidation', paths: ['/api/demo/cache/product/', '/api/demo/cache/seed-demo-product'], deps: ['catalog','redis'], anchorId: 'demo-cache', probePath: '/api/demo/cache/product/demo' },
-  { id: 'concurrency',  name: 'Concurrency',     paths: ['/api/demo/inventory/'],      deps: ['catalog','postgres'],                   anchorId: 'demo-concurrency' },
-  { id: 'circuit',      name: 'Circuit breaker', paths: ['/api/demo/circuit/'],        deps: ['catalog'],                              anchorId: 'demo-circuit' },
-  { id: 'events',       name: 'Event flow',      paths: ['/api/demo/events/'],         deps: ['payments','rabbitmq','postgres'],       anchorId: 'demo-events',      probePath: '/api/demo/events/relay-status' },
+  { id: 'cache',        name: 'Cache invalidation', paths: ['/api/v1/demo/cache/product/', '/api/v1/demo/cache/seed-demo-product'], deps: ['catalog','redis'], anchorId: 'demo-cache', probePath: '/api/v1/demo/cache/product/demo' },
+  { id: 'concurrency',  name: 'Concurrency',     paths: ['/api/v1/demo/inventory/'],      deps: ['catalog','postgres'],                   anchorId: 'demo-concurrency' },
+  { id: 'circuit',      name: 'Circuit breaker', paths: ['/api/v1/demo/circuit/'],        deps: ['catalog'],                              anchorId: 'demo-circuit' },
+  { id: 'events',       name: 'Event flow',      paths: ['/api/v1/demo/events/'],         deps: ['payments','rabbitmq','postgres'],       anchorId: 'demo-events',      probePath: '/api/v1/demo/events/relay-status' },
   // Tracing removed pending real OTel + Tempo integration; previous
-  // entry pointed at /api/demo/tracing which served a hardcoded span tree.
+  // entry pointed at /api/v1/demo/tracing which served a hardcoded span tree.
 ];
 
 const DEMO_LOOKUP: Record<string, DemoDependency> = Object.fromEntries(
@@ -330,7 +330,7 @@ export const LiveTopologyMap: React.FC = () => {
   // a hard refresh. After this, SignalR pushes keep us in sync.
   useEffect(() => {
     let cancelled = false;
-    fetch(`${CONSOLE_HUB_URL}/api/demo/chaos/state`)
+    fetch(`${CONSOLE_HUB_URL}/api/v1/demo/chaos/state`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!cancelled && data) {
@@ -349,7 +349,7 @@ export const LiveTopologyMap: React.FC = () => {
     setActiveMenu(null);
     dismissHint();
     try {
-      await fetch(`${CONSOLE_HUB_URL}/api/demo/chaos/${target}/pause`, {
+      await fetch(`${CONSOLE_HUB_URL}/api/v1/demo/chaos/${target}/pause`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ durationSeconds: 30 }),
@@ -364,7 +364,7 @@ export const LiveTopologyMap: React.FC = () => {
     if (!target) return;
     setActiveMenu(null);
     try {
-      await fetch(`${CONSOLE_HUB_URL}/api/demo/chaos/${target}/resume`, {
+      await fetch(`${CONSOLE_HUB_URL}/api/v1/demo/chaos/${target}/resume`, {
         method: 'POST',
       });
     } catch {

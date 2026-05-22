@@ -17,7 +17,7 @@ import * as signalR from '@microsoft/signalr';
  * contradicted itself.
  *
  * The fix is structural: a single source of truth that combines health
- * (from /api/health/snapshot) with chaos state (from /api/demo/chaos/state
+ * (from /api/health/snapshot) with chaos state (from /api/v1/demo/chaos/state
  * + the `OnChaosState` SignalR push). When chaos is paused on a target,
  * the corresponding service's `displayStatus` is forced to "offline"
  * regardless of what its underlying /health probe still reports.
@@ -127,7 +127,7 @@ export interface ClusterState {
 
 /**
  * Maps a service id from the /api/health/snapshot payload to the chaos
- * target id used by /api/demo/chaos/{target}/pause. The two name spaces
+ * target id used by /api/v1/demo/chaos/{target}/pause. The two name spaces
  * mostly align but not always: the snapshot uses `mq` for RabbitMQ where
  * the chaos manager uses `rabbitmq`. Postgres/Redis/Vault aren't in the
  * snapshot at all (they're inferred via service health, not directly
@@ -338,7 +338,7 @@ class ClusterStore {
 
   private async refreshChaos() {
     try {
-      const r = await fetch(`${API_URL}/api/demo/chaos/state`, {
+      const r = await fetch(`${API_URL}/api/v1/demo/chaos/state`, {
         cache: 'no-store',
       });
       if (!r.ok) return;

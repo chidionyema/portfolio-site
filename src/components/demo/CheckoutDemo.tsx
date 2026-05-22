@@ -637,7 +637,7 @@ const SAGA_LANES: { id: SagaLaneId; label: string }[] = [
 ];
 
 const SAGA_HAPPY_PATH: SagaHop[] = [
-  { id: 'http-1',          source: 'browser',  dest: 'bff',      eventName: 'POST /api/demo/saga/start', detail: 'Visitor clicks Pay',                                kind: 'http',  signalsStep: null },
+  { id: 'http-1',          source: 'browser',  dest: 'bff',      eventName: 'POST /api/v1/demo/saga/start', detail: 'Visitor clicks Pay',                                kind: 'http',  signalsStep: null },
   { id: 'http-2',          source: 'bff',      dest: 'checkout', eventName: 'POST /api/checkouts',       detail: 'BFF proxies to checkout-orchestrator',             kind: 'http',  signalsStep: null },
   { id: 'stock-req',       source: 'checkout', dest: 'catalog',  eventName: 'StockReservationRequested', detail: 'Saga: Initial → Initiated · publish via RabbitMQ', kind: 'event', signalsStep: 'initiated' },
   { id: 'stock-reserved',  source: 'catalog',  dest: 'checkout', eventName: 'StockReserved',             detail: 'Catalog: Product.ReserveStock + outbox publish',   kind: 'event', signalsStep: 'stock_reserved' },
