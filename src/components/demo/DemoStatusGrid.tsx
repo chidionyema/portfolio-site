@@ -19,18 +19,37 @@ const DEMO_SERVICE_MAP: Record<string, string | null> = {
   cdcsearch:   "search",
 };
 
-type HealthSnapshot = Record<string, "healthy" | "degraded" | "unhealthy" | string>;
+interface ServiceHealth {
+  id: string;
+  name: string;
+  status: string;
+}
+
+interface HealthResponse {
+  services?: ServiceHealth[];
+  systemStatus?: string;
+}
 
 export function DemoStatusGrid() {
-  const [health, setHealth] = useState<HealthSnapshot | null>(null);
+  const [serviceMap, setServiceMap] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const apiUrl = import.meta.env.PUBLIC_API_URL ?? "";
     fetch(`${apiUrl}/api/health/snapshot`, { signal: AbortSignal.timeout(5000) })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setHealth(data ?? {}))
-      .catch(() => setHealth({}))
+      .then((data: HealthResponse | null) => {
+        if (data?.services) {
+          const map: Record<string, string> = {};
+          for (const svc of data.services) {
+            map[svc.id] = svc.status;
+          }
+          setServiceMap(map);
+        } else {
+          setServiceMap({});
+        }
+      })
+      .catch(() => setServiceMap({}))
       .finally(() => setLoading(false));
   }, []);
 
@@ -38,9 +57,9 @@ export function DemoStatusGrid() {
     if (loading) return null;
     const requiredService = DEMO_SERVICE_MAP[demoId];
     if (requiredService === null) return true; // ratelimit / BFF-only
-    if (!health || Object.keys(health).length === 0) return false;
-    const status = health[requiredService];
-    return status === "healthy";
+    if (!serviceMap || Object.keys(serviceMap).length === 0) return false;
+    const status = serviceMap[requiredService];
+    return status === "online";
   }
 
   return (
