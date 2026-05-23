@@ -288,7 +288,7 @@ test.describe('Demo Interactions', () => {
     { id: 'circuit', button: /trip|hammer/i, result: /closed|open|half|requests/i },
     { id: 'stampede', button: /run|send|stampede/i, result: /cache|hit|miss|lock/i },
     { id: 'ratelimit', button: /send|request/i, result: /allowed|remaining|bucket/i },
-    { id: 'vault', button: /rotate now/i, result: /requesting|rotating|activated|unreachable|failed/i },
+    { id: 'vault', button: /rotate now/i, result: /requesting|rotating|activated|complete|disabled|unreachable/i },
     { id: 'ledger', button: /simulate|run/i, result: /credit|debit|balance/i },
     { id: 'refund', button: /start refund|refund/i, result: /requested|processing|started/i },
     { id: 'cdcsearch', button: /search/i, result: /result|hit|pipeline|no results/i },
