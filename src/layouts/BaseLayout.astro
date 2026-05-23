@@ -193,7 +193,6 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
     <title>{title}</title>
   </head>
   <body>
-    <StatusStrip initialSnapshot={initialHealth} client:load />
     <SiteNav />
 
     <slot />
