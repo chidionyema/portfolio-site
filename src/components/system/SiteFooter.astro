@@ -1,7 +1,6 @@
 ---
 const year = new Date().getFullYear();
 const repoUrl = 'https://github.com/chidionyema/haworks-platform';
-const siteRepoUrl = 'https://github.com/chidionyema/portfolio-site';
 ---
 
 <footer class="border-t border-border bg-base py-12 mt-24">
@@ -11,7 +10,7 @@ const siteRepoUrl = 'https://github.com/chidionyema/portfolio-site';
       <div>
         <p class="font-display text-lg text-primary mb-3">Chidi Onyema</p>
         <p class="text-sm text-muted leading-relaxed">
-          Principal Backend Engineer. London. Distributed systems that survive production.
+          Principal Backend Engineer. London / Remote.
         </p>
       </div>
 
@@ -21,32 +20,25 @@ const siteRepoUrl = 'https://github.com/chidionyema/portfolio-site';
         <nav class="flex flex-col gap-2 text-sm">
           <a href="/demos" class="text-secondary hover:text-primary transition-colors">Live Demos</a>
           <a href="/architecture" class="text-secondary hover:text-primary transition-colors">Architecture</a>
-          <a href="/work" class="text-secondary hover:text-primary transition-colors">Work</a>
-          <a href="/contact" class="text-secondary hover:text-primary transition-colors">Contact</a>
+          <a href="/about" class="text-secondary hover:text-primary transition-colors">About</a>
+          <a href="/contact" class="text-secondary hover:text-primary transition-colors">Get in touch</a>
         </nav>
       </div>
 
-      <!-- Column 3: Build this yourself -->
+      <!-- Column 3: Source -->
       <div>
-        <p class="text-[10px] uppercase tracking-widest text-muted font-bold mb-3">Build your own</p>
+        <p class="text-[10px] uppercase tracking-widest text-muted font-bold mb-3">Source</p>
         <p class="text-sm text-secondary leading-relaxed mb-3">
-          This portfolio is open source. Fork it, deploy it, make it yours.
+          The platform and all demos are open source.
         </p>
-        <div class="flex flex-col gap-2 text-xs">
-          <a href={repoUrl} target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Platform source &rarr;</a>
-          <a href={siteRepoUrl} target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Portfolio site source &rarr;</a>
-        </div>
+        <a href={repoUrl} target="_blank" rel="noopener noreferrer" class="text-xs text-accent hover:underline">
+          View on GitHub &rarr;
+        </a>
       </div>
     </div>
 
-    <!-- Bottom bar -->
-    <div class="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-      <p class="text-[10px] text-muted">&copy; {year} Chidi Onyema. All rights reserved.</p>
-      <div class="flex items-center gap-4 text-[10px] text-muted font-mono">
-        <span class="px-2 py-1 rounded bg-surface-warm border border-border">Bundle &lt; 240KB</span>
-        <span class="px-2 py-1 rounded bg-surface-warm border border-border">Astro 6</span>
-        <span class="px-2 py-1 rounded bg-surface-warm border border-border">Cloudflare Pages</span>
-      </div>
+    <div class="mt-12 pt-6 border-t border-border">
+      <p class="text-[10px] text-muted">&copy; {year} Chidi Onyema</p>
     </div>
   </div>
 </footer>

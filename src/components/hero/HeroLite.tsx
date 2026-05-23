@@ -43,33 +43,13 @@ export function Hero(_: HeroProps) {
               </p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
-                <a href="#challenges" className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
-                  See what I built
+                <a href="/demos" className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
+                  Try the live demos
                   <ArrowRight className="w-5 h-5" />
                 </a>
-                <a href="/architecture" className={cn(buttonVariants({ variant: "secondary" }), "px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
-                  How it works
+                <a href="/contact" className={cn(buttonVariants({ variant: "secondary" }), "px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base")}>
+                  Hire me
                 </a>
-                <div className="flex items-center gap-2">
-                  <a
-                    href="https://linkedin.com/in/chidionyema"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 text-secondary hover:text-primary transition-colors bg-surface-warm rounded-full"
-                    aria-label="LinkedIn"
-                  >
-                    <LinkedinIcon className="w-5 h-5" />
-                  </a>
-                  <a
-                    href="https://github.com/chidionyema"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 text-secondary hover:text-primary transition-colors bg-surface-warm rounded-full"
-                    aria-label="GitHub"
-                  >
-                    <GithubIcon className="w-5 h-5" />
-                  </a>
-                </div>
               </div>
 
               <div className="flex items-center gap-3 pt-6 border-t border-border/50">

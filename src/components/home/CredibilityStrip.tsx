@@ -1,15 +1,10 @@
 import { motion } from "framer-motion";
 
 const facts = [
-  { value: "8", label: "Microservices", detail: "on Fly.io" },
-  { value: "159", label: "Arch Rules", detail: "enforced every build" },
-  { value: "13", label: "Test Suites", detail: "unit → E2E" },
-  { value: "13", label: "Live Demos", detail: "real HTTP, real data" },
-];
-
-const stack = [
-  ".NET 9", "MassTransit", "PostgreSQL", "RabbitMQ",
-  "Redis", "EF Core", "Polly", "Vault", "Fly.io",
+  { value: "8", label: "Services", detail: "deployed on Fly.io" },
+  { value: "13", label: "Live Demos", detail: "click a button, see it work" },
+  { value: "0", label: "Mocked Calls", detail: "every response is real" },
+  { value: "10+", label: "Years", detail: "backend engineering" },
 ];
 
 export function CredibilityStrip() {
@@ -40,17 +35,6 @@ export function CredibilityStrip() {
           ))}
         </div>
 
-        {/* Tech pills */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {stack.map((name) => (
-            <span
-              key={name}
-              className="px-2.5 py-1 rounded-full bg-surface border border-border text-[11px] font-medium text-secondary"
-            >
-              {name}
-            </span>
-          ))}
-        </div>
       </div>
     </div>
   );
