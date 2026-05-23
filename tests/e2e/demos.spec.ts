@@ -288,7 +288,7 @@ test.describe('Demo Interactions', () => {
     { id: 'circuit', button: /trip|hammer/i, result: /closed|open|half|requests/i },
     { id: 'stampede', button: /run|send|stampede/i, result: /cache|hit|miss|lock/i },
     { id: 'ratelimit', button: /send|request/i, result: /allowed|remaining|bucket/i },
-    { id: 'vault', button: /rotate now/i, result: /requesting|rotating|activated|complete|disabled|unreachable/i },
+    { id: 'vault', button: /rotate now/i, result: /requesting|activated|dual-key|complete/i },
     { id: 'ledger', button: /simulate|run/i, result: /credit|debit|balance/i },
     { id: 'refund', button: /start refund|refund/i, result: /requested|processing|started/i },
     { id: 'cdcsearch', button: /search/i, result: /result|hit|pipeline|no results/i },
@@ -296,8 +296,8 @@ test.describe('Demo Interactions', () => {
 
   for (const { id, button, result } of interactiveDemos) {
     test(`demo "${id}" responds when primary button is clicked`, async ({ page }) => {
-      await page.goto(`/demos?demo=${id}`, { waitUntil: 'networkidle', timeout: 30_000 });
-      await page.waitForTimeout(3000); // hydration
+      await page.goto(`/demos?demo=${id}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(5000); // hydration + SignalR connection
 
       const btn = page.getByRole('button', { name: button }).first();
       if (await btn.isVisible({ timeout: 5000 }).catch(() => false)) {
