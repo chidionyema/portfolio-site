@@ -213,7 +213,7 @@ export function CircuitBreakerDemo() {
           ) : (
             <Flame className="w-5 h-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
           )}
-          Trip & Hammer
+          Trigger Failure
         </Button>
         <button onClick={resetCircuit} className="text-[10px] font-mono text-secondary hover:text-primary uppercase tracking-widest transition-colors">
           Reset Environment

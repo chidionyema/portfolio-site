@@ -15,196 +15,182 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     problem:
       'Reserving stock, charging a card, and writing an order touch three services with three databases. A crash mid-flow leaves money taken with no order, or an order with no payment.',
     mechanism:
-      'A saga turns the cross-service transaction into a sequence of local commits, each paired with a compensating action that runs on failure. State lives in the saga itself, not a distributed lock.',
+      'Each step is paired with an undo step. If payment fails after stock is reserved, the system automatically releases the stock. No manual cleanup needed.',
     watch:
       'When a step fails, prior steps are reversed in order. The system either reaches the end or unwinds back to the start.',
-    problemSummary: 'Cross-service crashes leave data inconsistent.',
-    mechanismSummary: 'Chained local commits with rollback logic.',
-    withoutPattern: 'Partial commits: customer charged but no order created. Manual reconciliation required.',
+    problemSummary: 'A crash mid-checkout leaves money taken but no order.',
+    mechanismSummary: 'Every step has an automatic undo. Failures roll back cleanly.',
+    withoutPattern: 'Customer charged but no order created. Manual reconciliation required.',
     businessOutcome: 'Every checkout either completes fully or rolls back cleanly.',
-    strategy: 'Stateful Saga Orchestration',
+    strategy: 'Saga Orchestration',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/CheckoutOrchestrator/CheckoutOrchestrator.Application/Sagas/CheckoutSaga.cs',
   },
   events: {
     problem:
-      'Saving a row and publishing an event are two writes to two systems. If the broker is down between them, the event is lost; if the database rolls back after, you publish a phantom.',
+      'Saving a row and publishing an event are two writes to two systems. If the message broker is down, the event is lost. If the database rolls back after, you publish a ghost event.',
     mechanism:
-      'Persist the event to an outbox table inside the same transaction as the business write. A separate relay reads the outbox and dispatches to the broker, with at-least-once delivery and idempotent consumers.',
+      'The event is saved to the same database as the business data, in the same transaction. A background worker picks it up and delivers it to the broker. If the broker is down, the event waits safely in the database.',
     watch:
-      'Pull the broker out from under the system mid-write. the row commits, the outbox row commits, and the event is delivered the moment the relay is back. Zero loss, no special handling.',
-    problemSummary: 'Publishing events can fail after database commits.',
-    mechanismSummary: 'Atomic outbox table + background relay.',
+      'Pull the broker offline mid-write. The row commits, the event is saved, and delivery happens the moment the broker returns. Zero loss.',
+    problemSummary: 'Events can be lost when the message broker goes down.',
+    mechanismSummary: 'Events are saved with the data, then delivered reliably.',
     withoutPattern: 'Events silently lost during broker outages. Downstream services never learn about the order.',
-    businessOutcome: 'Zero lost events. even when the message broker goes down mid-write.',
-    strategy: 'Transactional Outbox Pattern',
+    businessOutcome: 'Zero lost events, even when the message broker goes down mid-write.',
+    strategy: 'Transactional Outbox',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Payments/Payments.Infrastructure/DependencyInjection.cs',
   },
   circuit: {
     problem:
-      'A slow downstream dependency pins your thread pool. Every request waits on a timeout. Latency cascades upstream until the whole system queues itself to death.',
+      'A slow downstream service pins your thread pool. Every request waits on a timeout. Latency cascades upstream until the whole system grinds to a halt.',
     mechanism:
-      'After N consecutive failures the breaker opens and rejects requests instantly. After a cooldown it lets a single probe through; success closes it, failure reopens. Bulkheads cap concurrency per dependency so one bad actor cannot drain the pool.',
+      'After several failures, the system stops sending requests to the failing service and returns errors instantly. After a cooldown, it sends one test request. If it succeeds, traffic resumes.',
     watch:
-      'Compare two paths: fast-fail under an open breaker (visible in milliseconds) vs. the timeout cliff a circuit-less system would experience. Recovery is automatic and observable.',
-    problemSummary: 'Slow dependencies cascade into total system failure.',
-    mechanismSummary: 'Fail-fast circuit state with automatic probes.',
+      'Compare two paths: instant rejection under protection vs. the timeout cliff without it. Recovery is automatic.',
+    problemSummary: 'One slow service can take down the entire platform.',
+    mechanismSummary: 'Failing services are cut off. Recovery is automatic.',
     withoutPattern: 'Thread pool exhaustion. 30-second timeouts cascade. Entire platform becomes unresponsive.',
-    businessOutcome: 'One failing service can\'t take down the whole platform.',
-    strategy: 'Polly Circuit Breaker & Bulkheads',
+    businessOutcome: 'One failing service cannot take down the whole platform.',
+    strategy: 'Circuit Breaker',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/BffWeb/BffWeb.Api/Controllers/DemoController.cs',
   },
   vault: {
     problem:
-      'Static credentials in config files leak. to logs, screenshots, snapshots, alumni laptops. A six-month-old database password is a six-month-old vulnerability.',
+      'Static passwords in config files leak to logs, screenshots, and old laptops. A six-month-old database password is a six-month-old vulnerability.',
     mechanism:
-      'Vault issues short-lived credentials per service. A renewal worker rotates each lease before expiry; the app reads through an interface that returns the current lease without restart. Old leases revoke on the database side.',
+      'Short-lived credentials are issued per service and rotated automatically. The app picks up new credentials without restarting. Old credentials are revoked on the database.',
     watch:
-      'During a rotation the new lease is issued, the old one revoked, and not a single in-flight request fails. Two leases overlap for a few seconds; that overlap is the whole point.',
+      'During rotation, new credentials are issued, old ones revoked, and not a single request fails. Two sets of credentials overlap briefly to ensure zero downtime.',
     problemSummary: 'Static database passwords are a security risk.',
-    mechanismSummary: 'Dynamic roles with automated TTL rotation.',
+    mechanismSummary: 'Credentials rotate automatically with zero downtime.',
     withoutPattern: 'Six-month-old database password in config files. One leaked credential compromises everything.',
-    businessOutcome: 'No static passwords. credentials rotate automatically with zero downtime.',
-    strategy: 'HashiCorp Vault Dynamic Secrets',
+    businessOutcome: 'No static passwords. Credentials rotate automatically with zero downtime.',
+    strategy: 'Dynamic Secret Rotation',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Identity/Identity.Api/Controllers/AdminController.cs',
   },
   idempotency: {
     problem:
-      'Networks retry. Mobile clients retry. Webhooks retry. Without protection, every retry that succeeds creates a duplicate charge, a double order, a second email. once-and-only-once is a fiction over an unreliable channel.',
+      'Networks retry. Mobile clients retry. Webhooks retry. Without protection, every successful retry creates a duplicate charge, a double order, or a second email.',
     mechanism:
-      'A deterministic key is claimed via INSERT...ON CONFLICT against a Postgres UNIQUE constraint. The first request wins and its result is cached in the row. Replays find the cached result and return it without re-executing the side-effect. Concurrent collisions resolve at the database level.',
+      'Each request carries a unique key. The first request with that key executes and its result is saved. Every subsequent request with the same key returns the saved result without re-executing.',
     watch:
-      'Hammer the same key from many directions: only one execution leaves a side-effect. Every other replay returns the same response, immediately, with no second charge.',
-    problemSummary: 'Duplicate payments caused by network retries.',
-    mechanismSummary: 'Deterministic keys prevent double execution.',
+      'Send the same request multiple times. Only one execution creates a side-effect. Every replay returns the same response instantly.',
+    problemSummary: 'Network retries create duplicate charges.',
+    mechanismSummary: 'Each request has a unique key. Duplicates return the cached result.',
     withoutPattern: 'Every network retry creates a duplicate charge. Customer support flooded with refund requests.',
     businessOutcome: 'Duplicate clicks and network retries never double-charge a customer.',
-    strategy: 'Postgres UNIQUE Constraint',
+    strategy: 'Request Deduplication',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Orders/Orders.Api/Controllers/DemoController.cs',
   },
   stampede: {
     problem:
-      'A popular cache key expires. A thousand requests arrive in the same millisecond, all miss, and all hit the database simultaneously. The thundering herd takes the origin down.',
+      'A popular cache entry expires. A thousand requests arrive at the same time, all miss the cache, and all hit the database simultaneously. The database goes down.',
     mechanism:
-      'On a miss, only one caller acquires a per-key lock and rebuilds the value. The rest wait briefly on the lock and read the freshly-written value when it lands. .NET 9 HybridCache implements this with L1 (memory) + L2 (Redis) tiers.',
+      'On a cache miss, only one request rebuilds the value. The rest wait briefly and read the fresh value once it is ready. The database sees one query instead of a thousand.',
     watch:
-      'Without protection, request count to the origin equals concurrency. With protection it equals one. The graph is the demo.',
-    problemSummary: 'Cache expiration floods the database (Stampede).',
-    mechanismSummary: 'Locking and request coalescing during misses.',
-    withoutPattern: '50 concurrent requests all hit the database simultaneously. Origin database overwhelmed, latency spikes to seconds.',
-    businessOutcome: 'Cache expiration doesn\'t flood the database. only one caller rebuilds.',
-    strategy: '.NET 9 HybridCache / Coalescing',
+      'Without protection, every request hits the database. With protection, only one does. The difference is dramatic.',
+    problemSummary: 'Cache expiration floods the database.',
+    mechanismSummary: 'Only one request rebuilds. The rest wait and share the result.',
+    withoutPattern: '50 concurrent requests all hit the database simultaneously. Origin overwhelmed, latency spikes.',
+    businessOutcome: 'Cache expiration does not flood the database. Only one caller rebuilds.',
+    strategy: 'Cache Stampede Protection',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Catalog/Catalog.Api/Controllers/DemoTestController.cs',
   },
   cache: {
     problem:
-      'Many nodes share a cache. One node updates a record; the others keep serving stale data until their copies expire on their own clocks. Customers see different versions of the same thing.',
+      'Multiple servers share a cache. One server updates a record but the others keep serving stale data until their copies expire. Customers see different versions of the same thing.',
     mechanism:
-      'On write, publish an invalidation message over Redis pub/sub. Every node subscribes and drops its local copy on receipt. Subsequent reads miss, re-fetch, and converge.',
+      'On write, a message is broadcast to all servers. Each server drops its local copy immediately. The next read fetches fresh data from the database.',
     watch:
-      'Update a record on instance A. Within milliseconds, instance B serves the new value. without a poll, a TTL, or a request-time round trip.',
-    problemSummary: 'Multi-node clusters serve stale cached data.',
-    mechanismSummary: 'Pub/sub messages drop stale local copies.',
-    withoutPattern: 'Node A updates a product price. Nodes B-F keep serving the old price for minutes until TTL expires.',
-    businessOutcome: 'All nodes converge within milliseconds of a write. no stale data served.',
+      'Update a record on one server. Within milliseconds, all other servers serve the new value. No polling, no delay.',
+    problemSummary: 'Multiple servers serve stale cached data.',
+    mechanismSummary: 'Write broadcasts drop stale copies across all servers instantly.',
+    withoutPattern: 'Server A updates a product price. Servers B-F keep serving the old price for minutes.',
+    businessOutcome: 'All servers converge within milliseconds of a write. No stale data served.',
     strategy: 'Distributed Cache Invalidation',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Catalog/Catalog.Api/Controllers/DemoTestController.cs',
   },
   concurrency: {
     problem:
-      'Two operators edit the same record at the same time. Last-write-wins silently drops the first edit. The user who lost the race never knows.',
+      'Two people edit the same record at the same time. The last save silently overwrites the first. The person who lost the race never knows their work was discarded.',
     mechanism:
-      'Every row carries a version. Updates assert the version they read; if it changed, the database refuses the write and the application surfaces the conflict. The losing client can re-fetch, re-merge, and retry.',
+      'Every record has a version number. When you save, the system checks that the version has not changed since you loaded it. If someone else saved first, your save is rejected with a clear conflict message.',
     watch:
-      'Both edits start; both submit. One commits, one is rejected with a clear conflict signal. Nothing is silently overwritten.',
-    problemSummary: 'Concurrent edits cause silent data overwrites.',
-    mechanismSummary: 'Version tracking prevents stale updates.',
-    withoutPattern: 'Last writer silently wins. First editor\'s 20 minutes of work vanishes without warning.',
-    businessOutcome: 'No silent overwrites. conflicting edits are caught and surfaced immediately.',
-    strategy: 'EF Core Optimistic Concurrency',
+      'Both edits start. Both submit. One succeeds, one is rejected with a conflict signal. Nothing is silently overwritten.',
+    problemSummary: 'Concurrent edits cause silent data loss.',
+    mechanismSummary: 'Version checks prevent stale overwrites.',
+    withoutPattern: 'Last writer silently wins. First editor\'s work vanishes without warning.',
+    businessOutcome: 'No silent overwrites. Conflicting edits are caught and surfaced immediately.',
+    strategy: 'Optimistic Concurrency Control',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Catalog/Catalog.Api/Controllers/DemoTestController.cs',
   },
   ratelimit: {
     problem:
-      'A single client. a runaway script, an over-eager partner, a loop bug. issues a million requests a minute. Capacity meant for everyone is consumed by one.',
+      'A single client issues a million requests per minute. A runaway script, a loop bug, or an abusive caller consumes all capacity meant for everyone.',
     mechanism:
-      'A fixed-window rate limiter assigns each session a permit count and window duration. Requests acquire permits; when the window is exhausted, requests are rejected with a 429 and a Retry-After hint.',
+      'Each session gets a fixed number of requests per time window. Once exhausted, further requests are rejected with a "try again later" response. Legitimate users are unaffected.',
     watch:
-      'Saturate the bucket: traffic above the rate is shed cleanly while well-behaved clients keep their share. The system stays available even under abuse.',
-    problemSummary: 'Single users can exhaust system capacity.',
-    mechanismSummary: 'Fixed-window rate limiting with per-session permits.',
-    withoutPattern: 'A single runaway script consumes all capacity. Legitimate users get 503 errors across the board.',
+      'Exhaust the allowance. Traffic above the limit is rejected cleanly while well-behaved clients keep their share.',
+    problemSummary: 'One bad client can exhaust capacity for everyone.',
+    mechanismSummary: 'Per-session limits reject excess traffic cleanly.',
+    withoutPattern: 'A single runaway script consumes all capacity. Legitimate users get errors across the board.',
     businessOutcome: 'Abusive traffic is shed cleanly while legitimate users keep their quota.',
-    strategy: '.NET FixedWindowRateLimiter',
+    strategy: 'Rate Limiting',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/BffWeb/BffWeb.Api/Controllers/DemoController.cs',
-  },
-  tracing: {
-    problem:
-      'A user reports their checkout was slow. Logs from three services are interleaved in different log aggregators. You spend forty minutes correlating timestamps before you can answer "where was the time spent?"',
-    mechanism:
-      'Every request carries a trace id; every operation it touches emits a span tagged with that id, parent span id, service, operation, and duration. A flame graph reads the parent/child structure and shows the full call tree at a glance.',
-    watch:
-      'One request fans out across orders-domain, inventory, payments (which itself calls Stripe), notifications, and the outbox. The flame graph lets you read total time, where the long tail lives, and which span owned the failure when one occurs.',
-    problemSummary: 'Interleaved logs hide cross-service bottlenecks.',
-    mechanismSummary: 'Correlation IDs track requests across services.',
-    withoutPattern: 'Forty minutes correlating timestamps across log aggregators to find one slow span.',
-    businessOutcome: 'Any slow request is traceable across all services in seconds.',
-    strategy: 'OpenTelemetry + Distributed Tracing',
-    sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/BuildingBlocks/Extensions/ServiceDefaults.cs',
   },
   refund: {
     problem:
-      'A refund touches the payment provider, the ledger, and the order state. If the provider call fails or times out, the customer sees nothing. no refund, no explanation, no escalation.',
+      'A refund touches the payment provider, the ledger, and the order status. If the provider call fails or times out, the customer sees nothing. No refund, no explanation, no follow-up.',
     mechanism:
-      'A MassTransit saga state machine tracks each refund through Requested → AwaitingProviderConfirmation → Refunded. If the provider fails or 24 hours elapse, the saga transitions to RequiresReview instead of silently dropping the refund.',
+      'A workflow tracks each refund through its stages. If the provider fails or 24 hours pass, the workflow escalates to an operator for manual review instead of silently dropping the refund.',
     watch:
-      'The saga progresses through each state in real time. On success, the refund completes. On timeout or failure, it escalates to ops review. never silently lost.',
+      'The workflow progresses through each stage in real time. On success, the refund completes. On timeout, it escalates to ops review.',
     problemSummary: 'Failed refunds silently disappear.',
-    mechanismSummary: 'Saga with 24h timeout escalates to ops review.',
+    mechanismSummary: 'Workflow with 24h timeout escalates failures to ops review.',
     withoutPattern: 'Provider timeout = refund disappears. No escalation, no audit trail, angry customer.',
-    businessOutcome: 'Failed refunds escalate to ops review. never silently dropped.',
-    strategy: 'MassTransit Refund Saga',
+    businessOutcome: 'Failed refunds escalate to ops review. Never silently dropped.',
+    strategy: 'Refund Workflow',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Payments/Payments.Api/Controllers/AdminController.cs',
   },
   ledger: {
     problem:
-      'A payment credited to a seller and a commission debited to the platform are two separate writes. If one succeeds and the other fails, money is created or destroyed. the books no longer balance.',
+      'A payment credited to a seller and a commission debited to the platform are two separate writes. If one succeeds and the other fails, money is created or destroyed.',
     mechanism:
-      'Double-entry bookkeeping requires every transaction to produce at least two ledger entries that sum to zero. Both entries are written in a single atomic transaction on the same aggregate, so partial writes are impossible.',
+      'Every transaction produces at least two entries that sum to zero. A credit for the seller and a debit for the platform commission. Both are written atomically, so partial writes are impossible.',
     watch:
-      'Every simulation posts a CREDIT for the gross amount and a DEBIT for the platform commission. The sum of all entries always equals zero. That invariant is enforced at the domain model level, not the UI.',
-    problemSummary: 'Single-entry writes leave books out of balance.',
-    mechanismSummary: 'Paired debit/credit entries in one atomic write.',
-    withoutPattern: 'Commission debit succeeds but seller credit fails. Money created from nothing. Books never balance.',
-    businessOutcome: 'Every transaction balances to zero. money can\'t be created or destroyed.',
-    strategy: 'Double-Entry Ledger (domain invariant)',
+      'Every simulation posts a credit and a matching debit. The sum of all entries always equals zero. That balance is enforced at the code level, not just the UI.',
+    problemSummary: 'Partial writes leave financial records out of balance.',
+    mechanismSummary: 'Paired credit/debit entries in one atomic write.',
+    withoutPattern: 'Commission debit succeeds but seller credit fails. Money created from nothing.',
+    businessOutcome: 'Every transaction balances to zero. Money cannot be created or destroyed.',
+    strategy: 'Double-Entry Ledger',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Payouts/Payouts.Api/Controllers/LedgerController.cs',
   },
   erasure: {
     problem:
-      'A GDPR erasure request touches five services. If one service fails silently, personal data remains in the system. a regulatory breach. If the saga has no SLA enforcement, requests can stall indefinitely.',
+      'A data deletion request touches five services. If one fails silently, personal data remains. A regulatory breach. If there is no deadline enforcement, requests can stall indefinitely.',
     mechanism:
-      'A saga orchestrates erasure commands to each service in order. Each service confirms deletion before the saga advances. A 7-day SLA timer is started on creation; expiry without completion transitions the saga to Stalled for mandatory ops review.',
+      'A workflow sends delete commands to each service in order. Each confirms deletion before the workflow advances. A 7-day deadline is enforced. If any service fails to confirm, the request is escalated for manual review.',
     watch:
-      'Each service node lights up as it confirms erasure. On success all five confirm and the saga completes. Any failure transitions to Failed. never a silent partial delete.',
-    problemSummary: 'Partial erasure leaves regulated data in the system.',
-    mechanismSummary: 'Ordered saga with SLA timer prevents silent failures.',
+      'Each service lights up as it confirms deletion. On success, all five confirm. Any failure triggers escalation. Never a silent partial delete.',
+    problemSummary: 'Partial deletion leaves regulated data in the system.',
+    mechanismSummary: '7-day deadline with mandatory escalation on failure.',
     withoutPattern: 'Four of five services delete data. The fifth silently retains it. GDPR breach.',
-    businessOutcome: 'GDPR erasure touches all services or escalates. no partial deletes.',
-    strategy: 'GDPR Erasure Saga (Art. 17)',
+    businessOutcome: 'Data deletion touches all services or escalates. No partial deletes.',
+    strategy: 'GDPR Erasure Workflow',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Privacy/Privacy.Api/Controllers/PrivacyRequestsController.cs',
   },
   cdcsearch: {
     problem:
-      'Search indexes updated by polling the database on a timer lag behind writes by the poll interval. High-frequency writes mean the index is always slightly stale, and frequent polling adds unnecessary load to the primary.',
+      'Search indexes updated by polling the database on a timer lag behind writes. Frequent polling wastes database resources. Infrequent polling means stale results.',
     mechanism:
-      "Debezium reads PostgreSQL's Write-Ahead Log (WAL) and publishes every row change to a Kafka topic. A consumer reads from Kafka and updates the Elasticsearch index. The entire pipeline is event-driven. no polling, no scheduled jobs.",
+      'Every database write is captured from the database log and streamed to the search index in real time. No polling, no scheduled jobs. The index stays current within seconds of any write.',
     watch:
-      'Trigger a search and watch the CDC pipeline light up: PostgreSQL WAL → Debezium → Kafka → Elasticsearch. The pipeline completes and results reflect the latest data within seconds of any product write.',
-    problemSummary: 'Polling-based indexing is stale and wastes DB resources.',
-    mechanismSummary: 'WAL-driven CDC keeps indexes current with zero polling.',
+      'Trigger a product update and watch the change flow through the pipeline. The search index reflects the update within seconds.',
+    problemSummary: 'Polling-based search is stale and wastes database resources.',
+    mechanismSummary: 'Database changes stream to the search index in real time.',
     withoutPattern: 'Search results lag 5-30 seconds behind writes. Customers see stale product data.',
-    businessOutcome: 'Search indexes stay current within seconds. no polling, no stale results.',
-    strategy: 'Debezium CDC + Kafka + Elasticsearch',
+    businessOutcome: 'Search indexes stay current within seconds. No polling, no stale results.',
+    strategy: 'Change Data Capture',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Search/Search.Api/Program.cs',
   },
 };

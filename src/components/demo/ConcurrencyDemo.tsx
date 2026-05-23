@@ -279,7 +279,7 @@ export function ConcurrencyDemo() {
                 </div>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                <span className="text-[9px] uppercase tracking-widest text-muted">xmin version</span>
+                <span className="text-[9px] uppercase tracking-widest text-muted">Version</span>
                 <motion.span
                   key={currentVersion}
                   initial={{ scale: 1.3, color: '#a78bfa' }}
@@ -355,8 +355,8 @@ export function ConcurrencyDemo() {
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3 font-mono">
           <ListEnd className="w-4 h-4 text-muted shrink-0 mt-0.5" />
           <p className="text-[10px] leading-relaxed text-muted uppercase tracking-widest">
-            EF Core uses a hidden xmin column as a concurrency token. Updates check{' '}
-            <span className="text-primary">"WHERE id = X AND xmin = Y"</span>.
+            EF Core uses a hidden version token column as a concurrency token. Updates check{' '}
+            <span className="text-primary">"WHERE id = X AND version token = Y"</span>.
             The second writer to reach Postgres receives a 409.
           </p>
         </div>
@@ -487,7 +487,7 @@ export function ConcurrencyDemo() {
             </div>
 
             <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-[10px]">
-              <span className="text-muted/60 uppercase tracking-widest">Current xmin</span>
+              <span className="text-muted/60 uppercase tracking-widest">Current version</span>
               <motion.span
                 key={currentVersion}
                 initial={{ scale: 1.2, color: '#a78bfa' }}

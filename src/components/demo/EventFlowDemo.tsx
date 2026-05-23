@@ -471,7 +471,7 @@ export function EventFlowDemo() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black text-primary tracking-widest">RabbitMQ_Primary</span>
+                    <span className="text-xs font-black text-primary tracking-widest">Message Broker</span>
                     <span
                       className={cn(
                         "text-[9px] font-bold",

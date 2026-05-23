@@ -239,7 +239,7 @@ export function VaultRotationDemo() {
                   <div className="flex items-center gap-3">
                     <ShieldCheck className={cn("w-5 h-5", vaultStatus ? 'text-success' : 'text-error')} />
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                      PG_ROLE: identity_owner
+                      Database credential
                     </span>
                   </div>
                   <Pill variant={vaultStatus ? 'success' : 'error'}>
