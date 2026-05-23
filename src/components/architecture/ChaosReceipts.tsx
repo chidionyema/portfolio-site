@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useClusterState } from '../../hooks/useClusterState';
 
 /**
- * ChaosReceipts — the screenshot-survives moment.
+ * ChaosReceipts. the screenshot-survives moment.
  *
  * Three big numbers + verdicts that update at the end of every chaos
  * cycle (pause → resume → first post-resume success). Sourced from
@@ -12,7 +12,7 @@ import { useClusterState } from '../../hooks/useClusterState';
  *      850ms                0 records              1 of 1
  *      ✓ within SLA         ✓ invariant held       ✓ all terminal
  *
- * The receipts persist between cycles — the visitor always sees the
+ * The receipts persist between cycles. the visitor always sees the
  * most recent drill's outcome, not an empty-state placeholder.
  */
 

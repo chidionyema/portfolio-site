@@ -132,10 +132,10 @@ export function GdprErasureDemo() {
         appendLog(`Erasure request ${res.requestId.slice(0, 8)}… created`);
       }
       setCurrentState('Processing');
-      appendLog('Saga started — scrubbing services in order');
+      appendLog('Saga started. scrubbing services in order');
     } catch {
       setCurrentState('Processing');
-      appendLog('Saga started — scrubbing services in order');
+      appendLog('Saga started. scrubbing services in order');
     }
   }, [executeCommand, appendLog]);
 
@@ -260,9 +260,9 @@ export function GdprErasureDemo() {
                     Erasing data…
                   </span>
                 ) : currentState === 'Completed' ? (
-                  '✓ Erased — run another'
+                  '✓ Erased. run another'
                 ) : currentState === 'Failed' || currentState === 'Stalled' ? (
-                  '✕ Failed — run another'
+                  '✕ Failed. run another'
                 ) : (
                   'Request Erasure'
                 )}

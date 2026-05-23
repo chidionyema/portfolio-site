@@ -11,7 +11,7 @@ import { useEffect } from 'react';
  *
  * Effect: when a visitor pauses a service via the topology, error
  * rates and latencies on the live metrics panel shift within a
- * couple of seconds because traffic is already in flight — no
+ * couple of seconds because traffic is already in flight. no
  * "click a demo to see what happens" step.
  *
  * The auto-prober inside LiveTopologyMap fires only while chaos is

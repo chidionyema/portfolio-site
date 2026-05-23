@@ -227,7 +227,7 @@ export function CacheStampedeDemo() {
                 className="p-6 border-b border-white/5"
               >
                 <div className="text-[9px] font-black uppercase tracking-[0.35em] text-muted/60 mb-4 text-center">
-                  DB hits comparison — 50 concurrent requests
+                  DB hits comparison. 50 concurrent requests
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {/* Without protection */}
@@ -269,7 +269,7 @@ export function CacheStampedeDemo() {
           {/* Bar chart results */}
           <div className="flex-1 overflow-y-auto font-mono p-6">
             <div className="text-[9px] font-black uppercase tracking-[0.35em] text-muted/60 mb-4">
-              Recent runs — DB hits / 50 requests
+              Recent runs. DB hits / 50 requests
             </div>
 
             {localResults.length === 0 ? (

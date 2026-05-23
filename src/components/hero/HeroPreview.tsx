@@ -17,7 +17,7 @@ export interface HeroPreviewData {
  * Hero proof-preview triptych. Three cards: a live-cycling saga visualization,
  * a deep-dive opener, and a receipts strip. Each click-through into the
  * relevant section. The saga card progresses through events over ~7s and
- * resets with a fresh trace ID each cycle — pre-backend it cycles a known
+ * resets with a fresh trace ID each cycle. pre-backend it cycles a known
  * walkthrough, post-backend it would subscribe to /events/stream.
  */
 

@@ -18,7 +18,7 @@ export function CodeDrawer({ demoId }: CodeDrawerProps) {
     try {
       await navigator.clipboard.writeText(code);
     } catch {
-      /* Clipboard API unavailable (non-HTTPS / backgrounded tab) — fall back to execCommand */
+      /* Clipboard API unavailable (non-HTTPS / backgrounded tab). fall back to execCommand */
       const ta = document.createElement('textarea');
       ta.value = code;
       ta.style.position = 'fixed';

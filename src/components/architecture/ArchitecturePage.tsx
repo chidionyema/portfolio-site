@@ -147,7 +147,7 @@ export function ArchitecturePage() {
             Double-entry bookkeeping for payments
           </Heading>
           <p className="text-secondary text-sm mb-8 max-w-2xl">
-            Every payment is recorded as two entries — a debit and a credit —
+            Every payment is recorded as two entries. a debit and a credit —
             just like real accounting. The database enforces that they always
             sum to zero. If they {"don't"}, the transaction is rejected.
           </p>
@@ -349,14 +349,14 @@ const ANALYZER_EXAMPLES = [
   {
     id: 'HWK001',
     title: 'No manual database saves in message consumers',
-    why: 'The messaging outbox handles the save. Doing it manually breaks the atomic guarantee — events can be lost.',
+    why: 'The messaging outbox handles the save. Doing it manually breaks the atomic guarantee. events can be lost.',
     bad: `await _dbContext.SaveChangesAsync();\n// Outbox commits automatically`,
     good: `// Mutations via EF tracked entities\n// MassTransit outbox commits on success`,
   },
   {
     id: 'HWK002',
     title: 'No random IDs inside retry loops',
-    why: 'A new ID on each retry means the provider sees each attempt as a different request — causing duplicate charges.',
+    why: 'A new ID on each retry means the provider sees each attempt as a different request. causing duplicate charges.',
     bad: `policy.ExecuteAsync(() => {\n  var key = Guid.NewGuid(); // new per retry!\n});`,
     good: `var key = Guid.NewGuid();\npolicy.ExecuteAsync(() => {\n  Call(key); // same across retries\n});`,
   },
@@ -370,7 +370,7 @@ const ANALYZER_EXAMPLES = [
 ];
 
 const GUARD_EXAMPLES = [
-  { rule: 'No publishing events without saving first', why: 'If the save fails, the event is already sent — downstream services act on data that was rolled back' },
+  { rule: 'No publishing events without saving first', why: 'If the save fails, the event is already sent. downstream services act on data that was rolled back' },
   { rule: 'No manual transactions in message consumers', why: 'The messaging framework wraps each consumer in a transaction. A second one conflicts and can lose messages.' },
   { rule: 'No localhost URLs in configuration', why: 'Services run in containers and resolve each other by name. Localhost means "myself" inside a container.' },
   { rule: 'No constructor-based event records', why: 'The message serializer cannot reconstruct them. The event arrives empty on the other side.' },

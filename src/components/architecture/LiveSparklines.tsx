@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useClusterState } from '../../hooks/useClusterState';
 
 /**
- * LiveSparklines — replaces the placeholder GrafanaPanel embeds.
+ * LiveSparklines. replaces the placeholder GrafanaPanel embeds.
  *
  * The Grafana panels were "Awaiting telemetry…" forever because the
  * dev cluster doesn't have Grafana Cloud wired. The metrics they

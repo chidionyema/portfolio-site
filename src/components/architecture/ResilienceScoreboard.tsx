@@ -7,19 +7,19 @@ import { useClusterState } from '../../hooks/useClusterState';
  *
  * Continuously runs three proofs against the live cluster:
  *
- *   1. Idempotency — submits the same X-Idempotency-Key repeatedly
+ *   1. Idempotency. submits the same X-Idempotency-Key repeatedly
  *      to /api/v1/demo/idempotency/process. The Orders service uses a
  *      Postgres ON CONFLICT (key) DO UPDATE ... RETURNING claim_id,
  *      (xmax = 0) AS isWinner. The proof is: every successful response
  *      returns the SAME claim_id for the same key. If we ever see two
  *      different claim_ids → invariant violated.
  *
- *   2. Saga atomicity — kicks off a saga, polls /api/v1/demo/saga/{id}
+ *   2. Saga atomicity. kicks off a saga, polls /api/v1/demo/saga/{id}
  *      until it reaches a terminal state (Completed | Abandoned). The
  *      proof is: every saga reaches terminal state within a bounded
  *      time. None stays in progress, none vanishes.
  *
- *   3. Concurrency (OCC) — fires N concurrent PUTs to
+ *   3. Concurrency (OCC). fires N concurrent PUTs to
  *      /api/v1/demo/inventory/{id} carrying the same xmin in If-Match.
  *      Catalog uses Postgres xmin as EF's concurrency token. The
  *      proof is: exactly ONE PUT returns 200, the rest return 412
@@ -133,7 +133,7 @@ const idempotencySpec: ProofSpec = {
         ((state.detail.dedups as number) ?? 0) + (isWinner ? 0 : 1);
       state.detail.firstWrite = isWinner ? 1 : (state.detail.firstWrite ?? 1);
     } catch {
-      /* network/parse error — counted in errCount so the scoreboard reflects it */
+      /* network/parse error. counted in errCount so the scoreboard reflects it */
       state.errCount++;
     }
   },
@@ -172,7 +172,7 @@ const sagaSpec: ProofSpec = {
         return;
       }
 
-      // Poll for terminal state. Bounded — 12 polls × 1s = 12s max.
+      // Poll for terminal state. Bounded. 12 polls × 1s = 12s max.
       const terminalSet = new Set(['Completed', 'Abandoned', 'Failed']);
       let terminalStatus: string | null = null;
       for (let i = 0; i < 12; i++) {
@@ -202,14 +202,14 @@ const sagaSpec: ProofSpec = {
             : 'failed';
       state.detail[key] = ((state.detail[key] as number) ?? 0) + 1;
     } catch {
-      /* network/parse error — counted in errCount so the scoreboard reflects it */
+      /* network/parse error. counted in errCount so the scoreboard reflects it */
       state.errCount++;
     }
   },
   renderClaim: (s) =>
     s.okCount === 0 && s.errCount === 0
       ? 'Starting first saga…'
-      : `${s.okCount} sagas reached terminal state — ${s.detail.completed ?? 0} completed, ${s.detail.compensated ?? 0} compensated, ${s.detail.failed ?? 0} failed. 0 stuck in partial state.`,
+      : `${s.okCount} sagas reached terminal state. ${s.detail.completed ?? 0} completed, ${s.detail.compensated ?? 0} compensated, ${s.detail.failed ?? 0} failed. 0 stuck in partial state.`,
 };
 
 // ── Proof 3: Concurrency (xmin / OCC) ────────────────────────────────
@@ -279,10 +279,10 @@ const concurrencySpec: ProofSpec = {
       // Invariant: at most one concurrent update wins per batch
       if (won > 1) {
         state.invariantViolated = true;
-        state.invariantReason = `${won} updates won the same xmin race — lost update possible`;
+        state.invariantReason = `${won} updates won the same xmin race. lost update possible`;
       }
     } catch {
-      /* network/parse error — counted in errCount so the scoreboard reflects it */
+      /* network/parse error. counted in errCount so the scoreboard reflects it */
       state.errCount++;
     }
   },
@@ -358,7 +358,7 @@ export function ResilienceScoreboard() {
       }
       // Once unpaused, the next successful attempt records recoveryMs.
       if (!isPausedNow && s.recoveryStartMs && !s.recoveryMs && s.okCount > 0) {
-        // okCount may have advanced from a prior attempt — capture only if a
+        // okCount may have advanced from a prior attempt. capture only if a
         // NEW success lands after recoveryStartMs. Simpler heuristic: if
         // we're within RECOVERY_DISPLAY_MS, attribute the latest success.
         if (now - s.recoveryStartMs <= RECOVERY_DISPLAY_MS + 500) {
@@ -393,7 +393,7 @@ export function ResilienceScoreboard() {
       <div className="mt-4 pt-4 border-t border-white/[0.06] text-[11px] text-muted/70 leading-relaxed">
         Each row runs a real request loop against the BFF. Counters only advance
         when a response confirms the invariant. Pause a dependency in the
-        topology below — the affected row freezes and turns amber. Resume it —
+        topology below. the affected row freezes and turns amber. Resume it —
         the row goes green and reports time-to-first-success.
       </div>
     </div>

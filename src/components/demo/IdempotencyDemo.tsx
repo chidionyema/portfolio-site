@@ -184,7 +184,7 @@ export function IdempotencyDemo() {
       }));
       setLogs((prev) => [...raceLogs, ...prev].slice(0, 16));
     } catch {
-      /* fire-and-forget race probe — failure is non-fatal, scoreboard reflects errCount */
+      /* fire-and-forget race probe. failure is non-fatal, scoreboard reflects errCount */
     } finally {
       setIsRacing(false);
     }
@@ -330,7 +330,7 @@ export function IdempotencyDemo() {
                   </motion.div>
                 ) : (
                   <div className="text-center text-[11px] text-secondary/90 italic">
-                    Cache empty — first request will create a new entry.
+                    Cache empty. first request will create a new entry.
                   </div>
                 )}
               </Glass>
@@ -345,7 +345,7 @@ export function IdempotencyDemo() {
                   className="p-5 rounded-2xl border border-warning/20 bg-warning/5 space-y-4"
                 >
                   <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.25em]">
-                    <span className="text-warning">Race outcome — {lastRace.count} concurrent</span>
+                    <span className="text-warning">Race outcome. {lastRace.count} concurrent</span>
                     <span className="text-muted">key {lastRace.key}</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -438,7 +438,7 @@ export function IdempotencyDemo() {
                         colSpan={3}
                         className="py-24 text-center text-secondary/90 italic uppercase tracking-[0.4em] font-black"
                       >
-                        Fire a request from the controls above — this log will populate in real-time.
+                        Fire a request from the controls above. this log will populate in real-time.
                       </td>
                     </tr>
                   ) : (

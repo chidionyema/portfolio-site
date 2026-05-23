@@ -80,7 +80,7 @@ export function RefundSagaDemo() {
         amountCents: 3999,
         refundAmountCents: 3999,
         currency: 'USD',
-        reason: 'Demo refund — full amount',
+        reason: 'Demo refund. full amount',
       });
 
       if (res?.refundId) {
@@ -188,9 +188,9 @@ export function RefundSagaDemo() {
                     {currentState === 'AwaitingProviderConfirmation' ? 'Awaiting provider…' : 'Processing…'}
                   </span>
                 ) : currentState === 'Refunded' ? (
-                  '✓ Refund complete — run another'
+                  '✓ Refund complete. run another'
                 ) : currentState === 'RequiresReview' ? (
-                  '✕ Requires review — run another'
+                  '✕ Requires review. run another'
                 ) : (
                   'Request full refund'
                 )}

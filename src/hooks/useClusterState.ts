@@ -4,7 +4,7 @@ import { clusterStore, type ClusterState } from '../lib/cluster-store';
 /**
  * Read-only subscription to the shared ClusterStore. Any component
  * mounted in the page can call this and receive the same view of
- * the cluster — health, chaos, live events, BFF identity — without
+ * the cluster. health, chaos, live events, BFF identity. without
  * opening its own SignalR connection or REST polls.
  *
  * Drives the StatusStrip, LiveTopologyMap, LiveConsoleDock,

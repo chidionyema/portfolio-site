@@ -56,7 +56,7 @@ export function CommandPalette({ deepDives }: Props) {
 
   const dismissHint = useCallback(() => {
     setHintVisible(false);
-    try { localStorage.setItem(PALETTE_HINT_KEY, '1'); } catch { /* localStorage blocked in private mode — non-fatal */ }
+    try { localStorage.setItem(PALETTE_HINT_KEY, '1'); } catch { /* localStorage blocked in private mode. non-fatal */ }
   }, []);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function CommandPalette({ deepDives }: Props) {
         const t = window.setTimeout(() => setHintVisible(true), 8000);
         return () => window.clearTimeout(t);
       }
-    } catch { /* localStorage blocked in private mode — hint simply won't show */ }
+    } catch { /* localStorage blocked in private mode. hint simply won't show */ }
   }, []);
 
   // ⌘K / ctrl+K toggles. ESC closes (cmdk handles internally too).
@@ -104,7 +104,7 @@ export function CommandPalette({ deepDives }: Props) {
   };
 
   const items: PaletteItem[] = [
-    // Demos — keyed by group label so the user can search by capability.
+    // Demos. keyed by group label so the user can search by capability.
     ...allDemos.map((d): PaletteItem => {
       const groupLabel = demoGroups.find((g) => g.demos.some((x) => x.id === d.id))!.label;
       const id = `demo:${d.id}`;
@@ -137,7 +137,7 @@ export function CommandPalette({ deepDives }: Props) {
     // Theme
     // Light mode is deprecated until the design system has full token parity
     // (see UI_AND_DEMO_PLAN.md T5.1). The toggle was producing low-contrast
-    // text and invisible CTAs on the light theme — worse than no toggle.
+    // text and invisible CTAs on the light theme. worse than no toggle.
     // Links
     { id: 'link:github',   label: 'View source on GitHub', Icon: GithubIcon, run: go('https://github.com/chidionyema/haworks'), group: 'Links' },
     { id: 'link:linkedin', label: 'LinkedIn',              Icon: ExternalLink, run: go('https://linkedin.com/in/chidionyema'), group: 'Links' },
@@ -152,7 +152,7 @@ export function CommandPalette({ deepDives }: Props) {
 
   return (
     <>
-      {/* Floating launcher button — small, in the corner, keyboard-discoverable. */}
+      {/* Floating launcher button. small, in the corner, keyboard-discoverable. */}
       <button
         type="button"
         onClick={() => { setOpen(true); dismissHint(); }}
@@ -178,7 +178,7 @@ export function CommandPalette({ deepDives }: Props) {
         <div className="fixed bottom-20 right-5 z-40 max-w-[260px] glass border border-accent/30 rounded-lg p-3 shadow-2xl text-xs flex items-start gap-3 animate-fade-in">
           <Search className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
           <div className="flex-1 leading-relaxed text-secondary">
-            Jump to any demo or article fast — press <kbd className="px-1 py-0.5 rounded bg-base/70 text-muted text-[10px] font-mono">⌘K</kbd> from anywhere on the page.
+            Jump to any demo or article fast. press <kbd className="px-1 py-0.5 rounded bg-base/70 text-muted text-[10px] font-mono">⌘K</kbd> from anywhere on the page.
           </div>
           <button
             onClick={dismissHint}

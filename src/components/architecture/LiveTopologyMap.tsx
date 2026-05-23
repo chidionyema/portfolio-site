@@ -5,9 +5,9 @@ import * as signalR from '@microsoft/signalr';
  * LiveTopologyMap
  *
  * Replaces the placeholder TopologyMap. The point of this component is
- * to make the actual cluster shape visible — Browser → BFF → 5 services
+ * to make the actual cluster shape visible. Browser → BFF → 5 services
  * (catalog ×2 via Aspire WithReplicas) → 5 Postgres databases / RabbitMQ /
- * Redis / Vault — and to animate every real request as it flows through.
+ * Redis / Vault. and to animate every real request as it flows through.
  *
  * Data sources:
  *   • <c>/hubs/console</c> SignalR stream (built earlier today) for
@@ -159,7 +159,7 @@ interface DemoDependency {
   anchorId?: string;
   /**
    * If set, an auto-prober will hit this URL while ANY of `deps` is
-   * paused. Must be a side-effect-free GET — the prober fires up to
+   * paused. Must be a side-effect-free GET. the prober fires up to
    * one request every 3s per affected demo so the visitor sees real
    * 503s land instead of inferring failure from a static dep map.
    */
@@ -171,7 +171,7 @@ const DEMOS: DemoDependency[] = [
   { id: 'checkout',     name: 'Saga checkout',   paths: ['/api/v1/demo/saga/', '/api/checkout/'], deps: ['catalog','orders','payments','rabbitmq','postgres'], anchorId: 'demo-checkout' },
   { id: 'ratelimit',    name: 'Rate limit',      paths: ['/api/v1/demo/ratelimit/'],      deps: [],                                       anchorId: 'demo-ratelimit' },
   // Vault, cache, and events have safe read-only endpoints we can
-  // probe automatically while chaos is active — fires the actual
+  // probe automatically while chaos is active. fires the actual
   // backend round-trip so the visitor sees real failures land.
   { id: 'vault',        name: 'Vault rotation',  paths: ['/api/v1/demo/vault/'],          deps: ['vault','identity'],                     anchorId: 'demo-vault',       probePath: '/api/v1/demo/vault/status' },
   { id: 'stampede',     name: 'Cache stampede',  paths: ['/api/v1/demo/cache/stampede'],  deps: ['catalog','redis'],                      anchorId: 'demo-stampede' },
@@ -206,7 +206,7 @@ const PROBE_INTERVAL_MS = 3_000;
 const REPLICA_TTL_MS = 60_000;
 // After a chaos resume, downstream connection pools (EF/MassTransit/
 // Redis client) take a few seconds to re-establish. Failures during
-// this window aren't fresh chaos — surface them as "warming" instead
+// this window aren't fresh chaos. surface them as "warming" instead
 // of "broken" so the visitor doesn't think resume failed.
 const RECOVERY_WARMING_MS = 12_000;
 // Debounce: ignore status flips that arrive within this window of
@@ -307,7 +307,7 @@ export const LiveTopologyMap: React.FC = () => {
     try {
       if (localStorage.getItem('topology-hint-dismissed')) return;
     } catch {
-      // private mode etc — show the hint once
+      // private mode etc. show the hint once
     }
     const showTimer = window.setTimeout(() => setShowHint(true), 2000);
     const hideTimer = window.setTimeout(() => setShowHint(false), 14000);
@@ -322,7 +322,7 @@ export const LiveTopologyMap: React.FC = () => {
     try {
       localStorage.setItem('topology-hint-dismissed', '1');
     } catch {
-      /* localStorage blocked in private mode — dismissal won't persist, non-fatal */
+      /* localStorage blocked in private mode. dismissal won't persist, non-fatal */
     }
   };
 
@@ -372,7 +372,7 @@ export const LiveTopologyMap: React.FC = () => {
     }
   };
 
-  // Health snapshot polling — same endpoint StatusStrip uses.
+  // Health snapshot polling. same endpoint StatusStrip uses.
   useEffect(() => {
     let cancelled = false;
     const fetchSnapshot = async () => {
@@ -382,7 +382,7 @@ export const LiveTopologyMap: React.FC = () => {
         const data = (await res.json()) as HealthSnapshot;
         if (!cancelled) setSnapshot(data);
       } catch {
-        // ignore — degraded UI fallback handled by status colour default.
+        // ignore. degraded UI fallback handled by status colour default.
       }
     };
     fetchSnapshot();
@@ -438,7 +438,7 @@ export const LiveTopologyMap: React.FC = () => {
   // Auto-prober: while ANY chaos target is paused, fire safe GET probes
   // against every demo with a probePath whose deps include that target.
   // The probes are real BFF round-trips that hit ChaosFaultInjectionHandler
-  // and return real 503s — the visitor sees actual failures stream in,
+  // and return real 503s. the visitor sees actual failures stream in,
   // not a hardcoded "broken" badge. Disabled when nothing is paused.
   useEffect(() => {
     const pausedTargets = new Set(
@@ -517,7 +517,7 @@ export const LiveTopologyMap: React.FC = () => {
       return next;
     });
 
-    // 2. Rate counter — events in the trailing 1s window.
+    // 2. Rate counter. events in the trailing 1s window.
     const now = performance.now();
     const stamps = eventTimestampsRef.current;
     stamps.push(now);
@@ -650,7 +650,7 @@ export const LiveTopologyMap: React.FC = () => {
       if (snapshot?.systemStatus === 'offline') return healthColor('offline');
       // Map specific infra ids to snapshot ids
       if (node.id === 'rabbitmq') return healthColor(serviceById['mq']?.status);
-      // pg / redis / vault aren't in snapshot today — neutral colour.
+      // pg / redis / vault aren't in snapshot today. neutral colour.
       return 'rgba(255,255,255,0.35)';
     }
     const lookup: Record<string, string> = {
@@ -716,7 +716,7 @@ export const LiveTopologyMap: React.FC = () => {
           </radialGradient>
         </defs>
 
-        {/* Static edges — drawn first, faded. */}
+        {/* Static edges. drawn first, faded. */}
         <g stroke="rgba(255,255,255,0.08)" strokeWidth={1} fill="none">
           {STATIC_EDGES.map(([a, b]) => (
             <line
@@ -729,7 +729,7 @@ export const LiveTopologyMap: React.FC = () => {
           ))}
         </g>
 
-        {/* Live packets — keyframed via SMIL animateMotion. Fallback to a
+        {/* Live packets. keyframed via SMIL animateMotion. Fallback to a
             CSS keyframe path on browsers without SMIL would be more code;
             SMIL works in every modern browser today. */}
         <g>
@@ -885,7 +885,7 @@ export const LiveTopologyMap: React.FC = () => {
                   </foreignObject>
                 )}
 
-                {/* Replica badges below service nodes — one dot per observed
+                {/* Replica badges below service nodes. one dot per observed
                     instance id. Up to 4 visible; 5+ collapses to "+N". */}
                 {isService && replicaCount > 0 && (
                   <g>
@@ -938,7 +938,7 @@ interface ImpactRibbonProps {
   /**
    * Per-demo timestamp of the most recent chaos session start. A failure
    * counted within `events` only proves "verified broken" if its `ts` is
-   * after the session start — otherwise it's stale residue from before
+   * after the session start. otherwise it's stale residue from before
    * this pause and the card stays in "claimed broken" (theoretical) state.
    */
   chaosSessionStarts: Record<string, number>;
@@ -984,13 +984,13 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
     const recovering = recovery && recovery.until > now;
 
     // Honest states:
-    //  broken      — chaos active AND ≥1 real failure observed
-    //  probing     — chaos active, no failures yet
-    //  warming     — chaos cleared but recovery window still open and
+    //  broken     . chaos active AND ≥1 real failure observed
+    //  probing    . chaos active, no failures yet
+    //  warming    . chaos cleared but recovery window still open and
     //                no real success yet (ignore failures here as
     //                connection-pool warmup, not fresh chaos)
-    //  recovering  — chaos cleared, first real success landed
-    //  healthy     — chaos clear, no recent failures
+    //  recovering . chaos cleared, first real success landed
+    //  healthy    . chaos clear, no recent failures
     const warmDeadline = warmingUntil[demo.id];
     const warming = !claimedBroken && warmDeadline !== undefined && warmDeadline > now;
 
@@ -1077,7 +1077,7 @@ const ImpactRibbon: React.FC<ImpactRibbonProps> = ({
               key={demo.id}
               onClick={onClick}
               // 300ms transition keeps the card from strobing when
-              // chaos is toggled rapidly — the colour interpolates
+              // chaos is toggled rapidly. the colour interpolates
               // rather than flashing through intermediate states.
               className={`flex items-center gap-2 px-2 py-1.5 rounded border ${ringColor} text-left hover:bg-white/[0.04] transition-all duration-300`}
               title={

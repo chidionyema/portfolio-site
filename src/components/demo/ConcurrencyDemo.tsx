@@ -94,7 +94,7 @@ export function ConcurrencyDemo() {
         // Fade back to idle after glow
         setTimeout(() => setPanel(p => ({ ...p, state: 'idle' })), 2000);
       } else {
-        setPanel(p => ({ ...p, state: 'conflict', lastError: '409 Conflict — stale version' }));
+        setPanel(p => ({ ...p, state: 'conflict', lastError: '409 Conflict. stale version' }));
         setTimeout(() => setPanel(p => ({ ...p, state: 'idle' })), 3000);
       }
 
@@ -106,8 +106,8 @@ export function ConcurrencyDemo() {
         newVersion: success ? newVersion : currentVersion,
       }, ...prev].slice(0, 10));
     } catch {
-      /* network error treated as conflict — surfaces in panel UI */
-      setPanel(p => ({ ...p, state: 'conflict', lastError: '409 Conflict — stale version' }));
+      /* network error treated as conflict. surfaces in panel UI */
+      setPanel(p => ({ ...p, state: 'conflict', lastError: '409 Conflict. stale version' }));
       setTimeout(() => setPanel(p => ({ ...p, state: 'idle' })), 3000);
       setLogs(prev => [{
         id: crypto.randomUUID(),
@@ -153,7 +153,7 @@ export function ConcurrencyDemo() {
         if (success) setCurrentVersion(newVersion);
         return { success, newVersion };
       } catch {
-        /* network error — log as conflict so the race UI reflects the failure */
+        /* network error. log as conflict so the race UI reflects the failure */
         setLogs(prev => [{
           id: crypto.randomUUID(),
           timestamp: new Date(),
@@ -172,7 +172,7 @@ export function ConcurrencyDemo() {
     ]);
 
     setUserA(p => ({ ...p, state: r1.success ? 'success' : 'conflict', version: r1.newVersion }));
-    setUserB(p => ({ ...p, state: r3.success ? 'success' : 'conflict', lastError: r3.success ? null : '409 Conflict — stale version' }));
+    setUserB(p => ({ ...p, state: r3.success ? 'success' : 'conflict', lastError: r3.success ? null : '409 Conflict. stale version' }));
     setTimeout(() => {
       setUserA(p => ({ ...p, state: 'idle' }));
       setUserB(p => ({ ...p, state: 'idle' }));
@@ -329,7 +329,7 @@ export function ConcurrencyDemo() {
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-success shrink-0" />
                   <span className="text-[9px] font-black text-success uppercase tracking-wider">
-                    Committed — version incremented to v{currentVersion}
+                    Committed. version incremented to v{currentVersion}
                   </span>
                 </motion.div>
               )}
@@ -344,7 +344,7 @@ export function ConcurrencyDemo() {
             >
               {panel.state === 'pending'
                 ? <><RotateCw className="w-3.5 h-3.5 animate-spin" /> Saving…</>
-                : `Save — ${panel.label}`}
+                : `Save. ${panel.label}`}
             </Button>
           </motion.div>
         ))}

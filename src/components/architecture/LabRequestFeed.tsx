@@ -8,14 +8,14 @@ import type { ConsoleEvent, ChaosTargetState } from '../../lib/cluster-store';
  *
  * Live tail of every /api/* the BFF handled. Each row is one request;
  * clicking a row expands an inline waterfall that explains in plain
- * English what happened to that specific request — which upstream
+ * English what happened to that specific request. which upstream
  * services it tried, how long each hop took, whether chaos
  * intercepted it, and what the BFF returned.
  *
  * This is the "what happens to the request" view a chaos test needs:
  * the visitor pauses a service, watches the wire feed fill with
  * 503 rows, clicks one, and reads the request's actual behaviour
- * end-to-end. Recovery is the same view in reverse — successful
+ * end-to-end. Recovery is the same view in reverse. successful
  * rows after resume show the full happy-path waterfall.
  */
 
@@ -82,7 +82,7 @@ export function LabRequestFeed() {
       setCopied(key);
       setTimeout(() => setCopied(null), 1200);
     } catch {
-      /* Clipboard API unavailable (non-HTTPS / backgrounded tab) — fall back to prompt */
+      /* Clipboard API unavailable (non-HTTPS / backgrounded tab). fall back to prompt */
       window.prompt('Copy:', s);
     }
   };
@@ -324,7 +324,7 @@ function Behaviour({
           activity and threw a synthetic 503 in{' '}
           <strong>{ev.durationMs.toFixed(0)}ms</strong>. Without the handler
           this request would have hung for the full 4-second HttpClient
-          timeout per upstream attempt. Resume the target — the next
+          timeout per upstream attempt. Resume the target. the next
           request hits the real service and returns normally.
         </p>
       </div>
@@ -337,7 +337,7 @@ function Behaviour({
           What happened to this request
         </div>
         <p className="text-[11.5px] leading-relaxed">
-          The browser couldn't get a response — typically a network
+          The browser couldn't get a response. typically a network
           drop, a CORS preflight failure, or the BFF process not yet
           listening. Check the topology header for the cluster's
           status.
@@ -367,7 +367,7 @@ function Behaviour({
           What happened to this request
         </div>
         <p className="text-[11.5px] leading-relaxed">
-          The BFF returned a 4xx — client-level rejection. Common
+          The BFF returned a 4xx. client-level rejection. Common
           reasons: bad payload, missing header, route not found,
           rate-limit exhausted.
         </p>
@@ -384,7 +384,7 @@ function Behaviour({
         <strong>{ev.status}</strong> in{' '}
         <strong>{ev.durationMs.toFixed(0)}ms</strong>.{' '}
         {ev.upstreams.length === 0
-          ? 'No upstream call — the BFF handled this in-process (rate-limit, idempotency, etc).'
+          ? 'No upstream call. the BFF handled this in-process (rate-limit, idempotency, etc).'
           : `It fanned out to ${ev.upstreams.length} upstream service${ev.upstreams.length === 1 ? '' : 's'}: ${ev.upstreams.map((u) => `${u.service.replace('-svc', '')} (${u.instanceId})`).join(', ')}.`}
       </p>
     </div>

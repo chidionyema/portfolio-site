@@ -270,7 +270,7 @@ export function EventFlowDemo() {
                           animate={{ opacity: [0.4, 1, 0.4] }}
                           transition={{ duration: 1.2, repeat: Infinity }}
                           className="text-warning text-[14px] font-black"
-                          title="Relay paused — events queued in outbox"
+                          title="Relay paused. events queued in outbox"
                         >
                           ✕
                         </motion.div>

@@ -232,7 +232,7 @@ export function LedgerDemo() {
                 ? 'Sum of all entries = 0 · double-entry invariant'
                 : sumZero
                   ? 'Sum of all entries = 0 · invariant holds'
-                  : 'Invariant violated — entries do not balance'
+                  : 'Invariant violated. entries do not balance'
               }
             </div>
           </Card>

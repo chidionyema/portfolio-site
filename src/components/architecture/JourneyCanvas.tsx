@@ -5,7 +5,7 @@ import { LiveTopologyMap } from './LiveTopologyMap';
 import type { ConsoleEvent, JourneyKind, JourneySession } from '../../lib/cluster-store';
 
 /**
- * JourneyCanvas — the single visualisation surface that ties the topology
+ * JourneyCanvas. the single visualisation surface that ties the topology
  * to the BFF's JourneyScheduler. The BFF fires a rotating canonical journey
  * every ~20s (place-order saga / idempotent retry / OCC race); this component
  * locks onto each journey via OnJourneyStart and renders a per-journey side
@@ -14,7 +14,7 @@ import type { ConsoleEvent, JourneyKind, JourneySession } from '../../lib/cluste
  * Layout on desktop (>= lg):
  *
  *   ┌────────────────────────────────────────────────────────┐
- *   │  Header — active journey, sessionId, elapsed, target   │
+ *   │  Header. active journey, sessionId, elapsed, target   │
  *   ├──────────────────────────────────────┬─────────────────┤
  *   │                                      │                 │
  *   │     Live topology (existing)         │  Side panel:    │
@@ -33,7 +33,7 @@ import type { ConsoleEvent, JourneyKind, JourneySession } from '../../lib/cluste
  *     the side panel surfaces compensating / failed paths from real signals
  *
  * No prose narration. Every visible state on the side panels is sourced from
- * an actual event field — no inferred 'this is what would have happened'.
+ * an actual event field. no inferred 'this is what would have happened'.
  */
 
 interface JourneyCanvasProps {
@@ -57,7 +57,7 @@ export function JourneyCanvas({
   }, []);
 
   // While idle (between journeys) show the most recent completed journey
-  // so the panel never blanks out — gives the visitor something to read
+  // so the panel never blanks out. gives the visitor something to read
   // during the inter-journey cool-down.
   const displayedJourney: JourneySession | null = currentJourney ?? recentJourneys[0] ?? null;
   const isLive = currentJourney != null;
@@ -492,7 +492,7 @@ function OccRaceBoard({
         </div>
         <div className="text-[11px] text-secondary leading-relaxed">
           Postgres <code className="font-mono text-accent">xmin</code> is EF's concurrency token.
-          Exactly one update wins per batch — losers get 412, retry on a fresh row version.
+          Exactly one update wins per batch. losers get 412, retry on a fresh row version.
         </div>
       </div>
 

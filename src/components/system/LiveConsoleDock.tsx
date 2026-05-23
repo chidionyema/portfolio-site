@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { Activity, ChevronUp, ChevronDown, Copy, Check } from 'lucide-react';
 
-// Frontend build identity — injected by Vite `define` in astro.config.mjs at
+// Frontend build identity. injected by Vite `define` in astro.config.mjs at
 // dev-server / build start. Lets the dock prove which JS bundle is loaded.
 declare const __BUILD_SHA__: string;
 declare const __BUILD_STARTED_AT__: string;
@@ -18,7 +18,7 @@ const WEB_BUILD_STARTED_AT: string =
  *
  * Persistent bottom-right dock that streams real BFF activity to the page.
  * Connects to the BFF's /hubs/console SignalR endpoint. Every /api/* request
- * the BFF handles emits one event — the dock shows them as they arrive,
+ * the BFF handles emits one event. the dock shows them as they arrive,
  * with the actual replica id, status, and round-trip time.
  *
  * The point of this component is the artifact, not the chrome: a visitor
@@ -161,14 +161,14 @@ export const LiveConsoleDock: React.FC = () => {
     try {
       localStorage.setItem(HINT_DISMISSED_KEY, '1');
     } catch {
-      /* localStorage blocked in private mode — dismissal won't persist, non-fatal */
+      /* localStorage blocked in private mode. dismissal won't persist, non-fatal */
     }
   }, []);
 
   // Append events newest-first, capped. Triggers pulse + first-event
   // auto-expand. We treat anything arriving via OnConsoleEvent (not the
-  // backfill) as "live" — i.e. caused by the visitor's interaction or by
-  // ongoing cluster traffic — and that's what we want to draw the eye to.
+  // backfill) as "live". i.e. caused by the visitor's interaction or by
+  // ongoing cluster traffic. and that's what we want to draw the eye to.
   const pushEvent = useCallback((ev: ConsoleEvent) => {
     setEvents((prev) => {
       const next = [ev, ...prev];
@@ -349,14 +349,14 @@ export const LiveConsoleDock: React.FC = () => {
             <span className="text-accent">↙</span>{' '}
             <span className="font-bold">Live cluster activity.</span>{' '}
             <span className="text-secondary">
-              Press any demo on the page — the request appears here from a real
+              Press any demo on the page. the request appears here from a real
               .NET replica.
             </span>
           </button>
         </div>
       )}
 
-      {/* Collapsed pill — always visible. Shows connection state + count. */}
+      {/* Collapsed pill. always visible. Shows connection state + count. */}
       <button
         onClick={() => {
           setExpanded((e) => !e);
@@ -409,7 +409,7 @@ export const LiveConsoleDock: React.FC = () => {
             <div>
               Real activity from the BFF process at{' '}
               <span className="text-secondary">{CONSOLE_HUB_URL}</span>. Each
-              row is one HTTP request; copy the curl to reproduce — the
+              row is one HTTP request; copy the curl to reproduce. the
               response carries the same{' '}
               <span className="text-secondary">X-Instance-Id</span>.
             </div>

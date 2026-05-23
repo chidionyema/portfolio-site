@@ -1,5 +1,5 @@
 /**
- * Brand icons — Lucide removed brand marks for trademark reasons.
+ * Brand icons. Lucide removed brand marks for trademark reasons.
  * Inline SVGs here, styled as `currentColor` so they inherit text color.
  */
 import type { SVGProps } from 'react';

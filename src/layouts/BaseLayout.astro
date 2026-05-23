@@ -2,7 +2,7 @@
 import SiteNav from '../components/system/SiteNav.astro';
 import SiteFooter from '../components/system/SiteFooter.astro';
 import { StatusStrip } from '../components/system/StatusStrip';
-// LiveEnvironmentToast removed — the hero topology map and the live
+// LiveEnvironmentToast removed. the hero topology map and the live
 // console dock both prove the cluster is live; a third "we're online"
 // toast was visual noise that overlapped the dock on first paint.
 import { LiveConsoleDock } from '../components/system/LiveConsoleDock';
@@ -69,7 +69,7 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
     <style is:inline>
       /* Light editorial palette on :root. Components use semantic
          classes (text-primary, bg-surface, border-border) and tailwind
-         resolves them via CSS variables — flip the variables inside a
+         resolves them via CSS variables. flip the variables inside a
          scope and every consumer adapts without further changes. */
       :root{
         --color-base: 250 250 247;
@@ -130,7 +130,7 @@ const ogImageURL = new URL(ogImage, Astro.site ?? 'https://chidionyema.dev').toS
       }
 
       /* `.surface` and `.glass` utilities the existing demo components
-         still reference — render correctly on whichever surface they
+         still reference. render correctly on whichever surface they
          find themselves on via the CSS variables. */
       .surface{
         background: rgb(var(--color-surface));

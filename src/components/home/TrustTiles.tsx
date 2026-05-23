@@ -28,7 +28,7 @@ const tiles = [
     icon: Activity,
     value: '13',
     label: 'Interactive Demos',
-    detail: 'Try them — they hit real services',
+    detail: 'Try them. they hit real services',
     color: 'text-primary'
   },
 ];

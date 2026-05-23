@@ -648,7 +648,7 @@ const SAGA_HAPPY_PATH: SagaHop[] = [
 
 const SAGA_COMPENSATION_PATHS: Record<string, SagaHop[]> = {
   stock_failed: [
-    { id: 'comp-stock-failed', source: 'catalog',  dest: 'checkout', eventName: 'StockReservationFailed', detail: 'Saga: Initiated → Abandoned (no compensation needed — nothing reserved)', kind: 'compensation', signalsStep: 'stock_failed' },
+    { id: 'comp-stock-failed', source: 'catalog',  dest: 'checkout', eventName: 'StockReservationFailed', detail: 'Saga: Initiated → Abandoned (no compensation needed. nothing reserved)', kind: 'compensation', signalsStep: 'stock_failed' },
   ],
   payment_failed: [
     { id: 'comp-payment-failed', source: 'payments', dest: 'checkout', eventName: 'PaymentSessionFailed',   detail: 'Saga: StockReserved → Compensating',                  kind: 'compensation', signalsStep: 'payment_failed' },

@@ -55,7 +55,7 @@ export function RateLimiterDemo() {
     return () => clearInterval(interval);
   }, [retryAfter]);
 
-  // Window reset countdown — tracks seconds until next full window
+  // Window reset countdown. tracks seconds until next full window
   useEffect(() => {
     const tick = () => {
       const now = new Date();

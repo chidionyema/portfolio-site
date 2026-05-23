@@ -15,7 +15,7 @@ export function StatusStrip(_: StatusStripProps) {
   // One source of truth: the shared cluster store. When chaos pauses
   // a target, `services[i].displayStatus` flips to 'offline' and
   // `systemStatus` flips to 'degraded' regardless of what the
-  // underlying /health probe says — service-chaos is BFF-side fault
+  // underlying /health probe says. service-chaos is BFF-side fault
   // injection so the raw health endpoint lies.
   const { services, systemStatus, connectionState } = useClusterState();
 

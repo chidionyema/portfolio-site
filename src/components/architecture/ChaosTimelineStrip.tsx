@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useClusterState } from '../../hooks/useClusterState';
 
 /**
- * ChaosTimelineStrip — the page's spine.
+ * ChaosTimelineStrip. the page's spine.
  *
  * Sits at the top of /lab's WATCH zone. Renders the chaos lifecycle
  * as four named phases with timestamps, so every panel below shares
@@ -12,18 +12,18 @@ import { useClusterState } from '../../hooks/useClusterState';
  *      47s     0.3s     22.1s         4.2s         ●
  *
  * Phase transitions, sourced from real signals (no inferred states):
- *   STEADY     — no chaos target paused. (chaos store has no paused entries)
- *   INJECT     — first OnChaosState push with a paused target arrives
- *   DEGRADED   — first /api/* event lands with status >= 500 attributable
+ *   STEADY    . no chaos target paused. (chaos store has no paused entries)
+ *   INJECT    . first OnChaosState push with a paused target arrives
+ *   DEGRADED  . first /api/* event lands with status >= 500 attributable
  *                to the paused target since INJECT
- *   RECOVERING — OnChaosState flips that target back to running
- *   STEADY     — first 2xx /api/* event lands on a previously-affected
+ *   RECOVERING. OnChaosState flips that target back to running
+ *   STEADY    . first 2xx /api/* event lands on a previously-affected
  *                path within RECOVERY_GRACE_MS of resume
  *
  * No prose. The phases are named with single English words because each
  * is a state, not a sentence. A pill at the right shows whether human
  * intervention occurred (currently always 'auto' since the chaos manager
- * auto-resumes — but the pill is the place that fact lives).
+ * auto-resumes. but the pill is the place that fact lives).
  */
 
 const RECOVERY_GRACE_MS = 8_000;
@@ -60,7 +60,7 @@ export function ChaosTimelineStrip() {
   const { chaos, events } = useClusterState();
   const [, setTick] = useState(0);
 
-  // Phase history — each transition appends here. We keep the trailing
+  // Phase history. each transition appends here. We keep the trailing
   // few entries so we can show the previous phase's elapsed time too.
   const historyRef = useRef<PhaseEntry[]>([
     { phase: 'steady', enteredAtMs: Date.now() },

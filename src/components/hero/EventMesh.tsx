@@ -76,7 +76,7 @@ export const EventMesh: React.FC<EventMeshProps> = ({ pingTrigger }) => {
 
   // Listen to edge-flow events from the topology stream. useEventStream returns
   // an `events` array (newest first); we take [0] as the latest tick.
-  // Absolute URL — EventSource resolves bare /api/* against the page origin
+  // Absolute URL. EventSource resolves bare /api/* against the page origin
   // (port 4321 in dev), which would 404 on the Astro dev server. The BFF
   // serves SSE on :5050.
   const apiUrl = import.meta.env.PUBLIC_API_URL ?? '';

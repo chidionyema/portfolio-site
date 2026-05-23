@@ -1,5 +1,5 @@
 /**
- * Icon vocabulary — the single source of truth.
+ * Icon vocabulary. the single source of truth.
  *
  * Same concept always renders the same icon, site-wide.
  * Add new icons here, not at call sites, so the visual language stays coherent.
@@ -65,7 +65,7 @@ export const ContextIcon = {
   Outbox: Send,
 } as const;
 
-/** Demo categories — used in tabs and the future sidebar. */
+/** Demo categories. used in tabs and the future sidebar. */
 export const DemoIcon = {
   checkout: ArrowRightLeft,
   events: Send,

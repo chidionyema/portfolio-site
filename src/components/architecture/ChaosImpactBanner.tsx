@@ -4,7 +4,7 @@ import { useClusterState } from '../../hooks/useClusterState';
 import type { ConsoleEvent } from '../../lib/cluster-store';
 
 /**
- * ChaosImpactBanner — auto-narrates chaos in plain English.
+ * ChaosImpactBanner. auto-narrates chaos in plain English.
  *
  * The whole point of /lab is "I pause something and immediately see
  * what happens to the actual requests." This banner does exactly that:
@@ -16,7 +16,7 @@ import type { ConsoleEvent } from '../../lib/cluster-store';
  * latest one. No clicks needed.
  *
  * On resume it flips to a "system recovered" frame for ~10s, featuring
- * the first successful request after resume — proving the system
+ * the first successful request after resume. proving the system
  * self-healed without intervention.
  *
  * Steady state: hidden.
@@ -161,7 +161,7 @@ export function ChaosImpactBanner() {
 
   // Auto-scroll into view the moment a paused session first becomes
   // active. The visitor pauses something (typically clicking in the
-  // topology, which is below this banner) — without scroll-on-pause
+  // topology, which is below this banner). without scroll-on-pause
   // the cause/effect/recovery story is hidden above their viewport.
   const hasActive = pausedSessions.length > 0 || liveResumeSessions.length > 0;
   useEffect(() => {
@@ -206,7 +206,7 @@ function PausePanel({ session, now }: { session: PauseSession; now: number }) {
           <div className="text-base text-primary font-semibold mb-1">
             You paused <span className="text-error uppercase tracking-widest">{session.target}</span>.
             {session.failureCount === 0
-              ? ' Watching the wire — failures will appear here as they land.'
+              ? ' Watching the wire. failures will appear here as they land.'
               : ` ${session.failureCount} request${session.failureCount === 1 ? '' : 's'} ${session.failureCount === 1 ? 'has' : 'have'} failed since you paused (${elapsedSec}s ago).`}
           </div>
           <div className="text-[12px] text-secondary">
@@ -237,7 +237,7 @@ function PausePanel({ session, now }: { session: PauseSession; now: number }) {
         />
       ) : (
         <div className="rounded border border-error/20 bg-black/30 p-4 text-[12px] text-muted/70 italic">
-          No failures yet — the runners take a few seconds to circle back to a path that depends on {session.target}.
+          No failures yet. the runners take a few seconds to circle back to a path that depends on {session.target}.
         </div>
       )}
     </div>
@@ -256,7 +256,7 @@ function ResumePanel({ session }: { session: ResumeSession }) {
             <span className="text-success uppercase tracking-widest">{session.target}</span>{' '}
             resumed.
             {session.failureCount === 0
-              ? ' No failures observed during the pause window — runners didn\'t happen to hit a dependent path.'
+              ? ' No failures observed during the pause window. runners didn\'t happen to hit a dependent path.'
               : session.firstRecoveryMs != null
                 ? ` System recovered in ${session.firstRecoveryMs}ms.`
                 : ' Waiting for the first successful request after resume…'}
@@ -361,7 +361,7 @@ function HopStrip({ ev, tone }: { ev: ConsoleEvent; tone: 'error' | 'success' })
           extraClass={failTone}
         />
       ) : (
-        <Hop label="(no upstream — chaos blocked)" extraClass={failTone} />
+        <Hop label="(no upstream. chaos blocked)" extraClass={failTone} />
       )}
       <span className="text-muted/40 shrink-0 text-[11px]">→</span>
       <Hop

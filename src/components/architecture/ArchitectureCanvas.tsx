@@ -1,5 +1,5 @@
 /**
- * ArchitectureCanvas — the static reference diagram for /lab.
+ * ArchitectureCanvas. the static reference diagram for /lab.
  *
  * Same node layout as LiveTopologyMap so visitors recognise the cluster
  * shape, but no packets, no chaos, no click-handlers. Edges are labelled
@@ -39,7 +39,7 @@ const NODES: NodeDef[] = [
 interface EdgeDef {
   from: string;
   to: string;
-  /** Style hint — solid for sync HTTP, dashed for MT events, dotted for Vault leases. */
+  /** Style hint. solid for sync HTTP, dashed for MT events, dotted for Vault leases. */
   kind: 'http' | 'event' | 'sql' | 'vault' | 'cache';
 }
 

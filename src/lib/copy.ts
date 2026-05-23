@@ -1,5 +1,5 @@
 /**
- * Honesty contract — copy that flips when the backend is wired.
+ * Honesty contract. copy that flips when the backend is wired.
  * See docs/UI_FEATURES_PLAN.md §0.2.
  */
 
@@ -29,12 +29,12 @@ export const CHECKOUT_COPY = {
   PAY_CONFIRMING: 'Confirming payment…',
   PAY_COMPLETING: 'Completing order…',
   PAY_DONE_PREFIX: 'Order', // followed by '#ABC-123 confirmed'
-  FAIL_SOLD_OUT: 'Sorry — Demo Widget just sold out',
-  FAIL_CARD_DECLINED: 'Card declined — your items are released',
+  FAIL_SOLD_OUT: 'Sorry. Demo Widget just sold out',
+  FAIL_CARD_DECLINED: 'Card declined. your items are released',
   RECEIPT_HEADER: 'Order confirmed',
   RECEIPT_EMAIL_LINE: "We'll email you a receipt at demo@haworks.dev",
   RECEIPT_VIEW_LINK: 'View order details',
-  RECEIPT_VIEW_TOOLTIP: 'Demo only — there is no real order page',
+  RECEIPT_VIEW_TOOLTIP: 'Demo only. there is no real order page',
   RUN_ANOTHER: 'Run another',
   ENGINEERING_HEADER: 'Server events',
   COMPENSATION_HEADER: 'Compensation',

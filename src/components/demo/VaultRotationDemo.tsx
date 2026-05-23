@@ -110,7 +110,7 @@ export function VaultRotationDemo() {
         setReceipt(res as RequestMetadata);
       }
     } catch {
-      /* rotation API unreachable — surface failure via stage UI, non-fatal */
+      /* rotation API unreachable. surface failure via stage UI, non-fatal */
       setIsRotating(false);
       setCurrentStage('failed');
     }

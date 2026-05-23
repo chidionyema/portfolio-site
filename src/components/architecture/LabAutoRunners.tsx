@@ -47,7 +47,7 @@ async function rawFetch(
       const ct = r.headers.get('content-type') ?? '';
       if (ct.includes('application/json')) body = await r.json();
     } catch {
-      /* JSON parse failed — body stays undefined, caller inspects r.ok/status */
+      /* JSON parse failed. body stays undefined, caller inspects r.ok/status */
     }
     return { ok: r.ok, status: r.status, body };
   } catch (e) {
@@ -115,7 +115,7 @@ const RUNNERS: RunnerSpec[] = [
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // X-Demo-Session must parse as Guid? — 'lab-runner' was failing
+          // X-Demo-Session must parse as Guid?. 'lab-runner' was failing
           // ASP.NET's model binding with 400. Omit and let the controller
           // generate a fresh session id from the empty body.
         },

@@ -3,18 +3,18 @@ import { Play, Hand } from 'lucide-react';
 import { useClusterState } from '../../hooks/useClusterState';
 
 /**
- * ChaosDrillController — the mode toggle + drill loop driver.
+ * ChaosDrillController. the mode toggle + drill loop driver.
  *
  * Two modes:
- *   • Drill — auto-runs a 60-second chaos cycle on a rotating target
+ *   • Drill. auto-runs a 60-second chaos cycle on a rotating target
  *     (catalog → postgres → rabbitmq → payments → repeat). The visitor
  *     watches; nothing to click. Auto-pauses 30s, auto-resumes, waits
  *     ~25s steady, repeats.
- *   • Drive — disables the auto-loop. Visitor clicks topology nodes
+ *   • Drive. disables the auto-loop. Visitor clicks topology nodes
  *     to fault-inject manually.
  *
  * Backed entirely by the existing /api/v1/demo/chaos/{target}/pause and
- * /resume endpoints — no new BFF route needed. Pause requests are
+ * /resume endpoints. no new BFF route needed. Pause requests are
  * fire-and-forget; the controller doesn't track responses, just tracks
  * its own clock-driven state machine.
  */
@@ -53,7 +53,7 @@ export function ChaosDrillController() {
           body: JSON.stringify({ durationSeconds: PAUSE_DURATION_S }),
         });
       } catch {
-        // network blip — try the next cycle
+        // network blip. try the next cycle
       }
     };
 
@@ -82,7 +82,7 @@ export function ChaosDrillController() {
 
   // When toggling to drive mode while something is paused, leave it paused
   // (visitor wanted to inspect). When toggling to drill mode while paused,
-  // also leave alone — the drill loop will pick up after current pause
+  // also leave alone. the drill loop will pick up after current pause
   // ends naturally.
   const anyPaused = Object.values(chaos).some((c) => c.status === 'paused');
 

@@ -5,7 +5,7 @@ import { useClusterState } from '../../hooks/useClusterState';
  * LiveMetricsPanel
  *
  * Real-time tiles fed from the cluster store's event stream. No
- * narrative, no "X happened at Y" prose — the lab is supposed to
+ * narrative, no "X happened at Y" prose. the lab is supposed to
  * exercise the real system and let the visitor read its response
  * in numbers that move.
  *

@@ -65,7 +65,7 @@ export function DemoContext({ demoId }: DemoContextProps) {
         </div>
       )}
 
-      {/* Without this pattern — expandable failure scenario */}
+      {/* Without this pattern. expandable failure scenario */}
       {copy.withoutPattern && (
         <div className="mt-3">
           <button

@@ -4,7 +4,7 @@ import * as signalR from '@microsoft/signalr';
  * Shared cluster state store.
  *
  * Module-level singleton that owns the page's view of the live
- * cluster — one SignalR connection, periodic REST polls — and
+ * cluster. one SignalR connection, periodic REST polls. and
  * exposes derived state to every component that subscribes via
  * `useClusterState`.
  *
@@ -13,7 +13,7 @@ import * as signalR from '@microsoft/signalr';
  * via its own SignalR + polls, LiveConsoleDock via another SignalR,
  * HeroFingerprint via a one-shot REST). Each rendered its own truth
  * with no shared agreement. Pause payments via the topology and the
- * top-of-page StatusStrip kept showing payments as green — the page
+ * top-of-page StatusStrip kept showing payments as green. the page
  * contradicted itself.
  *
  * The fix is structural: a single source of truth that combines health
@@ -25,14 +25,14 @@ import * as signalR from '@microsoft/signalr';
  * Astro-island compatibility: each `client:*` directive creates its own
  * React root, so React Context can't reach across islands. A
  * module-level singleton works because every island shares the same JS
- * module graph — they all see the same `clusterStore` instance.
+ * module graph. they all see the same `clusterStore` instance.
  */
 
 // Vite needs to see the literal `import.meta.env.PUBLIC_API_URL` access
 // pattern to statically inline the value at build time. The earlier
 // `(import.meta as any).env?.PUBLIC_API_URL` form with the `as any` cast
 // + optional chaining defeated the static replacement and the deployed
-// bundle ended up calling localhost:5050 — see the production console
+// bundle ended up calling localhost:5050. see the production console
 // errors that surfaced after the single-page collapse.
 const API_URL = (
   import.meta.env.PUBLIC_API_URL ?? ''
@@ -131,7 +131,7 @@ export interface ClusterState {
  * mostly align but not always: the snapshot uses `mq` for RabbitMQ where
  * the chaos manager uses `rabbitmq`. Postgres/Redis/Vault aren't in the
  * snapshot at all (they're inferred via service health, not directly
- * health-checked) — pausing them doesn't override any specific service
+ * health-checked). pausing them doesn't override any specific service
  * row, but it does flip the global systemStatus to degraded.
  */
 const SNAPSHOT_TO_CHAOS: Record<string, string> = {
@@ -181,7 +181,7 @@ class ClusterStore {
   /** Bound for useSyncExternalStore. */
   getSnapshot = (): ClusterState => this.state;
 
-  /** Stable empty snapshot for SSR — same reference every call. */
+  /** Stable empty snapshot for SSR. same reference every call. */
   getServerSnapshot = (): ClusterState => SSR_SNAPSHOT;
 
   /**
@@ -332,7 +332,7 @@ class ClusterStore {
       this.update({ health: data });
       this.recomputeDerivedServices();
     } catch {
-      // ignore — backend may be temporarily unreachable
+      // ignore. backend may be temporarily unreachable
     }
   }
 
@@ -346,7 +346,7 @@ class ClusterStore {
       this.update({ chaos: this.normaliseChaos(data) });
       this.recomputeDerivedServices();
     } catch {
-      // ignore — chaos endpoint is dev-only and may 403 in prod
+      // ignore. chaos endpoint is dev-only and may 403 in prod
     }
   }
 
@@ -355,7 +355,7 @@ class ClusterStore {
    * the canonical "what is this service actually doing" view used by
    * the StatusStrip, topology footer, and any other indicator. A paused
    * target overrides its service's status to "offline" regardless of
-   * what the service's own /health probe still reports — service-chaos
+   * what the service's own /health probe still reports. service-chaos
    * is BFF-side fault injection, the underlying process stays up so the
    * raw probe lies.
    */

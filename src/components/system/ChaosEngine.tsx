@@ -27,7 +27,7 @@ export function ChaosEngine({ onStateChange, isOpen, onClose }: ChaosEngineProps
     onStateChange(next);
   };
 
-  // Auto-reset chaos when the panel closes — the explainer above promises it,
+  // Auto-reset chaos when the panel closes. the explainer above promises it,
   // and it prevents the next visitor from inheriting somebody else's mess.
   const closeAndReset = () => {
     const reset: ChaosState = { latencyMs: 0, brokerDown: false, serviceFaulty: false };

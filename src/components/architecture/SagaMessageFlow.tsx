@@ -1,8 +1,8 @@
 /**
- * SagaMessageFlow — static SVG of the place-order saga choreography.
+ * SagaMessageFlow. static SVG of the place-order saga choreography.
  *
  * Shows the happy path top-to-bottom and the compensating path on the
- * right. Same conventions as ArchitectureCanvas — solid lines for HTTP,
+ * right. Same conventions as ArchitectureCanvas. solid lines for HTTP,
  * dashed for MassTransit events. No animation. This is the diagram that
  * answers "how does the saga actually flow" without prose.
  */
