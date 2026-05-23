@@ -97,7 +97,7 @@ export function useDemoSession(moduleName?: string) {
         fetchOptions.body = JSON.stringify(payload);
       }
 
-      const response = await fetch(`${API_URL}/api/demo${endpoint}`, fetchOptions);
+      const response = await fetch(`${API_URL}/api/v1/demo${endpoint}`, fetchOptions);
 
       const latencyMs = Math.round(performance.now() - start);
       const statusCode = response.status;

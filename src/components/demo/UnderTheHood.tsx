@@ -79,7 +79,8 @@ export function UnderTheHood({ demoId }: { demoId: string }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            style={{ overflow: 'hidden' }}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 font-mono text-[10px]">
               <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5">

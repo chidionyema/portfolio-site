@@ -63,7 +63,7 @@ export function DemoStatusGrid() {
   }
 
   return (
-    <div className="mb-10">
+    <div className="mb-10 min-h-[180px]">
       <p className="text-xs font-mono uppercase tracking-widest text-muted mb-3">
         Live service status
       </p>

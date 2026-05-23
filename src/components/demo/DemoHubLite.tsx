@@ -312,7 +312,7 @@ export function DemoHub() {
 
             <RealSystemBanner metadata={metadata} />
 
-            <div className="relative min-h-[500px]">
+            <div className="relative min-h-[600px]">
                <AnimatePresence mode="wait" initial={false}>
                   {viewMode === "live" ? (
                      <motion.div
