@@ -1,5 +1,5 @@
 ---
-title: "Replaced a legacy access control system — zero downtime"
+title: "Replaced a legacy access control system"
 company: "NSP Security"
 role: "Technical Lead"
 period: "Jul 2025 – Jan 2026"
@@ -10,7 +10,7 @@ publishedAt: 2026-05-20
 
 Led the full rewrite of a global physical access control system (door locks, card readers, CCTV integration) from a monolithic Delphi application to .NET 8 microservices.
 
-- **Zero-downtime migration** of 1,000+ properties from the legacy system. Each site was cut over individually with automatic fallback if the new system failed health checks.
+- **Incremental migration** of 1,000+ properties from the legacy system. Each site was cut over individually with automatic fallback if the new system failed health checks.
 - **10,000 concurrent IoT connections** via MQTT, with fault-tolerant reconnection and message deduplication so a network blip never unlocks or locks a door twice.
 - **Event-driven architecture** using RabbitMQ to decouple door events, alarms, and audit logs. Services can be updated independently without taking the system offline.
 - **Idempotent lock-control APIs** ensuring that a retry (network timeout, duplicate webhook) never results in a door being toggled twice.

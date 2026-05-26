@@ -59,11 +59,11 @@ export const DEMO_CONTEXT: Record<string, DemoContextCopy> = {
     mechanism:
       'Short-lived credentials are issued per service and rotated automatically. The app picks up new credentials without restarting. Old credentials are revoked on the database.',
     watch:
-      'During rotation, new credentials are issued, old ones revoked, and not a single request fails. Two sets of credentials overlap briefly to ensure zero downtime.',
+      'During rotation, new credentials are issued and old ones revoked. Two sets of credentials overlap briefly so the app never sees an auth failure.',
     problemSummary: 'Static database passwords are a security risk.',
-    mechanismSummary: 'Credentials rotate automatically with zero downtime.',
+    mechanismSummary: 'Credentials rotate automatically without interrupting requests.',
     withoutPattern: 'Six-month-old database password in config files. One leaked credential compromises everything.',
-    businessOutcome: 'No static passwords. Credentials rotate automatically with zero downtime.',
+    businessOutcome: 'No static passwords. Credentials rotate automatically without interrupting requests.',
     strategy: 'Dynamic Secret Rotation',
     sourceUrl: 'https://github.com/chidionyema/haworks-platform/blob/main/src/Identity/Identity.Api/Controllers/AdminController.cs',
   },
