@@ -24,8 +24,10 @@ describe('IdempotencyDemo', () => {
 
   it('renders correctly', () => {
     render(<IdempotencyDemo />);
-    // Renders a heading and the action button
-    expect(screen.getByRole('heading')).toBeInTheDocument();
+    // Renders headings ("Safe retries" + "Audit log") and the action button.
+    // Two headings exist, so getByRole('heading') would throw a
+    // multiple-elements error.
+    expect(screen.getAllByRole('heading').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument();
   });
 

@@ -30,8 +30,10 @@ describe('EventFlowDemo', () => {
     await act(async () => {
       render(<EventFlowDemo />);
     });
-    // Renders a heading and the action button
-    expect(screen.getByRole('heading')).toBeInTheDocument();
+    // Renders headings ("Event delivery guarantee" caption heading + the
+    // "Message broker" h3) and the action button. Two headings exist, so
+    // getByRole('heading') would throw a multiple-elements error.
+    expect(screen.getAllByRole('heading').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /commit/i })).toBeInTheDocument();
   });
 

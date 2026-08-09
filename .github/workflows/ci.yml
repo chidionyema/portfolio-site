@@ -23,6 +23,9 @@ jobs:
       - name: Quality gates
         run: bash scripts/check-quality.sh
 
+      - name: Unit + component tests
+        run: npx vitest run
+
       - name: Build
         env:
           GIT_SHA: ${{ github.sha }}

@@ -21,22 +21,34 @@ describe('VaultRotationDemo', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders correctly', () => {
-    render(<VaultRotationDemo />);
-    expect(screen.getByText('Dynamic Credentials')).toBeInTheDocument();
+  it('renders correctly', async () => {
+    // "Dynamic Credentials" was pre-rewrite copy; the panel label is
+    // "Database credential". "ACTIVE" only appears once the mount-time
+    // checkStatus() effect resolves (mocked executeCommand -> {success:true}),
+    // so the render must be flushed inside act() before asserting on it.
+    await act(async () => {
+      render(<VaultRotationDemo />);
+    });
+    expect(screen.getByText('Database credential')).toBeInTheDocument();
     expect(screen.getByText('ACTIVE')).toBeInTheDocument();
   });
 
-  it('can test connection and log success', async () => {
-    render(<VaultRotationDemo />);
-    const testBtn = screen.getByRole('button', { name: /Test Query/i });
-    
+  it('can verify vault status and show active credential', async () => {
+    // There's no "Test Query" button or "DB Auth Success" text; the current
+    // control is "Verify" (calls checkStatus(), which flips the credential
+    // Pill to "ACTIVE" using the mocked {success:true} response).
     await act(async () => {
-      fireEvent.click(testBtn);
+      render(<VaultRotationDemo />);
+    });
+
+    const verifyBtn = screen.getByRole('button', { name: /^Verify$/i });
+
+    await act(async () => {
+      fireEvent.click(verifyBtn);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('DB Auth Success')).toBeInTheDocument();
+      expect(screen.getByText('ACTIVE')).toBeInTheDocument();
     });
   });
 });

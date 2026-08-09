@@ -29,7 +29,9 @@ describe('CacheInvalidationDemo', () => {
 
   it('renders correctly', () => {
     render(<CacheInvalidationDemo />);
-    expect(screen.getByText('Pub/Sub Invalidation')).toBeInTheDocument();
+    // "Pub/Sub Invalidation" was pre-rewrite copy; the current heading is
+    // "Three-Tier Cache Ladder" (see CacheInvalidationDemo.tsx).
+    expect(screen.getByText('Three-Tier Cache Ladder')).toBeInTheDocument();
     expect(screen.getByText('Update DB')).toBeInTheDocument();
   });
 

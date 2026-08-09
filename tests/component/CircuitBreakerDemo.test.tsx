@@ -23,20 +23,26 @@ describe('CircuitBreakerDemo', () => {
 
   it('renders correctly', () => {
     render(<CircuitBreakerDemo />);
-    expect(screen.getByText('Circuit Breaker State')).toBeInTheDocument();
+    // "Circuit Breaker State" and a "Send Request" button were pre-rewrite copy;
+    // the component now shows the state machine directly via its state labels
+    // and a "With Breaker" traffic panel (see CircuitBreakerDemo.tsx STATE_CONFIG
+    // + the "With Breaker" Heading).
+    expect(screen.getByText('With Breaker')).toBeInTheDocument();
     expect(screen.getByText('Closed')).toBeInTheDocument();
   });
 
   it('can send a request and log success', async () => {
     render(<CircuitBreakerDemo />);
-    const sendBtn = screen.getByRole('button', { name: /Send Request/i });
-    
+    const sendBtn = screen.getByRole('button', { name: /Trigger Failure/i });
+
     await act(async () => {
       fireEvent.click(sendBtn);
     });
 
+    // fireHammer() fires 6 parallel "with breaker" requests, each resolving
+    // success:true from the mock, so multiple "200 OK" rows land in the table.
     await waitFor(() => {
-      expect(screen.getByText('200 OK')).toBeInTheDocument();
+      expect(screen.getAllByText('200 OK').length).toBeGreaterThan(0);
     });
   });
 });
