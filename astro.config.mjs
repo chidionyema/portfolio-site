@@ -33,8 +33,10 @@ export default defineConfig({
       __BUILD_STARTED_AT__: JSON.stringify(buildStartedAt),
     },
   },
-  // TODO: confirm production domain. Used for canonical, OG, sitemap.
-  site: 'https://haworks.pages.dev',
+  // Production domain — confirmed live via package.json name, deploy.yml,
+  // ci.yml Playwright base URL, and a direct HTTP check (2026-08-09).
+  // Used for canonical, OG, sitemap.
+  site: 'https://haworks-platform.pages.dev',
   markdown: {
     shikiConfig: {
       // Dual-theme. CSS picks one via the data-theme attribute on <html>.
