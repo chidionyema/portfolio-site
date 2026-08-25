@@ -1,0 +1,20 @@
+# gitleaks allow-list for this repository. The estate security gate
+# (chidionyema/idp/.github/actions/security-scan) runs gitleaks over the full
+# history; every entry here is a match that is not a credential, with the
+# reason. A real secret is never allow-listed: it is rotated (crew#240).
+title = "portfolio-site"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "matches that are variables or documented placeholders, not values"
+# regexes are tested against the captured secret, not the whole line
+regexes = [
+  # Terraform interpolation passed to curl -u: the value is a variable, never a literal
+  '''^":\$\{(var|self\.triggers)\.[a-z_]+\}"$''',
+  # documented placeholder in the grafana module
+  '''YOUR_GRAFANA_API_KEY''',
+  # idempotency demo keys in the spec: an example header value, not a credential
+  '''^(test|my-unique)-key-123$''',
+]
